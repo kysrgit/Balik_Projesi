@@ -1,4 +1,4 @@
 ultralytics
-onnxruntime
+onnxruntime-gpu
 opencv-python
 customtkinter

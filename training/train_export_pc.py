@@ -60,7 +60,7 @@ def main():
     # 3. Training
     print("\n[1/3] Starting YOLO11m Training...")
     # Load a model
-    model = YOLO("yolo11m.pt")  # load a pretrained model
+    model = YOLO("yolo11n.pt")  # load a pretrained model (NANO for CPU speed)
 
     # Train the model
     # batch=4 as requested for memory safety
@@ -68,11 +68,11 @@ def main():
         data=dataset_yaml,
         epochs=30,
         imgsz=640,
-        batch=4,
+        batch=8, # Increased batch size for Nano model
         mosaic=1.0,
         device=0, # Force GPU for PC prototype validation
         project="runs/detect",
-        name="yolo11m_pufferfish",
+        name="yolo11n_pufferfish",
         exist_ok=True
     )
 
