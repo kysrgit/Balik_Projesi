@@ -109,6 +109,23 @@ def main():
         cv2.putText(display_frame, f"FPS: {fps:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         cv2.putText(display_frame, f"Latency: {latency_ms:.1f}ms", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         
+        # 🎨 UX: Clear status indicator (SAFE = green, DANGER = red)
+        if len(boxes) > 0:
+            status_color = (0, 0, 255)  # Red for danger
+            status_text_display = "! DANGER - PUFFERFISH !"
+        else:
+            status_color = (0, 200, 0)  # Green for safe
+            status_text_display = "SAFE"
+        
+        # Draw status indicator bar at bottom
+        cv2.rectangle(display_frame, (0, height - 40), (width, height), status_color, -1)
+        cv2.putText(display_frame, status_text_display, (width // 2 - 80, height - 12), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        
+        # 🎨 UX: Keyboard shortcut hint
+        cv2.putText(display_frame, "[Q] Quit", (10, height - 12), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        
         status_text = f"Model: YOLO11m (PyTorch) | GPU: {gpu_name if device!='cpu' else 'OFF'}"
         text_size = cv2.getTextSize(status_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)[0]
         cv2.putText(display_frame, status_text, (width - text_size[0] - 10, 30), 
