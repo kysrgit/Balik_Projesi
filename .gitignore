@@ -1,8 +1,57 @@
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 *.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments
 .venv/
+venv/
+ENV/
+env/
+
+# IDEs
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# Model files (large files)
+*.pt
+*.onnx
+*.engine
+*.tflite
+*.pb
+
+# Training outputs
 runs/
+wandb/
 *.log
 Batch_Results_*/
+
+# Dataset (large files)
+dataset/
+balon_baligi_fotograflari/
+
+# Environment variables
+.env
+*.env
+
+# OS specific
+desktop.ini
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.docx
+*.pdf
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

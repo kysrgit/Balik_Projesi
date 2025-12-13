@@ -15,8 +15,19 @@ except ImportError:
     GPIO_AVAILABLE = False
     print("⚠️ GPIO library not found. LED control disabled.")
 
+# Try importing CLAHE preprocessing
+try:
+    # Assuming utils is in the same directory or python path
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from utils.img_processing import preprocess_image
+    CLAHE_AVAILABLE = True
+    print("✅ CLAHE preprocessing module found.")
+except ImportError:
+    CLAHE_AVAILABLE = False
+    print("⚠️ utils.img_processing not found. Using raw frames.")
+
 # Constants
-MODEL_PATH = "app/pufferfish_pi_int8.onnx" # The quantized model
+MODEL_PATH = "pufferfish_pi_int8.onnx" # The quantized model
 CONF_THRESHOLD = 0.60
 DETECTION_DIR = "detections"
 
@@ -25,7 +36,7 @@ def ensure_dir(directory):
         os.makedirs(directory)
 
 def main():
-    print("--- Pufferfish Detection System (STABLE HEADLESS MODE) ---")
+    print("--- Pufferfish Detection System (HEADLESS MODE) ---")
     ensure_dir(DETECTION_DIR)
     
     # 1. Load Model
@@ -37,26 +48,18 @@ def main():
         print(f"❌ Critical Error loading model: {e}")
         return
 
-    # 2. Setup Video Capture (V4L2 Optimized)
-    print("📷 Initializing Camera (V4L2)...")
+    # 2. Setup Video Capture
     video_source = 0
-    # Explicitly use V4L2 backend for Pi
-    cap = cv2.VideoCapture(video_source, cv2.CAP_V4L2)
+    cap = cv2.VideoCapture(video_source)
     
     if not cap.isOpened():
         print(f"❌ Error: Could not open video source {video_source}")
         return
 
-    # Force YUYV format (Critical for Pi Camera Module stability)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
+    # Optimize Camera
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
     cap.set(cv2.CAP_PROP_FPS, 30)
-
-    # WARM-UP (Critical Fix)
-    print("⏳ Sensör başlatılıyor, lütfen bekleyin (2 saniye)...")
-    time.sleep(2)
-    print("✅ Kamera Hazır!")
 
     print("--- Monitoring Started (Press Ctrl+C to stop) ---")
 
@@ -69,13 +72,19 @@ def main():
             ret, frame = cap.read()
             if not ret:
                 print("❌ Failed to grab frame")
-                time.sleep(0.1) # Short wait before retry
+                time.sleep(1)
                 continue
 
             t1 = time.time()
             
-            # 4. Inference
-            results = model.predict(source=frame, conf=CONF_THRESHOLD, imgsz=640, verbose=False)
+            # 4. Preprocess
+            if CLAHE_AVAILABLE:
+                processed_frame = preprocess_image(frame)
+            else:
+                processed_frame = frame
+
+            # 5. Inference
+            results = model.predict(source=processed_frame, conf=CONF_THRESHOLD, imgsz=640, verbose=False)
             
             t2 = time.time()
             
@@ -83,11 +92,11 @@ def main():
             fps = 1 / (t2 - prev_time) if prev_time != 0 else 0
             prev_time = t2
             
-            # 5. Logic
+            # 6. Logic
             result = results[0]
             boxes = result.boxes
             
-            status_msg = "NO FISH"
+            status_msg = "SEARCHING..."
             detection_count = len(boxes)
             
             if detection_count > 0:
@@ -105,7 +114,7 @@ def main():
                     save_path = os.path.join(DETECTION_DIR, filename)
                     
                     # Draw boxes on the frame before saving
-                    save_frame = frame.copy()
+                    save_frame = processed_frame.copy()
                     for box in boxes:
                         x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
                         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
@@ -124,7 +133,7 @@ def main():
 
             # Console Log (Every ~1 second)
             if int(t2) % 1 == 0 and int(t2 * 10) % 10 == 0: # Simple throttle
-                 print(f"FPS: {fps:.1f} | Status: {status_msg}")
+                 print(f"FPS: {fps:.1f} | Status: {status_msg} | Detections: {detection_count}")
 
     except KeyboardInterrupt:
         print("\n🛑 Stopping...")
