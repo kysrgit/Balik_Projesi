@@ -30,10 +30,24 @@ except ImportError:
 MODEL_PATH = "pufferfish_pi_int8.onnx" # The quantized model
 CONF_THRESHOLD = 0.60
 DETECTION_DIR = "detections"
+# 🛡️ SECURITY: Limit detection files to prevent disk exhaustion on Pi
+MAX_DETECTION_FILES = 100
 
 def ensure_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+def cleanup_old_detections(directory, max_files):
+    """🛡️ SECURITY: Remove oldest detection files to prevent disk exhaustion."""
+    try:
+        files = sorted(
+            [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.jpg')],
+            key=os.path.getmtime
+        )
+        while len(files) >= max_files:
+            os.remove(files.pop(0))
+    except OSError:
+        pass  # Fail silently - don't crash detection on cleanup error
 
 def main():
     print("--- Pufferfish Detection System (HEADLESS MODE) ---")
@@ -109,6 +123,9 @@ def main():
                 # Save Evidence (Max 1 per second)
                 current_time = time.time()
                 if current_time - last_save_time >= 1.0:
+                    # 🛡️ SECURITY: Clean up old files before saving new one
+                    cleanup_old_detections(DETECTION_DIR, MAX_DETECTION_FILES)
+                    
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     filename = f"fish_{timestamp}.jpg"
                     save_path = os.path.join(DETECTION_DIR, filename)
