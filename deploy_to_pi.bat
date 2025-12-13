@@ -54,8 +54,14 @@ echo.
 echo Simdi Raspberry Pi'ye baglaniyoruz...
 echo.
 echo ========================================================
-echo ONEMLI: Sifre soruldugunda '1356' yazip Enter'a basin.
-echo (Yazarken ekranda karakter gorunmez, normaldir)
+echo  GUVENLI BAGLANTI ICIN SSH KEY KULLANIN:
+echo  --------------------------------------------------------
+echo  1. Eger SSH key ayarlamadiyseniz:
+echo     ssh-keygen -t ed25519
+echo     ssh-copy-id %USER%@RPi_IP_ADRESINIZ
+echo.
+echo  2. Bu sayede sifre girmeden guvenli baglanti kurarsınız.
+echo  3. Sifreyi asla script veya kod icinde saklamayin!
 echo ========================================================
 echo.
 echo Baglandiktan sonra calistirmaniz gereken komutlar:
@@ -65,5 +71,5 @@ echo   ./install_pi.sh
 echo   python3 app/main_headless.py
 echo.
 
-:: 4. Connect
+:: 4. Connect (using SSH key or prompting for password securely)
 ssh %USER%@%RPi_IP% "cd Balik_Projesi && bash"
