@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 
 # --- CONFIGURATION ---
-# We use YOLOv8s as requested, but YOLOv11s is a drop-in replacement if you change the model name.
-MODEL_NAME = 'yolov8s.pt' 
+# YOLO11m - Medium model for balanced speed/accuracy on Raspberry Pi 5
+MODEL_NAME = 'yolo11m.pt' 
 DATA_CONFIG = Path(__file__).parent.parent / "dataset" / "data.yaml"
 PROJECT_DIR = Path(__file__).parent.parent / "runs" / "detect"
 EPOCHS = 50
@@ -25,7 +25,7 @@ def train():
         epochs=EPOCHS,
         imgsz=IMG_SIZE,
         project=str(PROJECT_DIR),
-        name='pufferfish_yolov8s',
+        name='pufferfish_yolo11m',
         
         # --- Augmentation Hyperparameters for Underwater ---
         hsv_h=0.04,  # Increase hue shift (default 0.015) to handle water color var
@@ -38,12 +38,12 @@ def train():
         mosaic=1.0,  # Strong mosaic augmentation
         
         # --- System ---
-        device='cpu', # Force CPU if no GPU available on dev machine, change to 0 if you have NVIDIA GPU
+        device=0,    # Use GPU (change to 'cpu' if no NVIDIA GPU)
         workers=4,
         exist_ok=True
     )
 
-    print(f"[INFO] Training complete. Best model saved to {PROJECT_DIR}/pufferfish_yolov8s/weights/best.pt")
+    print(f"[INFO] Training complete. Best model saved to {PROJECT_DIR}/pufferfish_yolo11m/weights/best.pt")
 
 if __name__ == "__main__":
     if not DATA_CONFIG.exists():

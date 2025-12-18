@@ -1,4 +1,20 @@
-ultralytics
+# Core Dependencies
+ultralytics>=8.0.0
 onnxruntime-gpu
 opencv-python
+
+# Deep Learning (for training)
+torch
+torchvision
+torchaudio
+
+# Data Processing
+pyyaml
+pillow
+numpy
+
+# UI (optional, for PC GUI)
 customtkinter
+
+# Raspberry Pi (optional, for deployment)
+# gpiozero  # Uncomment if testing GPIO on PC, installed via install_pi.sh on Pi

@@ -2,7 +2,6 @@ import cv2
 import time
 import os
 import sys
-from datetime import datetime
 from ultralytics import YOLO
 
 # Try importing GPIO
@@ -100,7 +99,8 @@ def main():
                 # Save Evidence (Max 1 per second)
                 current_time = time.time()
                 if current_time - last_save_time >= 1.0:
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    # Optimized: reuse current_time instead of calling datetime.now()
+                    timestamp = time.strftime("%Y%m%d_%H%M%S", time.localtime(current_time))
                     filename = f"fish_{timestamp}.jpg"
                     save_path = os.path.join(DETECTION_DIR, filename)
                     

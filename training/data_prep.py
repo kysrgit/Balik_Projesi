@@ -6,7 +6,7 @@ import yaml
 
 # --- CONFIGURATION ---
 # Source directory containing raw images (User provided path)
-SOURCE_DIR = r"c:\kayra\Balık Projesi Klasörleri\Balık_Projesi_Antigravity\balon_baligi_fotograflari"
+SOURCE_DIR = r"c:\AI\Balik_Projesi_Antigravity\balon_baligi_fotograflari"
 
 # Destination YOLO structure
 BASE_DIR = Path(__file__).parent.parent / "dataset"
