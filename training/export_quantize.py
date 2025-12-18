@@ -9,9 +9,9 @@ from ultralytics import YOLO
 
 # --- CONFIGURATION ---
 # Path to trained YOLO11m model
-MODEL_PATH = Path(__file__).parent.parent / "app" / "yolo11m_pufferfish.pt"
+MODEL_PATH = Path(__file__).parent.parent / "models" / "yolo11m_pufferfish.pt"
 ONNX_PATH = MODEL_PATH.with_suffix('.onnx')
-QUANTIZED_MODEL_PATH = Path(__file__).parent.parent / "app" / "pufferfish_pi_int8.onnx"
+QUANTIZED_MODEL_PATH = Path(__file__).parent.parent / "models" / "pufferfish_pi_int8.onnx"
 
 # Calibration Data Path (uses your validation set)
 CALIBRATION_IMG_DIR = Path(__file__).parent.parent / "dataset" / "images" / "val"

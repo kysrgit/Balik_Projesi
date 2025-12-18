@@ -28,13 +28,15 @@ Bu proje, Raspberry Pi 5 donanımında verimli şekilde çalışan bir sualtı b
 ```
 Balik_Projesi_Antigravity/
 │
-├── 📁 app/                          # Runtime (Raspberry Pi 5)
+├── 📁 app/                          # Runtime Uygulaması (Raspberry Pi 5)
 │   ├── main_pi.py                   # Pi runtime (ekranlı mod)
 │   ├── main_headless.py             # Pi runtime (headless mod)
-│   ├── pufferfish_pi_int8.onnx      # Production model (INT8)
-│   ├── yolo11m_pufferfish.pt        # Eğitilmiş model kaynağı
 │   └── utils/
 │       └── img_processing.py        # CLAHE preprocessing
+│
+├── 📁 models/                       # Model Dosyaları
+│   ├── yolo11m_pufferfish.pt        # Eğitilmiş PyTorch model
+│   └── pufferfish_pi_int8.onnx      # Production INT8 model
 │
 ├── 📁 training/                     # Eğitim Scriptleri (PC - CUDA)
 │   ├── data_prep.py                 # Dataset hazırlama
@@ -42,16 +44,24 @@ Balik_Projesi_Antigravity/
 │   ├── train_export_pc.py           # Eğitim + ONNX export + quantize
 │   └── export_quantize.py           # INT8 quantization
 │
-├── 📁 dataset/                      # Eğitim verileri (gitignored)
-├── 📁 balon_baligi_fotograflari/    # Ham fotoğraflar
+├── 📁 scripts/                      # Deployment & Kurulum
+│   ├── deploy_to_pi.bat             # Windows → Pi deployment
+│   ├── install_pi.sh                # Pi kurulum scripti
+│   ├── baslat.sh                    # Pi başlatma scripti
+│   └── export_for_pi.py             # Pi için model export
 │
-├── 📄 deploy_to_pi.bat              # Windows → Pi deployment
-├── 📄 install_pi.sh                 # Pi kurulum scripti
-├── 📄 baslat.sh                     # Pi başlatma scripti
-├── 📄 export_for_pi.py              # Pi için model export
+├── � docs/                         # Dokümantasyon
+│   ├── design_strategy.md           # Tasarım stratejisi
+│   └── research/                    # Araştırma dökümanları
+│
+├── 📁 dataset/                      # Eğitim verileri (gitignored)
+│
+├── 📄 README.md                     # Bu dosya
 ├── 📄 requirements.txt              # Python bağımlılıkları
-├── 📄 design_strategy.md            # Tasarım stratejisi belgesi
-└── 📄 README.md                     # Bu dosya
+├── 📄 LICENSE                       # MIT Lisans
+├── 📄 SECURITY.md                   # Güvenlik bilgisi
+├── 📄 .env.example                  # Örnek environment
+└── 📄 .gitignore                    # Git ignore kuralları
 ```
 
 ## 🛠️ Kurulum
@@ -84,7 +94,8 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 1. **Dosyaları Pi'ye aktarın:**
 ```bash
-# Windows'ta otomatik deployment scripti
+# Windows'ta scripts klasöründen çalıştırın
+cd scripts
 deploy_to_pi.bat
 ```
 
@@ -121,7 +132,7 @@ python training/train_yolo.py
 ```bash
 python training/export_quantize.py
 # veya
-python export_for_pi.py
+python scripts/export_for_pi.py
 ```
 
 ## 🖥️ Kullanım
@@ -166,7 +177,7 @@ Tespit edilen balon balıkları `detections/` klasörüne otomatik kaydedilir.
 
 ```python
 CONF_THRESHOLD = 0.60  # Güven eşiği (0.0 - 1.0)
-MODEL_PATH = "pufferfish_pi_int8.onnx"  # Model dosyası
+MODEL_PATH = "models/pufferfish_pi_int8.onnx"  # Model dosyası
 DETECTION_DIR = "detections"  # Kayıt klasörü
 ```
 

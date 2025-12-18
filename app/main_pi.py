@@ -15,7 +15,7 @@ except ImportError:
     print("⚠️ GPIO library not found. LED control disabled.")
 
 # Constants
-MODEL_PATH = "app/pufferfish_pi_int8.onnx" # The quantized model
+MODEL_PATH = "models/pufferfish_pi_int8.onnx" # The quantized model
 CONF_THRESHOLD = 0.60
 DETECTION_DIR = "detections"
 
