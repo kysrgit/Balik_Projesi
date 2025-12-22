@@ -1,223 +1,91 @@
-# 🐡 Underwater Pufferfish Detection System
+# Balon Balığı Tespit Sistemi
 
-Raspberry Pi 5 için optimize edilmiş, gerçek zamanlı balon balığı tespit sistemi. YOLO11m modeli ve ONNX Runtime kullanılarak INT8 quantization ile çalışır.
+Raspberry Pi 5 için sualtı balon balığı tespit sistemi. YOLO modeli ve gerçek zamanlı web dashboard içerir.
 
-## 🎯 Proje Özeti
-
-Bu proje, Raspberry Pi 5 donanımında verimli şekilde çalışan bir sualtı balon balığı tespit sistemi uygulamaktadır. Sistem şunları kullanır:
-
-- **YOLO11m** - Nesne tespiti için (Medium model - hız/doğruluk dengesi)
-- **ONNX Runtime** - CPU üzerinde optimize edilmiş inference
-- **OpenCV** - Görüntü ön işleme ve kamera entegrasyonu
-- **INT8 Quantization** - Edge deployment için optimize edilmiş model
-- **Lab-Color CLAHE** - Sualtı görüntü iyileştirme
-
-## 🚀 Özellikler
-
-- ✅ YOLO11m ile gerçek zamanlı balon balığı tespiti
-- ✅ PC'de NVIDIA CUDA ile GPU hızlandırmalı eğitim
-- ✅ Raspberry Pi 5 için INT8 optimize model
-- ✅ Headless çalışma modu (ekransız deployment)
-- ✅ Display modunda canlı görüntüleme
-- ✅ GPIO entegrasyonu (LED/alarm tetikleme - Pin 17)
-- ✅ Otomatik deployment scriptleri
-- ✅ Tespit anında otomatik fotoğraf kaydetme
-
-## 📁 Proje Yapısı
+## Proje Yapısı
 
 ```
-Balik_Projesi_Antigravity/
-│
-├── 📁 app/                          # Runtime Uygulaması (Raspberry Pi 5)
-│   ├── main_pi.py                   # Pi runtime (ekranlı mod)
-│   ├── main_headless.py             # Pi runtime (headless mod)
-│   └── utils/
-│       └── img_processing.py        # CLAHE preprocessing
-│
-├── 📁 models/                       # Model Dosyaları
-│   ├── yolo11m_pufferfish.pt        # Eğitilmiş PyTorch model
-│   └── pufferfish_pi_int8.onnx      # Production INT8 model
-│
-├── 📁 training/                     # Eğitim Scriptleri (PC - CUDA)
-│   ├── data_prep.py                 # Dataset hazırlama
-│   ├── train_yolo.py                # YOLO11m eğitimi
-│   ├── train_export_pc.py           # Eğitim + ONNX export + quantize
-│   └── export_quantize.py           # INT8 quantization
-│
-├── 📁 scripts/                      # Deployment & Kurulum
-│   ├── deploy_to_pi.bat             # Windows → Pi deployment
-│   ├── install_pi.sh                # Pi kurulum scripti
-│   ├── baslat.sh                    # Pi başlatma scripti
-│   └── export_for_pi.py             # Pi için model export
-│
-├── � docs/                         # Dokümantasyon
-│   ├── design_strategy.md           # Tasarım stratejisi
-│   └── research/                    # Araştırma dökümanları
-│
-├── 📁 dataset/                      # Eğitim verileri (gitignored)
-│
-├── 📄 README.md                     # Bu dosya
-├── 📄 requirements.txt              # Python bağımlılıkları
-├── 📄 LICENSE                       # MIT Lisans
-├── 📄 SECURITY.md                   # Güvenlik bilgisi
-├── 📄 .env.example                  # Örnek environment
-└── 📄 .gitignore                    # Git ignore kuralları
+app/
+├── core/                 # Cekirdek moduller
+│   ├── config.py         # Merkezi ayarlar
+│   ├── camera.py         # Kamera (Pi + OpenCV)
+│   ├── detector.py       # YOLO wrapper
+│   └── gpio.py           # LED kontrolu
+├── utils/
+│   └── image.py          # CLAHE ve goruntu isleme
+├── dashboard/
+│   ├── server.py         # Flask web server
+│   ├── stream.py         # MJPEG streaming
+│   └── templates/        # HTML
+├── main.py               # Ana calistirici
+
+training/
+├── data_prep.py          # Dataset hazirlama
+├── train_yolo.py         # Model egitimi
+└── export_quantize.py    # ONNX export + INT8
+
+scripts/
+├── deploy_to_pi.bat      # Pi'ye transfer
+└── install_pi.sh         # Pi kurulum
+
+models/
+└── pufferfish_pi_int8.onnx  # Egitilmis model
 ```
 
-## 🛠️ Kurulum
+## Kurulum
 
-### PC Kurulumu (Windows - Eğitim)
-
-1. **Depoyu klonlayın:**
-```bash
-git clone https://github.com/kysrgit/Balik_Projesi.git
-cd Balik_Projesi
-```
-
-2. **Sanal ortam oluşturun:**
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-```
-
-3. **Bağımlılıkları yükleyin:**
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **GPU desteği için (NVIDIA CUDA):**
+## Kullanim
+
+### Konsol modu (headless)
 ```bash
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+python app/main.py
 ```
 
-### Raspberry Pi 5 Kurulumu
-
-1. **Dosyaları Pi'ye aktarın:**
+### GUI modu (pencereli)
 ```bash
-# Windows'ta scripts klasöründen çalıştırın
-cd scripts
-deploy_to_pi.bat
+python app/main.py --gui
 ```
 
-2. **Pi üzerinde kurulum yapın:**
+### Web Dashboard
 ```bash
-chmod +x install_pi.sh
-./install_pi.sh
+python app/dashboard/server.py
+# http://localhost:5000
 ```
 
-3. **Uygulamayı başlatın:**
-```bash
-# Ekranlı mod
-python3 app/main_pi.py
+## Ozellikler
 
-# Headless mod (arka planda çalışma)
-python3 app/main_headless.py
-```
+- YOLO11m model, INT8 quantized
+- Lab-CLAHE sualti goruntu iyilestirme
+- 30 FPS gercek zamanli tespit
+- Web dashboard (MJPEG stream)
+- GPIO LED uyarisi
+- Otomatik tespit kaydi
 
-## 🎓 Model Eğitimi
+## Donanim
 
-Eğitim sadece PC üzerinde (NVIDIA GPU ile) yapılır:
+- Raspberry Pi 5 (16GB)
+- Camera Module 3
+- Active Cooler
+- LED (GPIO 17)
 
-1. **Dataset hazırlama:**
-```bash
-python training/data_prep.py
-```
+## Model Egitimi
 
-2. **Model eğitimi:**
-```bash
-python training/train_yolo.py
-```
+1. Gorselleri `balon_baligi_fotograflari/` klasorune koy
+2. `python training/data_prep.py` - dataset olustur
+3. Roboflow veya LabelImg ile etiketle
+4. `python training/train_yolo.py` - egit
+5. `python training/export_quantize.py` - Pi icin export
 
-3. **Pi için export ve quantization:**
-```bash
-python training/export_quantize.py
-# veya
-python scripts/export_for_pi.py
-```
+## Ayarlar
 
-## 🖥️ Kullanım
-
-### Raspberry Pi 5 Üzerinde
-
-```bash
-# Ekranlı mod - Canlı görüntüleme ile
-python3 app/main_pi.py
-
-# Headless mod - Tespitler diske kaydedilir
-python3 app/main_headless.py
-```
-
-Tespit edilen balon balıkları `detections/` klasörüne otomatik kaydedilir.
-
-## 📊 Performans
-
-| Platform | Model | Precision | FPS | Latency |
-|----------|-------|-----------|-----|---------|
-| Raspberry Pi 5 | YOLO11m | INT8 | 5-8 | ~125ms |
-
-## 🔧 Donanım Gereksinimleri
-
-### PC (Eğitim)
-- **OS:** Windows 10/11
-- **GPU:** NVIDIA RTX 3060 veya üstü
-- **RAM:** 16GB+
-- **Depolama:** 20GB+ boş alan
-
-### Raspberry Pi 5 (Deployment)
-- **Model:** Raspberry Pi 5 (4GB/8GB RAM önerilir)
-- **Kamera:** V4L2 uyumlu USB kamera veya Pi Camera Module
-- **Depolama:** 32GB+ microSD kart
-- **GPIO:** Pin 17 - LED/alarm bağlantısı (opsiyonel)
-
-## ⚙️ Konfigürasyon
-
-### Tespit Parametreleri
-
-`app/main_pi.py` ve `app/main_headless.py` içinde:
-
-```python
-CONF_THRESHOLD = 0.60  # Güven eşiği (0.0 - 1.0)
-MODEL_PATH = "models/pufferfish_pi_int8.onnx"  # Model dosyası
-DETECTION_DIR = "detections"  # Kayıt klasörü
-```
-
-### GPIO Ayarları
-
-LED/alarm için GPIO Pin 17 kullanılmaktadır. Tespit anında LED yanar.
-
-## 📝 Teknik Detaylar
-
-### Preprocessing Pipeline
-1. Kamera görüntüsü alınır (640x640, YUYV format)
-2. Lab color space'e çevrilir
-3. CLAHE (Contrast Limited Adaptive Histogram Equalization) uygulanır
-4. BGR'ye geri çevrilir
-5. Model inference yapılır
-
-### Model Bilgisi
-- **Mimari:** YOLO11m (Medium)
-- **Giriş Boyutu:** 640x640
-- **Quantization:** INT8 (Dynamic)
-- **Çıkış:** Bounding boxes + confidence scores
-
-## 🤝 Katkıda Bulunma
-
-Katkılarınız memnuniyetle karşılanır! Pull Request göndermekten çekinmeyin.
-
-## 📄 Lisans
-
-Bu proje MIT Lisansı altında lisanslanmıştır - detaylar için LICENSE dosyasına bakın.
-
-## 🙏 Teşekkürler
-
-- [Ultralytics YOLO11](https://github.com/ultralytics/ultralytics)
-- [ONNX Runtime](https://onnxruntime.ai/)
-- [OpenCV](https://opencv.org/)
-
-## 📧 İletişim
-
-Sorular veya destek için GitHub üzerinden issue açabilirsiniz.
+`app/core/config.py` dosyasinda:
+- `CONF_THRESH`: Tespit esigi (varsayilan 0.60)
+- `SKIP_FRAMES`: Performans icin frame atlama
+- `CLAHE_CLIP`: Kontrast ayari
 
 ---
-
-**Not:** Bu proje sualtı balon balığı tespiti için optimize edilmiştir. Dataset ve eğitilmiş modeller boyut kısıtlamaları nedeniyle depoya dahil değildir.
+Son guncelleme: 2024-12

@@ -1,94 +1,67 @@
-import onnx
-from onnxruntime.quantization import quantize_static, CalibrationDataReader, QuantType, QuantFormat
+# ONNX export ve INT8 quantization
 import os
+import glob
 import numpy as np
 from PIL import Image
 from pathlib import Path
-import glob
 from ultralytics import YOLO
+from onnxruntime.quantization import quantize_static, CalibrationDataReader, QuantType, QuantFormat
 
-# --- CONFIGURATION ---
-# Path to trained YOLO11m model
-MODEL_PATH = Path(__file__).parent.parent / "models" / "yolo11m_pufferfish.pt"
-ONNX_PATH = MODEL_PATH.with_suffix('.onnx')
-QUANTIZED_MODEL_PATH = Path(__file__).parent.parent / "models" / "pufferfish_pi_int8.onnx"
+MODEL_PT = Path(__file__).parent.parent / "models" / "yolo11m_pufferfish.pt"
+MODEL_ONNX = MODEL_PT.with_suffix('.onnx')
+MODEL_INT8 = Path(__file__).parent.parent / "models" / "pufferfish_pi_int8.onnx"
+CALIB_DIR = Path(__file__).parent.parent / "dataset" / "images" / "val"
 
-# Calibration Data Path (uses your validation set)
-CALIBRATION_IMG_DIR = Path(__file__).parent.parent / "dataset" / "images" / "val"
 
-class YoloCalibrationDataReader(CalibrationDataReader):
-    """
-    Reads images from the validation set to calibrate the quantization.
-    This ensures the INT8 model understands the range of values in real data.
-    """
-    def __init__(self, image_dir, input_name="images"):
-        self.image_paths = glob.glob(os.path.join(image_dir, "*.jpg")) + \
-                           glob.glob(os.path.join(image_dir, "*.png"))
-        # Limit calibration to 100 images to save time
-        self.image_paths = self.image_paths[:100]
-        self.preprocess_flag = True
-        self.enum_data_dicts = iter([])
-        self.input_name = input_name
-        print(f"[INFO] Calibration initialized with {len(self.image_paths)} images.")
-
+class CalibReader(CalibrationDataReader):
+    """Kalibrasyon icin gorsel okuyucu"""
+    def __init__(self, img_dir):
+        paths = glob.glob(str(img_dir / "*.jpg")) + glob.glob(str(img_dir / "*.png"))
+        self.paths = paths[:100]  # max 100 gorsel
+        self.idx = 0
+        print(f"Kalibrasyon: {len(self.paths)} gorsel")
+    
     def get_next(self):
-        iter_data = next(self.enum_data_dicts, None)
-        if iter_data:
-            return iter_data
+        if self.idx >= len(self.paths):
+            return None
+        
+        img = Image.open(self.paths[self.idx]).convert("RGB").resize((640, 640))
+        data = np.array(img).astype(np.float32) / 255.0
+        data = np.expand_dims(data.transpose(2, 0, 1), 0)
+        
+        self.idx += 1
+        return {"images": data}
 
-        self.enum_data_dicts = None
-        if self.preprocess_flag:
-            self.preprocess_flag = False
-            data_list = []
-            for img_path in self.image_paths:
-                # Preprocessing must match YOLO runtime preprocessing
-                # Resize to 640x640, Normalize 0-1
-                img = Image.open(img_path).convert("RGB")
-                img = img.resize((640, 640))
-                img_data = np.array(img).astype(np.float32)
-                img_data = img_data / 255.0  # Normalize 0-1
-                img_data = img_data.transpose(2, 0, 1)  # HWC -> CHW
-                img_data = np.expand_dims(img_data, axis=0) # Add batch dim
-                
-                data_list.append({self.input_name: img_data})
-            
-            self.enum_data_dicts = iter(data_list)
-            return next(self.enum_data_dicts, None)
-        return None
 
-def export_and_quantize():
-    # 1. Export PyTorch -> ONNX
-    if not MODEL_PATH.exists():
-        print(f"[ERROR] Trained model not found at {MODEL_PATH}")
-        print("Please train the model first or check the path!")
+def export():
+    if not MODEL_PT.exists():
+        print(f"Model yok: {MODEL_PT}")
         return
-
-    print(f"[INFO] Exporting {MODEL_PATH} to ONNX...")
-    model = YOLO(MODEL_PATH)
-    # Export arguments: opset=12 is stable, simplify=True removes redundant nodes
+    
+    # ONNX export
+    print("ONNX'e cevriliyor...")
+    model = YOLO(MODEL_PT)
     model.export(format='onnx', opset=12, simplify=True)
     
-    if not ONNX_PATH.exists():
-        print("[ERROR] Export failed.")
+    if not MODEL_ONNX.exists():
+        print("Export basarisiz")
         return
-
-    # 2. Quantize ONNX -> INT8 (Static)
-    print(f"[INFO] Starting INT8 Static Quantization...")
     
-    dr = YoloCalibrationDataReader(CALIBRATION_IMG_DIR, input_name='images')
-
+    # INT8 quantization
+    print("INT8 quantization...")
+    reader = CalibReader(CALIB_DIR)
+    
     quantize_static(
-        model_input=str(ONNX_PATH),
-        model_output=str(QUANTIZED_MODEL_PATH),
-        calibration_data_reader=dr,
-        quant_format=QuantFormat.QDQ, # Quantize-DeQuantize format (best for ARM CPUs)
-        per_channel=False,             # Per-tensor is usually faster on CPU
+        model_input=str(MODEL_ONNX),
+        model_output=str(MODEL_INT8),
+        calibration_data_reader=reader,
+        quant_format=QuantFormat.QDQ,
         weight_type=QuantType.QInt8,
         activation_type=QuantType.QUInt8
     )
     
-    print(f"[SUCCESS] Quantized model saved to: {QUANTIZED_MODEL_PATH}")
-    print("Transfer 'pufferfish_pi_int8.onnx' to your Raspberry Pi 5.")
+    print(f"Tamamlandi: {MODEL_INT8}")
+
 
 if __name__ == "__main__":
-    export_and_quantize()
+    export()
