@@ -1,91 +1,129 @@
-# Balon Balığı Tespit Sistemi
+# 🐡 Balon Balığı Tespit Sistemi
 
-Raspberry Pi 5 için sualtı balon balığı tespit sistemi. YOLO modeli ve gerçek zamanlı web dashboard içerir.
+Raspberry Pi 5 üzerinde çalışan, gerçek zamanlı sualtı balon balığı tespit sistemi. YOLO11m modeli, Pi 5 native kamera entegrasyonu (libcamera/picamera2) ve canlı web dashboard içerir.
 
-## Proje Yapısı
+## Sistem Mimarisi
 
 ```
 app/
-├── core/                 # Cekirdek moduller
-│   ├── config.py         # Merkezi ayarlar
-│   ├── camera.py         # Kamera (Pi + OpenCV)
-│   ├── detector.py       # YOLO wrapper
-│   └── gpio.py           # LED kontrolu
+├── core/                    # Çekirdek modüller
+│   ├── config.py            # Merkezi ayarlar
+│   ├── camera.py            # Pi 5 native kamera (picamera2)
+│   ├── detector.py          # YOLO ONNX wrapper
+│   └── gpio.py              # LED kontrolü (GPIO 17)
 ├── utils/
-│   └── image.py          # CLAHE ve goruntu isleme
+│   └── image.py             # CLAHE ve görüntü işleme
 ├── dashboard/
-│   ├── server.py         # Flask web server
-│   ├── stream.py         # MJPEG streaming
-│   └── templates/        # HTML
-├── main.py               # Ana calistirici
+│   ├── server.py            # Flask + Socket.IO web sunucu
+│   ├── stream.py            # MJPEG streaming & FrameBuffer
+│   └── templates/
+│       └── index.html       # Dashboard arayüzü
+└── main.py                  # Headless/GUI çalıştırıcı
 
 training/
-├── data_prep.py          # Dataset hazirlama
-├── train_yolo.py         # Model egitimi
-└── export_quantize.py    # ONNX export + INT8
+├── data_prep.py             # Dataset hazırlama (YOLO formatı)
+├── train_yolo.py            # Model eğitimi (YOLO11m, 50 epoch)
+└── export_quantize.py       # ONNX export + INT8 quantization
 
 scripts/
-├── deploy_to_pi.bat      # Pi'ye transfer
-└── install_pi.sh         # Pi kurulum
+└── install_pi.sh            # Raspberry Pi 5 kurulum betiği
 
 models/
-└── pufferfish_pi_int8.onnx  # Egitilmis model
+└── pufferfish_pi_int8.onnx  # INT8 quantized ONNX model
 ```
 
-## Kurulum
+## Gereksinimler
 
-```bash
-pip install -r requirements.txt
-```
-
-## Kullanim
-
-### Konsol modu (headless)
-```bash
-python app/main.py
-```
-
-### GUI modu (pencereli)
-```bash
-python app/main.py --gui
-```
-
-### Web Dashboard
-```bash
-python app/dashboard/server.py
-# http://localhost:5000
-```
-
-## Ozellikler
-
-- YOLO11m model, INT8 quantized
-- Lab-CLAHE sualti goruntu iyilestirme
-- 30 FPS gercek zamanli tespit
-- Web dashboard (MJPEG stream)
-- GPIO LED uyarisi
-- Otomatik tespit kaydi
-
-## Donanim
-
-- Raspberry Pi 5 (16GB)
-- Camera Module 3
+### Donanım
+- Raspberry Pi 5 (8GB / 16GB)
+- Raspberry Pi Camera Module 3 (IMX708)
 - Active Cooler
-- LED (GPIO 17)
+- LED (GPIO Pin 17)
 
-## Model Egitimi
+### Yazılım
+- Raspberry Pi OS (Debian Trixie)
+- Python 3.11+
+- picamera2, OpenCV, Flask, Ultralytics, ONNX Runtime
 
-1. Gorselleri `balon_baligi_fotograflari/` klasorune koy
-2. `python training/data_prep.py` - dataset olustur
-3. Roboflow veya LabelImg ile etiketle
-4. `python training/train_yolo.py` - egit
-5. `python training/export_quantize.py` - Pi icin export
+## Kurulum (Raspberry Pi 5)
+
+```bash
+git clone https://github.com/kysrgit/Balik_Projesi.git
+cd Balik_Projesi
+chmod +x scripts/install_pi.sh
+./scripts/install_pi.sh
+```
+
+Kurulum betiği şunları yapar:
+1. Sistem paketlerini günceller
+2. Donanım kütüphanelerini OS seviyesinde kurar (picamera2, opencv, flask)
+3. `--system-site-packages` ile sanal ortam oluşturur
+4. Yapay zeka kütüphanelerini pip ile indirir (ultralytics, onnxruntime)
+
+## Kullanım
+
+### Web Dashboard (Önerilen)
+```bash
+source .venv_pi/bin/activate
+python3 app/dashboard/server.py
+# Tarayıcıdan: http://<pi_ip>:5000
+```
+
+### Headless Mod
+```bash
+python3 app/main.py
+```
+
+### GUI Mod (Ekranlı Ortam)
+```bash
+python3 app/main.py --gui
+```
+
+## Dashboard Özellikleri
+
+- **3 Görüntü Modu:** Raw, CLAHE, Detection
+- **Canlı Metrikler:** FPS, confidence, CPU sıcaklığı, throttle durumu
+- **Ayarlanabilir Parametreler:** Confidence eşiği, CLAHE clip limit
+- **Tespit Logu:** Zaman damgalı kayıtlar ve thumbnail önizleme
+- **Anlık Bildirimler:** Toast notification ile tespit uyarısı
+- **Snapshot & Kayıt:** Anlık görüntü alma
+
+## Teknik Detaylar
+
+| Parametre | Değer |
+|---|---|
+| Model | YOLO11m, INT8 quantized ONNX |
+| Giriş Çözünürlüğü | 640x640 |
+| Kamera Çözünürlüğü | 640x480 @ 30 FPS |
+| Kamera Arayüzü | libcamera (picamera2) |
+| Inference | ONNX Runtime (CPUExecutionProvider) |
+| Ön İşleme | Lab renk uzayında CLAHE |
+| Streaming | MJPEG over HTTP |
+| İletişim | Flask-SocketIO (WebSocket) |
+
+## Model Eğitimi
+
+1. Görselleri `balon_baligi_fotograflari/` klasörüne koy
+2. `python training/data_prep.py` — Train/val bölümlemesi
+3. LabelImg veya Roboflow ile YOLO formatında etiketle
+4. `python training/train_yolo.py` — 50 epoch eğitim (GPU önerilir)
+5. `python training/export_quantize.py` — INT8 ONNX export
 
 ## Ayarlar
 
-`app/core/config.py` dosyasinda:
-- `CONF_THRESH`: Tespit esigi (varsayilan 0.60)
-- `SKIP_FRAMES`: Performans icin frame atlama
-- `CLAHE_CLIP`: Kontrast ayari
+Tüm ayarlar `app/core/config.py` dosyasında:
+
+| Parametre | Varsayılan | Açıklama |
+|---|---|---|
+| `CONF_THRESH` | 0.60 | Tespit güven eşiği |
+| `SKIP_FRAMES` | 5 | N frame'de bir tespit (performans) |
+| `CLAHE_CLIP` | 3.0 | Kontrast iyileştirme seviyesi |
+| `TARGET_FPS` | 30 | Hedef kamera FPS |
+| `DASHBOARD_PORT` | 5000 | Web sunucu portu |
+
+## Lisans
+
+MIT License
 
 ---
-Son guncelleme: 2024-12
+Son güncelleme: 2026-02
