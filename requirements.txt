@@ -1,6 +1,7 @@
 # Core
 ultralytics>=8.0.0
 onnxruntime-gpu
+onnx
 opencv-python
 torch
 torchvision

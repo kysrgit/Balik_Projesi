@@ -10,6 +10,8 @@ __pycache__/
 
 # Virtual Environments
 .venv/
+.venv_pi/
+.venv_wsl/
 venv/
 ENV/
 env/
@@ -33,6 +35,10 @@ runs/
 wandb/
 *.log
 Batch_Results_*/
+
+# App Data & Logs (large dynamic files)
+detections_log.csv
+detections/
 
 # Dataset (large files)
 dataset/

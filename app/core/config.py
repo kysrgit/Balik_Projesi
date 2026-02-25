@@ -8,6 +8,7 @@ ROOT_DIR = Path(__file__).parent.parent.parent
 # Model
 MODEL_PATH = ROOT_DIR / "models" / "pufferfish_pi_int8.onnx"
 CONF_THRESH = 0.60
+DETECTOR_IMGSZ = 640 # Model ONNX olarak 640x640 boyutunda sabit (fixed) ihraç edildiği için değiştirilemez. 
 
 # Kamera
 CAM_WIDTH = 640

@@ -18,11 +18,11 @@ class FrameBuffer:
     def update(self, raw=None, clahe=None, detection=None, detections=None):
         with self.lock:
             if raw is not None:
-                self.raw = raw
+                self.raw = raw.copy()
             if clahe is not None:
-                self.clahe = clahe
+                self.clahe = clahe.copy()
             if detection is not None:
-                self.detection = detection
+                self.detection = detection.copy()
             if detections is not None:
                 self.detections = detections
                 self.count = len(detections)

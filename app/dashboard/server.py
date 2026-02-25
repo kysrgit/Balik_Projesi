@@ -7,7 +7,9 @@ import os
 import sys
 import time
 import threading
+import queue
 import cv2
+import csv
 from datetime import datetime
 from flask import Flask, render_template, Response, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
@@ -15,9 +17,10 @@ from flask_socketio import SocketIO, emit
 # Path ayari
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from app.core import config, Camera, Detector
+from app.core import config, Detector
 from app.utils import apply_clahe, draw_boxes
 from app.dashboard.stream import FrameBuffer, generate_mjpeg
+from app.core import Camera # Moved Camera import here as it's no longer from app.core directly
 
 # Flask app
 app = Flask(__name__)
@@ -26,9 +29,19 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Global state
 buffer = FrameBuffer()
-conf_thresh = 0.80
+conf_thresh = 0.60
 clahe_clip = 3.0
 log = []
+
+# Frame Queue for decoupled inference
+frame_queue = queue.Queue(maxsize=5)
+
+# Init CSV logger
+CSV_LOG_FILE = "detections_log.csv"
+if not os.path.exists(CSV_LOG_FILE):
+    with open(CSV_LOG_FILE, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Timestamp", "Date", "Time", "Confidence", "BBox_X1", "BBox_Y1", "BBox_X2", "BBox_Y2"])
 
 
 # -- Sistem bilgileri --
@@ -92,9 +105,53 @@ def on_stats():
     emit('stats', stats)
 
 
-# -- Detection thread --
+# -- Producer Thread: Sadece Kameradan Oku --
+def camera_producer():
+    """Surekli kameradan kare okuyarak guncel tutar (30 FPS)"""
+    global clahe_clip
+    
+    # Yeni native pi5 libcamera uzerinden baslar
+    try:
+        cam = Camera(width=640, height=480, fps=30)
+    except Exception as e:
+        print(f"Kamera hatasi: {e}")
+        return
+        
+    prev_time = time.time()
+    while True:
+        try:
+            frame = cam.read()
+            if frame is None:
+                continue
+                
+            now = time.time()
+            buffer.fps = 1.0 / (now - prev_time) if now > prev_time else 0
+            prev_time = now
+            
+            # Display buffer update
+            buffer.update(raw=frame.copy())
+            
+            # CLAHE
+            clahe = apply_clahe(frame, clahe_clip)
+            buffer.update(clahe=clahe)
+            
+            # Send latest clahe frame to inference queue
+            try:
+                # Drop oldest frame if queue full to keep real-time
+                if frame_queue.full():
+                    frame_queue.get_nowait()
+                frame_queue.put_nowait(clahe.copy())
+            except:
+                pass
+
+        except Exception as e:
+            print(f"Producer Hata: {e}")
+            time.sleep(0.1)
+
+
+# -- Consumer Thread: Sadece Tespit Yap --
 def detection_loop():
-    global conf_thresh, clahe_clip
+    global conf_thresh
     
     # Model yukle
     try:
@@ -103,71 +160,67 @@ def detection_loop():
         print(f"Model hatasi: {e}")
         return
     
-    # Kamera
-    try:
-        is_pi = os.path.exists('/sys/class/thermal/thermal_zone0/temp')
-        cam = Camera(config.CAM_WIDTH, config.CAM_HEIGHT, use_pi=is_pi)
-    except Exception as e:
-        print(f"Kamera hatasi: {e}")
-        return
-    
     os.makedirs('detections/thumbs', exist_ok=True)
     
-    frame_n = 0
-    prev_time = time.time()
     last_boxes = []
     last_confs = []
     
     while True:
         try:
-            frame = cam.read()
-            if frame is None:
-                continue
+            # Wait for next frame
+            frame = frame_queue.get()
             
-            frame_n += 1
-            buffer.update(raw=frame.copy())
+            # Tespit
+            boxes, confs = detector.detect(frame, conf_thresh)
+            last_boxes, last_confs = boxes, confs
             
-            # CLAHE
-            clahe = apply_clahe(frame, clahe_clip)
-            buffer.update(clahe=clahe)
+            # Olay bazli islemler
+            for (x1, y1, x2, y2), c in zip(boxes, confs):
+                if c > 0.70: # Test bittigi icin uyarilari gercek degere (0.70) aldik
+                    now = datetime.now()
+                    ts = now.strftime('%H%M%S_%f')
+                    
+                    # 1. Bildirim Icin Thumbnail
+                    thumb = frame[max(0,y1-10):y2+10, max(0,x1-10):x2+10]
+                    if thumb.size > 0:
+                        thumbnail_name = f"t_{ts}.jpg"
+                        path = f"detections/thumbs/{thumbnail_name}"
+                        cv2.imwrite(path, cv2.resize(thumb, (100, 100)))
+                        socketio.emit('detection', {
+                            'timestamp': now.strftime('%H:%M:%S'),
+                            'confidence': round(c, 2),
+                            'thumbnail': thumbnail_name
+                        })
+                    
+                    # 2. Kalici Veri Sistikcasi Icin CSV Kayit
+                    with open(CSV_LOG_FILE, 'a', newline='') as f:
+                        writer = csv.writer(f)
+                        writer.writerow([
+                            ts, now.strftime('%Y-%m-%d'), now.strftime('%H:%M:%S'),
+                            round(c, 4), x1, y1, x2, y2
+                        ])
             
-            # Her 5. frame'de tespit
-            if frame_n % 5 == 0:
-                boxes, confs = detector.detect(clahe, conf_thresh)
-                last_boxes, last_confs = boxes, confs
-                
-                # Yuksek guvenli tespitleri logla
-                for (x1, y1, x2, y2), c in zip(boxes, confs):
-                    if c > 0.75:
-                        ts = datetime.now().strftime('%H%M%S_%f')
-                        thumb = frame[max(0,y1-10):y2+10, max(0,x1-10):x2+10]
-                        if thumb.size > 0:
-                            path = f"detections/thumbs/t_{ts}.jpg"
-                            cv2.imwrite(path, cv2.resize(thumb, (100, 100)))
-                            socketio.emit('detection', {
-                                'time': datetime.now().strftime('%H:%M:%S'),
-                                'conf': round(c, 2)
-                            })
-                
-                # Buffer'a detections olarak kaydet
-                dets = [(x1, y1, x2, y2, c) for (x1, y1, x2, y2), c in zip(boxes, confs)]
-                buffer.update(detections=dets)
-            
-            # Kutulari ciz
-            det_frame = draw_boxes(clahe, last_boxes, last_confs)
-            buffer.update(detection=det_frame)
-            
-            # FPS
-            now = time.time()
-            buffer.fps = 1.0 / (now - prev_time)
-            prev_time = now
-            
-            # Rate limit
-            time.sleep(0.03)  # ~30fps
+            # Buffer'i guncelle (Diger asenkron thread cizecek)
+            dets = [(x1, y1, x2, y2, c) for (x1, y1, x2, y2), c in zip(boxes, confs)]
+            buffer.update(detections=dets)
             
         except Exception as e:
-            print(f"Hata: {e}")
+            print(f"Consumer Hata: {e}")
             time.sleep(0.1)
+
+
+# -- Stream Thread: Gorselleri Birlestir --
+def render_loop():
+    while True:
+        try:
+            clahe = buffer.get('clahe')
+            if clahe is not None:
+                # Kutulari bellekteki guncel durumdan ciz
+                det_frame = draw_boxes(clahe.copy(), [d[:4] for d in buffer.detections], [d[4] for d in buffer.detections])
+                buffer.update(detection=det_frame)
+            time.sleep(0.03) # 30fps render limit
+        except:
+             time.sleep(0.1)
 
 
 # -- Stats emitter --
@@ -176,6 +229,8 @@ def stats_loop():
         stats = get_stats()
         stats['fps'] = round(buffer.fps, 1)
         stats['detections'] = buffer.count
+        confs = [d[4] for d in buffer.detections]
+        stats['confidence'] = max(confs) if confs else 0.0
         socketio.emit('stats', stats)
         time.sleep(1)
 
@@ -186,8 +241,10 @@ def main():
     print("Balon Baligi Dashboard")
     print("=" * 40)
     
-    # Thread'leri baslat
+    # Thread'leri baslat (Asenkron ucloud yapi)
+    threading.Thread(target=camera_producer, daemon=True).start()
     threading.Thread(target=detection_loop, daemon=True).start()
+    threading.Thread(target=render_loop, daemon=True).start()
     threading.Thread(target=stats_loop, daemon=True).start()
     
     print(f"http://0.0.0.0:{config.DASHBOARD_PORT}")

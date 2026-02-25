@@ -94,10 +94,57 @@
                 opacity: 0.5;
             }
         }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999999;
+            /* Force it to stay above all cards */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: rgba(15, 20, 30, 0.9);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid #00ff88;
+            border-radius: 8px;
+            padding: 12px 20px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transform: translateX(120%);
+            animation: slideIn 0.3s forwards, fadeOut 0.5s 2.5s forwards;
+            min-width: 250px;
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        .metric-card {
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 
 <body class="text-white min-h-screen p-4">
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
     <!-- Header -->
     <header class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold text-green-400">
@@ -217,20 +264,20 @@
             <div class="glass rounded-xl p-4">
                 <h2 class="font-bold mb-4 text-green-400"><i class="fas fa-chart-bar"></i> Metrics</h2>
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="text-center p-3 rounded bg-black/30">
-                        <p class="text-2xl font-bold text-green-400" id="stat-fps">0</p>
+                    <div class="text-center p-3 rounded bg-black/30 metric-card" id="card-fps">
+                        <p class="text-2xl font-bold transition-colors duration-300" id="stat-fps">0</p>
                         <p class="text-xs text-gray-400">FPS</p>
                     </div>
-                    <div class="text-center p-3 rounded bg-black/30">
-                        <p class="text-2xl font-bold text-yellow-400" id="stat-conf">0.00</p>
+                    <div class="text-center p-3 rounded bg-black/30 metric-card" id="card-conf">
+                        <p class="text-2xl font-bold transition-colors duration-300" id="stat-conf">0.00</p>
                         <p class="text-xs text-gray-400">Confidence</p>
                     </div>
-                    <div class="text-center p-3 rounded bg-black/30">
+                    <div class="text-center p-3 rounded bg-black/30 metric-card">
                         <p class="text-2xl font-bold text-blue-400" id="stat-detections">0</p>
                         <p class="text-xs text-gray-400">Detections</p>
                     </div>
-                    <div class="text-center p-3 rounded bg-black/30">
-                        <p class="text-2xl font-bold" id="stat-temp">--°C</p>
+                    <div class="text-center p-3 rounded bg-black/30 metric-card">
+                        <p class="text-2xl font-bold transition-colors duration-300" id="stat-temp">--°C</p>
                         <p class="text-xs text-gray-400">CPU Temp</p>
                     </div>
                 </div>
@@ -297,16 +344,26 @@
         });
 
         socket.on('stats', (data) => {
-            document.getElementById('stat-fps').textContent = data.fps.toFixed(1);
-            document.getElementById('stat-conf').textContent = data.confidence.toFixed(2);
+            const fpsEl = document.getElementById('stat-fps');
+            fpsEl.textContent = data.fps.toFixed(1);
+            fpsEl.className = data.fps < 10 ? 'text-2xl font-bold text-red-500 transition-colors duration-300' :
+                data.fps < 20 ? 'text-2xl font-bold text-yellow-500 transition-colors duration-300' :
+                    'text-2xl font-bold text-green-400 transition-colors duration-300';
+
+            const confEl = document.getElementById('stat-conf');
+            confEl.textContent = data.confidence ? data.confidence.toFixed(2) : "0.00";
+            confEl.className = (data.confidence && data.confidence > 0.7) ? 'text-2xl font-bold text-green-400 transition-colors duration-300' :
+                (data.confidence && data.confidence > 0.4) ? 'text-2xl font-bold text-yellow-400 transition-colors duration-300' :
+                    'text-2xl font-bold text-gray-400 transition-colors duration-300';
+
             document.getElementById('stat-detections').textContent = data.detections;
 
             const temp = data.cpu_temp;
             const tempEl = document.getElementById('stat-temp');
             tempEl.textContent = temp.toFixed(1) + '°C';
-            tempEl.className = temp > 70 ? 'text-2xl font-bold text-red-500' :
-                temp > 60 ? 'text-2xl font-bold text-yellow-500' :
-                    'text-2xl font-bold text-green-400';
+            tempEl.className = temp > 75 ? 'text-2xl font-bold text-red-500 transition-colors duration-300' :
+                temp > 65 ? 'text-2xl font-bold text-yellow-500 transition-colors duration-300' :
+                    'text-2xl font-bold text-green-400 transition-colors duration-300';
 
             document.getElementById('stat-throttle').textContent = data.throttled ? '⚠️ THROTTLED' : 'OK';
             document.getElementById('stat-throttle').className = data.throttled ? 'text-red-500' : 'text-green-400';
@@ -428,17 +485,40 @@
                      class="w-12 h-12 rounded object-cover thumbnail"
                      onclick="showLightbox('/detections/thumbs/${data.thumbnail}')">
                 <div class="flex-1">
-                    <span class="text-green-400">${data.timestamp}</span>
-                    <span class="text-white">Pufferfish detected</span>
-                    <span class="text-yellow-400">(${data.confidence.toFixed(2)})</span>
+                    <span class="text-green-400 font-mono">${data.timestamp}</span>
+                    <span class="text-white ml-2">Pufferfish</span>
+                    <span class="text-yellow-400 ml-1">(${(data.confidence * 100).toFixed(0)}%)</span>
                 </div>
             `;
             log.insertBefore(entry, log.firstChild);
+
+            showToast(data.thumbnail, data.confidence);
 
             // Limit entries
             while (log.children.length > 20) {
                 log.removeChild(log.lastChild);
             }
+        }
+
+        function showToast(thumbnail, conf) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <img src="/detections/thumbs/${thumbnail}" class="w-10 h-10 rounded object-cover border border-green-500">
+                <div>
+                    <div class="text-green-400 font-bold text-sm">Target Detected!</div>
+                    <div class="text-xs text-gray-300">Confidence: ${(conf * 100).toFixed(0)}%</div>
+                </div>
+            `;
+            container.appendChild(toast);
+
+            // Remove after animation (3 seconds total)
+            setTimeout(() => {
+                if (container.contains(toast)) {
+                    container.removeChild(toast);
+                }
+            }, 3000);
         }
 
         function showLightbox(src) {

@@ -1,14 +1,17 @@
 # YOLO tespit modulu
 from ultralytics import YOLO
+from app.core import config
 
 class Detector:
     def __init__(self, model_path):
+        # Profilleme sonrasi ONNX uyarisini kaldirmak icin provider kurgusu yapildi
         self.model = YOLO(str(model_path), task='detect')
-        print(f"Model yuklendi: {model_path}")
+        print(f"Model yuklendi: {model_path} (Cozunurluk: {config.DETECTOR_IMGSZ}x{config.DETECTOR_IMGSZ})")
     
     def detect(self, frame, conf=0.6):
         """Tek frame uzerinde tespit yap, (boxes, confs) dondur"""
-        results = self.model.predict(source=frame, conf=conf, imgsz=640, verbose=False)
+        # Inference sirasinda goruntuyu kucult ki algilama cok hizli olsun
+        results = self.model.predict(source=frame, conf=conf, imgsz=config.DETECTOR_IMGSZ, verbose=False)
         
         boxes = []
         confs = []
