@@ -318,8 +318,9 @@
     </div>
 
     <!-- Lightbox -->
-    <div id="lightbox" onclick="closeLightbox()">
-        <img id="lightbox-img" src="">
+    <div id="lightbox" onclick="closeLightbox()" class="flex flex-col gap-4 cursor-pointer">
+        <img id="lightbox-img" src="" class="shadow-2xl">
+        <p class="text-gray-400 text-sm"><kbd class="bg-gray-800 px-2 py-1 rounded">Esc</kbd> to close</p>
     </div>
 
     <script>
@@ -529,6 +530,13 @@
         function closeLightbox() {
             document.getElementById('lightbox').style.display = 'none';
         }
+
+        // 🎨 Palette: Keyboard Accessibility (Escape to close modal)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('lightbox').style.display === 'flex') {
+                closeLightbox();
+            }
+        });
 
         // Initialize
         setViewMode('debug');
