@@ -15,7 +15,7 @@ def apply_clahe(img, clip=3.0, grid=(8, 8)):
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
     
-    # ⚡ Bolt Optimization: Sadece ayarlar degistiginde obje yarat (C++ memory protection)
+    # CLAHE objesini ayar degismedikce yeniden olusturma
     if _clahe_cache is None or _last_clip != clip or _last_grid != grid:
         _clahe_cache = cv2.createCLAHE(clipLimit=clip, tileGridSize=grid)
         _last_clip = clip

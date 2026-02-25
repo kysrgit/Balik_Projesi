@@ -26,7 +26,7 @@ source .venv_pi/bin/activate
 pip install ultralytics onnxruntime pyyaml pillow
 
 echo "====================================="
-echo "✅ KUSURSUZ (GOLDEN) KURULUM TAMAMLANDI!"
+echo "✅ Kurulum tamamlandi!"
 echo "Projeyi Pi uzerinde baslatmak icin:"
 echo "1. source .venv_pi/bin/activate"
 echo "2. python3 app/dashboard/server.py"

@@ -24,7 +24,7 @@ from app.core import Camera # Moved Camera import here as it's no longer from ap
 
 # Flask app
 app = Flask(__name__)
-# 🛡️ Sentinel: Removed hardcoded secret key (Critical)
+# Guvenlik: Secret key ortam degiskeninden alinir
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', os.urandom(32).hex())
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 

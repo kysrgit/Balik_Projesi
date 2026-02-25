@@ -531,7 +531,7 @@
             document.getElementById('lightbox').style.display = 'none';
         }
 
-        // 🎨 Palette: Keyboard Accessibility (Escape to close modal)
+        // Lightbox'i Escape tusu ile kapat
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && document.getElementById('lightbox').style.display === 'flex') {
                 closeLightbox();
