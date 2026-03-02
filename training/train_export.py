@@ -7,10 +7,10 @@ def main():
     # ---------------------------------------------------------
     # 1. Configuration
     # ---------------------------------------------------------
-    API_KEY = "YOUR_API_KEY"  # TODO: User must fill this in
-    WORKSPACE = "YOUR_WORKSPACE" # TODO: User must fill this in
-    PROJECT = "YOUR_PROJECT" # TODO: User must fill this in
-    VERSION = 1 # TODO: User must fill this in
+    API_KEY = os.environ.get("ROBOFLOW_API_KEY", "YOUR_API_KEY")
+    WORKSPACE = "baliktespitprojesi"
+    PROJECT = "balon-baligi-tespiti-oa6kg"
+    VERSION = 1
     
     MODEL_NAME = "yolo11n.pt"  # YOLO11 Nano
     IMG_SIZE = 640
