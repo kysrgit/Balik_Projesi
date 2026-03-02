@@ -13,7 +13,7 @@ import cv2
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core import config, Camera, Detector, gpio
-from app.utils import apply_clahe, draw_boxes
+from app.utils import draw_boxes
 
 
 def save_detection(frame, boxes, confs, save_dir):
@@ -68,16 +68,10 @@ def run(use_clahe=True, show_gui=False):
             
             frame_count += 1
             
-            # CLAHE on isleme
-            if use_clahe:
-                processed = apply_clahe(frame, config.CLAHE_CLIP)
-            else:
-                processed = frame
-            
             # Her N frame'de tespit yap (performans icin)
             boxes, confs = [], []
             if frame_count % config.SKIP_FRAMES == 0:
-                boxes, confs = detector.detect(processed, config.CONF_THRESH)
+                boxes, confs = detector.detect(frame, config.CONF_THRESH, use_clahe=use_clahe, clahe_clip=config.CLAHE_CLIP)
             
             # Tespit varsa
             if len(boxes) > 0:
@@ -86,14 +80,14 @@ def run(use_clahe=True, show_gui=False):
                 # Saniyede max 1 kayit
                 now = time.time()
                 if now - last_save >= 1.0:
-                    save_detection(processed, boxes, confs, str(config.DETECTION_DIR))
+                    save_detection(frame, boxes, confs, str(config.DETECTION_DIR))
                     last_save = now
             else:
                 gpio.off()
             
             # GUI modu
             if show_gui:
-                display = draw_boxes(processed, boxes, confs)
+                display = draw_boxes(frame, boxes, confs)
                 cv2.imshow("Tespit", display)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break

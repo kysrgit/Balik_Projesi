@@ -18,7 +18,7 @@ from flask_socketio import SocketIO, emit
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from app.core import config, Detector
-from app.utils import apply_clahe, draw_boxes
+from app.utils import draw_boxes
 from app.dashboard.stream import FrameBuffer, generate_mjpeg
 from app.core import Camera # Moved Camera import here as it's no longer from app.core directly
 
@@ -132,18 +132,15 @@ def camera_producer():
             # Display buffer update
             buffer.update(raw=frame.copy())
             
-            # CLAHE
-            clahe = apply_clahe(frame, clahe_clip)
-            buffer.update(clahe=clahe)
-            
-            # Send latest clahe frame to inference queue
+            # Send latest raw frame to inference queue
             try:
                 # Drop oldest frame if queue full to keep real-time
                 if frame_queue.full():
                     frame_queue.get_nowait()
-                frame_queue.put_nowait(clahe.copy())
+                frame_queue.put_nowait(frame.copy())
             except:
                 pass
+
 
         except Exception as e:
             print(f"Producer Hata: {e}")
@@ -165,41 +162,49 @@ def detection_loop():
     
     last_boxes = []
     last_confs = []
+    last_save_time = 0.0
     
     while True:
         try:
             # Wait for next frame
             frame = frame_queue.get()
             
-            # Tespit
-            boxes, confs = detector.detect(frame, conf_thresh)
+            # Tespit (CLAHE sadece inference edilen frame'e ve kucultulmus tensore uygulanacak)
+            boxes, confs = detector.detect(frame, conf=conf_thresh, use_clahe=True, clahe_clip=clahe_clip)
             last_boxes, last_confs = boxes, confs
             
             # Olay bazli islemler
             for (x1, y1, x2, y2), c in zip(boxes, confs):
                 if c > 0.70: # Test bittigi icin uyarilari gercek degere (0.70) aldik
-                    now = datetime.now()
-                    ts = now.strftime('%H%M%S_%f')
+                    now_time = time.time()
                     
-                    # 1. Bildirim Icin Thumbnail
-                    thumb = frame[max(0,y1-10):y2+10, max(0,x1-10):x2+10]
-                    if thumb.size > 0:
-                        thumbnail_name = f"t_{ts}.jpg"
-                        path = f"detections/thumbs/{thumbnail_name}"
-                        cv2.imwrite(path, cv2.resize(thumb, (100, 100)))
-                        socketio.emit('detection', {
-                            'timestamp': now.strftime('%H:%M:%S'),
-                            'confidence': round(c, 2),
-                            'thumbnail': thumbnail_name
-                        })
-                    
-                    # 2. Kalici Veri Sistikcasi Icin CSV Kayit
-                    with open(CSV_LOG_FILE, 'a', newline='') as f:
-                        writer = csv.writer(f)
-                        writer.writerow([
-                            ts, now.strftime('%Y-%m-%d'), now.strftime('%H:%M:%S'),
-                            round(c, 4), x1, y1, x2, y2
-                        ])
+                    # Rate limiting: Ziplamalari ve disk yorgunlugunu engelle
+                    if now_time - last_save_time >= config.DASHBOARD_SAVE_INTERVAL:
+                        now_dt = datetime.now()
+                        ts = now_dt.strftime('%H%M%S_%f')
+                        
+                        # 1. Bildirim Icin Thumbnail
+                        thumb = frame[max(0,y1-10):y2+10, max(0,x1-10):x2+10]
+                        if thumb.size > 0:
+                            thumbnail_name = f"t_{ts}.jpg"
+                            path = f"detections/thumbs/{thumbnail_name}"
+                            cv2.imwrite(path, cv2.resize(thumb, (100, 100)))
+                            socketio.emit('detection', {
+                                'timestamp': now_dt.strftime('%H:%M:%S'),
+                                'confidence': round(c, 2),
+                                'thumbnail': thumbnail_name
+                            })
+                        
+                        # 2. Kalici Veri Sistikcasi Icin CSV Kayit
+                        with open(CSV_LOG_FILE, 'a', newline='') as f:
+                            writer = csv.writer(f)
+                            writer.writerow([
+                                ts, now_dt.strftime('%Y-%m-%d'), now_dt.strftime('%H:%M:%S'),
+                                round(c, 4), x1, y1, x2, y2
+                            ])
+                        
+                        last_save_time = now_time
+                        break # Bu frame icin ilk gecerli objeyi (en yuksek guven) loglamak yeterlidir
             
             # Buffer'i guncelle (Diger asenkron thread cizecek)
             dets = [(x1, y1, x2, y2, c) for (x1, y1, x2, y2), c in zip(boxes, confs)]
@@ -214,10 +219,10 @@ def detection_loop():
 def render_loop():
     while True:
         try:
-            clahe = buffer.get('clahe')
-            if clahe is not None:
+            raw = buffer.get('raw')
+            if raw is not None:
                 # Kutulari bellekteki guncel durumdan ciz
-                det_frame = draw_boxes(clahe.copy(), [d[:4] for d in buffer.detections], [d[4] for d in buffer.detections])
+                det_frame = draw_boxes(raw.copy(), [d[:4] for d in buffer.detections], [d[4] for d in buffer.detections])
                 buffer.update(detection=det_frame)
             time.sleep(0.03) # 30fps render limit
         except:

@@ -169,9 +169,6 @@
                 <button onclick="switchStream('raw')" class="stream-tab px-4 py-2 rounded glass" data-stream="raw">
                     <i class="fas fa-camera"></i> Raw
                 </button>
-                <button onclick="switchStream('clahe')" class="stream-tab px-4 py-2 rounded glass" data-stream="clahe">
-                    <i class="fas fa-adjust"></i> CLAHE
-                </button>
                 <button onclick="switchStream('detection')" class="stream-tab px-4 py-2 rounded glass bg-green-500/30"
                     data-stream="detection">
                     <i class="fas fa-crosshairs"></i> Detection
@@ -204,12 +201,6 @@
                         <i class="fas fa-camera text-2xl text-gray-500"></i>
                     </div>
                     <p class="text-xs text-center mt-1 text-gray-400">Raw</p>
-                </div>
-                <div class="glass rounded-lg p-1 w-32 cursor-pointer hover:bg-white/10" onclick="switchStream('clahe')">
-                    <div class="w-full aspect-video bg-gray-800 rounded flex items-center justify-center">
-                        <i class="fas fa-adjust text-2xl text-gray-500"></i>
-                    </div>
-                    <p class="text-xs text-center mt-1 text-gray-400">CLAHE</p>
                 </div>
                 <div class="glass rounded-lg p-1 w-32 cursor-pointer hover:bg-white/10"
                     onclick="switchStream('detection')">
