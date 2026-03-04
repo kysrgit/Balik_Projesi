@@ -9,7 +9,7 @@ from onnxruntime.quantization import quantize_static, CalibrationDataReader, Qua
 MODEL_PT = Path(__file__).parent.parent / "models" / "yolo11m_pufferfish.pt"
 MODEL_ONNX = MODEL_PT.with_suffix('.onnx')
 MODEL_INT8 = Path(__file__).parent.parent / "models" / "pufferfish_pi_int8.onnx"
-CALIB_DIR = Path(__file__).parent.parent / "dataset" / "images" / "val"
+CALIB_DIR = Path(__file__).parent.parent / "dataset" / "valid" / "images"
 
 
 class CalibReader(CalibrationDataReader):

@@ -9,9 +9,10 @@ try:
     from ultralytics.data.augment import Albumentations
     import albumentations as A
 
-    def custom_albumentations_init(self, p=1.0):
+    def custom_albumentations_init(self, p=1.0, **kwargs):
         self.p = p
         self.transform = None
+        self.contains_spatial = False  # Bizim transform'lar spatial değil
         try:
             T = [
                 # 1. Kötü görüş (Bulanık Su / Partiküller) - Gauss ve Median Blur
@@ -27,7 +28,7 @@ try:
                 # 4. Ekstra renk titremeleri
                 A.HueSaturationValue(hue_shift_limit=15, sat_shift_limit=30, val_shift_limit=20, p=0.2)
             ]
-            self.transform = A.Compose(T, bbox_params=A.BboxParams(format="yolo", label_fields=["class_labels"]))
+            self.transform = A.Compose(T)
             print("[+] Özel Sualtı Albumentations Augmentasyonu AKTİF!")
         except Exception as e:
             print(f"[!] Albumentations ayarları yapılandırılamadı: {e}")
@@ -75,7 +76,9 @@ def train():
         bgr=0.1,      # Channel swap ile rastgele renk şoku
         
         device=0,
-        exist_ok=True
+        exist_ok=True,
+        workers=2,    # Windows'da DataLoader worker crash'lerini önle
+        batch=8       # 6GB GPU bellek sınırı için güvenli batch boyutu
     )
     
     print(f"Bitti! Model: {OUTPUT_DIR}/pufferfish/weights/best.pt")
