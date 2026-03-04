@@ -1,15 +1,8 @@
-# Core
-ultralytics>=8.0.0
-onnxruntime-gpu
-onnx
-opencv-python
-torch
-torchvision
-pyyaml
-pillow
-numpy
-
-# Dashboard
-flask
-flask-socketio
-eventlet
+ultralytics>=8.1.0
+opencv-python-headless>=4.8.0
+Flask>=3.0.0
+Flask-SocketIO>=5.3.6
+eventlet>=0.35.0
+onnxruntime>=1.16.0
+pyserial>=3.5
+pynmea2>=1.19.0

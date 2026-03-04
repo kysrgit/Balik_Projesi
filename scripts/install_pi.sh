@@ -8,7 +8,7 @@ sudo apt-get update && sudo apt-get upgrade -y
 
 echo "[2/4] Gerekli sistem paketleri OS seviyesinde kuruluyor (Cok Onemli!)..."
 # Pi 5'in ana kameraya (libcamera) tam erisimi olmasi icin kütüphaneleri apt ile kurmaliyiz
-sudo apt-get install -y python3-venv python3-opencv python3-picamera2 python3-flask python3-flask-socketio python3-numpy python3-eventlet htop
+sudo apt-get install -y python3.14-venv python3.14-dev python3.14-distutils python3-opencv python3-picamera2 python3-flask python3-flask-socketio python3-numpy python3-eventlet htop
 
 echo "[3/4] Virtual Environment (Sanal Ortam) kuruluyor..."
 # Eski bozuk ortami her zaman sil
@@ -16,7 +16,7 @@ echo "Eski sanal ortam siliniyor..."
 rm -rf .venv_pi
 
 # Yeni ortam (OS kutuphanelerine, yani kameraya erisim izni ile)
-python3 -m venv --system-site-packages .venv_pi
+python3.14 -m venv --system-site-packages .venv_pi
 
 echo "[4/4] Yapay Zeka (AI) kutuphaneleri indiriliyor..."
 source .venv_pi/bin/activate

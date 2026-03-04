@@ -1,5 +1,4 @@
 # ONNX export ve INT8 quantization
-import os
 import glob
 import numpy as np
 from PIL import Image

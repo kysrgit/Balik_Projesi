@@ -1,5 +1,4 @@
 # Dataset hazirlama - YOLO formati
-import os
 import shutil
 import random
 from pathlib import Path

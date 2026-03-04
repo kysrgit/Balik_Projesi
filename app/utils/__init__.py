@@ -1,1 +1,1 @@
-from .image import apply_clahe, draw_boxes
+from .image import draw_boxes

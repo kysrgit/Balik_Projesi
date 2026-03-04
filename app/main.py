@@ -7,13 +7,39 @@ import argparse
 import time
 import os
 import sys
+import csv
 import cv2
+from datetime import datetime
 
 # Proje path ayari
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core import config, Camera, Detector, gpio
 from app.utils import draw_boxes
+
+# CSV log dosyasi
+CSV_LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "detections_log.csv")
+
+
+def _ensure_csv_header():
+    """CSV dosyasi yoksa basliklari olustur"""
+    if not os.path.exists(CSV_LOG_FILE):
+        with open(CSV_LOG_FILE, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Timestamp", "Date", "Time", "Confidence", "BBox_X1", "BBox_Y1", "BBox_X2", "BBox_Y2"])
+
+
+def _log_detection_csv(boxes, confs):
+    """Tespitleri CSV'ye yaz"""
+    now_dt = datetime.now()
+    ts = now_dt.strftime('%H%M%S_%f')
+    with open(CSV_LOG_FILE, 'a', newline='') as f:
+        writer = csv.writer(f)
+        for (x1, y1, x2, y2), c in zip(boxes, confs):
+            writer.writerow([
+                ts, now_dt.strftime('%Y-%m-%d'), now_dt.strftime('%H:%M:%S'),
+                round(c, 4), x1, y1, x2, y2
+            ])
 
 
 def save_detection(frame, boxes, confs, save_dir):
@@ -32,6 +58,9 @@ def run(use_clahe=True, show_gui=False):
     print("=" * 40)
     print("Balon Baligi Tespit Sistemi")
     print("=" * 40)
+    
+    # CSV basligi hazirla
+    _ensure_csv_header()
     
     # GPIO baslat
     gpio.init()
@@ -81,6 +110,7 @@ def run(use_clahe=True, show_gui=False):
                 now = time.time()
                 if now - last_save >= 1.0:
                     save_detection(frame, boxes, confs, str(config.DETECTION_DIR))
+                    _log_detection_csv(boxes, confs)
                     last_save = now
             else:
                 gpio.off()

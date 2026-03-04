@@ -42,7 +42,7 @@ models/
 
 ### Yazılım
 - Raspberry Pi OS (Debian Trixie)
-- Python 3.11+
+- Python 3.14.3
 - picamera2, OpenCV, Flask, Ultralytics, ONNX Runtime
 
 ## Kurulum (Raspberry Pi 5)

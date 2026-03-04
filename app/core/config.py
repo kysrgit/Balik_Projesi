@@ -1,5 +1,4 @@
 # Merkezi ayarlar
-import os
 from pathlib import Path
 
 # Proje kök dizini
@@ -9,6 +8,12 @@ ROOT_DIR = Path(__file__).parent.parent.parent
 MODEL_PATH = ROOT_DIR / "models" / "pufferfish_pi_int8.onnx"
 CONF_THRESH = 0.60
 DETECTOR_IMGSZ = 640 # Model ONNX olarak 640x640 boyutunda sabit (fixed) ihraç edildiği için değiştirilemez. 
+
+# GIS & Veritabanı
+GPS_PORT = "/dev/ttyAMA0"
+GPS_BAUDRATE = 9600
+DB_PATH = ROOT_DIR / "spatial_log.sqlite"
+MAX_MAP_POINTS = 5000
 
 # Kamera
 CAM_WIDTH = 640

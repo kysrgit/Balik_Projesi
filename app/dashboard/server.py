@@ -8,6 +8,7 @@ import sys
 import time
 import threading
 import queue
+import json
 import cv2
 import csv
 from datetime import datetime
@@ -21,6 +22,9 @@ from app.core import config, Detector
 from app.utils import draw_boxes
 from app.dashboard.stream import FrameBuffer, generate_mjpeg
 from app.core import Camera # Moved Camera import here as it's no longer from app.core directly
+from app.core.gps import gps_state, gps_reader_thread
+from app.db.spatial import init_db, insert_detection
+from app.export import to_geojson, to_csv_download, to_darwincore_archive, WebhookNotifier
 
 # Flask app
 app = Flask(__name__)
@@ -32,6 +36,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 buffer = FrameBuffer()
 conf_thresh = 0.60
 clahe_clip = 3.0
+is_recording = False
 log = []
 
 # Frame Queue for decoupled inference
@@ -68,7 +73,7 @@ def video(stream_type):
 
 @app.route('/api/config', methods=['GET', 'POST'])
 def api_config():
-    global conf_thresh, clahe_clip
+    global conf_thresh, clahe_clip, is_recording
     if request.method == 'POST':
         data = request.json
         if 'confidence' in data:
@@ -76,7 +81,7 @@ def api_config():
         if 'clahe_clip' in data:
             clahe_clip = float(data['clahe_clip'])
         return jsonify({'status': 'ok'})
-    return jsonify({'confidence': conf_thresh, 'clahe_clip': clahe_clip})
+    return jsonify({'confidence': conf_thresh, 'clahe_clip': clahe_clip, 'recording': is_recording})
 
 @app.route('/api/snapshot', methods=['POST'])
 def snapshot():
@@ -88,15 +93,76 @@ def snapshot():
         return jsonify({'status': 'ok', 'file': name})
     return jsonify({'status': 'error'})
 
+@app.route('/api/record', methods=['POST'])
+def record_toggle():
+    global is_recording
+    is_recording = not is_recording
+    return jsonify({'status': 'ok', 'recording': is_recording})
+
 @app.route('/detections/<path:name>')
 def serve_file(name):
     return send_from_directory('detections', name)
 
 
+# -- Export / Data Sharing Endpoints --
+webhook_notifier = WebhookNotifier(rate_limit_seconds=60)
+
+@app.route('/api/export/geojson')
+def export_geojson():
+    """GeoJSON export — harita servisleri, QGIS, Leaflet uyumlu"""
+    data = to_geojson(CSV_LOG_FILE, str(config.DB_PATH))
+    return Response(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        mimetype='application/geo+json',
+        headers={'Content-Disposition': 'attachment; filename=pufferfish_detections.geojson'}
+    )
+
+@app.route('/api/export/csv')
+def export_csv():
+    """CSV download — araştırmacılar için"""
+    csv_data = to_csv_download(CSV_LOG_FILE, str(config.DB_PATH))
+    return Response(
+        csv_data,
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=pufferfish_detections.csv'}
+    )
+
+@app.route('/api/export/darwincore')
+def export_darwincore():
+    """DarwinCore Archive (ZIP) — GBIF / OBIS uyumlu"""
+    zip_data = to_darwincore_archive(CSV_LOG_FILE, str(config.DB_PATH))
+    return Response(
+        zip_data,
+        mimetype='application/zip',
+        headers={'Content-Disposition': 'attachment; filename=pufferfish_dwca.zip'}
+    )
+
+@app.route('/api/webhooks', methods=['GET', 'POST', 'DELETE'])
+def api_webhooks():
+    """Webhook yönetimi"""
+    if request.method == 'GET':
+        targets = webhook_notifier.get_targets()
+        stats = webhook_notifier.get_stats()
+        return jsonify({'targets': targets, 'stats': stats})
+    elif request.method == 'POST':
+        data = request.json or {}
+        name = data.get('name', '')
+        url = data.get('url', '')
+        if not name or not url:
+            return jsonify({'status': 'error', 'message': 'name ve url gerekli'}), 400
+        webhook_notifier.add_target(name, url)
+        return jsonify({'status': 'ok', 'targets': webhook_notifier.get_targets()})
+    elif request.method == 'DELETE':
+        data = request.json or {}
+        name = data.get('name', '')
+        webhook_notifier.remove_target(name)
+        return jsonify({'status': 'ok', 'targets': webhook_notifier.get_targets()})
+
+
 # -- WebSocket --
 @socketio.on('connect')
 def on_connect():
-    emit('config', {'confidence': conf_thresh, 'clahe_clip': clahe_clip})
+    emit('config', {'confidence': conf_thresh, 'clahe_clip': clahe_clip, 'recording': is_recording})
 
 @socketio.on('get_stats')
 def on_stats():
@@ -109,7 +175,6 @@ def on_stats():
 # -- Producer Thread: Sadece Kameradan Oku --
 def camera_producer():
     """Surekli kameradan kare okuyarak guncel tutar (30 FPS)"""
-    global clahe_clip
     
     # Yeni native pi5 libcamera uzerinden baslar
     try:
@@ -149,7 +214,7 @@ def camera_producer():
 
 # -- Consumer Thread: Sadece Tespit Yap --
 def detection_loop():
-    global conf_thresh
+    global is_recording
     
     # Model yukle
     try:
@@ -160,8 +225,6 @@ def detection_loop():
     
     os.makedirs('detections/thumbs', exist_ok=True)
     
-    last_boxes = []
-    last_confs = []
     last_save_time = 0.0
     
     while True:
@@ -171,11 +234,10 @@ def detection_loop():
             
             # Tespit (CLAHE sadece inference edilen frame'e ve kucultulmus tensore uygulanacak)
             boxes, confs = detector.detect(frame, conf=conf_thresh, use_clahe=True, clahe_clip=clahe_clip)
-            last_boxes, last_confs = boxes, confs
             
             # Olay bazli islemler
             for (x1, y1, x2, y2), c in zip(boxes, confs):
-                if c > 0.70: # Test bittigi icin uyarilari gercek degere (0.70) aldik
+                if c >= conf_thresh and is_recording: # Kayit acikken, dashboard slider esigini kullan
                     now_time = time.time()
                     
                     # Rate limiting: Ziplamalari ve disk yorgunlugunu engelle
@@ -203,7 +265,36 @@ def detection_loop():
                                 round(c, 4), x1, y1, x2, y2
                             ])
                         
+                        # 3. Canli GIS Loglama: Eger GPS verisi gecerliyse
+                        lat, lon, gps_ts, is_valid = gps_state.get()
+                        if is_valid:
+                            try:
+                                # SpatiaLite Log
+                                insert_detection("Pufferfish", c, lat, lon, now_time)
+                                
+                                # Frontend'e event yolla
+                                socketio.emit('gis_detection', {
+                                    'lat': lat,
+                                    'lon': lon,
+                                    'confidence': round(c, 2),
+                                    'timestamp': now_dt.strftime('%H:%M:%S')
+                                })
+                                # Kritik: CPU context switch izin vermesi icin eventlet sleep
+                                socketio.sleep(0)
+                            except Exception as spatial_err:
+                                print(f"Spatial Log Hata: {spatial_err}")
+
                         last_save_time = now_time
+                        
+                        # 4. Webhook bildirimi (arka planda, ana thread'i bloklamaz)
+                        webhook_notifier.notify_async(
+                            species="Lagocephalus sceleratus",
+                            confidence=round(c, 4),
+                            lat=lat if is_valid else None,
+                            lon=lon if is_valid else None,
+                            timestamp=now_dt.strftime('%Y-%m-%d %H:%M:%S')
+                        )
+                        
                         break # Bu frame icin ilk gecerli objeyi (en yuksek guven) loglamak yeterlidir
             
             # Buffer'i guncelle (Diger asenkron thread cizecek)
@@ -247,11 +338,20 @@ def main():
     print("Balon Baligi Dashboard")
     print("=" * 40)
     
+    # DB Init
+    try:
+        init_db()
+    except Exception as e:
+        print(f"SpatiaLite DB Init Error: {e}")
+
     # Thread'leri baslat (Asenkron ucloud yapi)
     threading.Thread(target=camera_producer, daemon=True).start()
     threading.Thread(target=detection_loop, daemon=True).start()
     threading.Thread(target=render_loop, daemon=True).start()
     threading.Thread(target=stats_loop, daemon=True).start()
+    
+    # GPS Thread
+    threading.Thread(target=gps_reader_thread, daemon=True).start()
     
     print(f"http://0.0.0.0:{config.DASHBOARD_PORT}")
     print("=" * 40)

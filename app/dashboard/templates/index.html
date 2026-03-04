@@ -8,6 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
@@ -43,6 +47,7 @@
 
         .slider {
             -webkit-appearance: none;
+            appearance: none;
             height: 8px;
             border-radius: 5px;
             background: #333;
@@ -50,6 +55,7 @@
 
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
+            appearance: none;
             width: 20px;
             height: 20px;
             border-radius: 50%;
@@ -177,7 +183,8 @@
 
             <!-- Main Video -->
             <div class="glass rounded-xl p-2 glow stream-container">
-                <img id="main-stream" src="/video/detection" class="w-full h-full object-contain rounded-lg">
+                <img id="main-stream" src="/video/detection" alt="Live Video Stream"
+                    class="w-full h-full object-contain rounded-lg">
             </div>
 
             <!-- Overlay Controls -->
@@ -249,6 +256,49 @@
                         <i class="fas fa-circle"></i> Record
                     </button>
                 </div>
+                <div class="mt-3 flex items-center justify-between text-sm">
+                    <span class="text-gray-300">Recording</span>
+                    <span id="record-state" class="px-2 py-1 rounded bg-gray-700 text-gray-200">OFF</span>
+                </div>
+            </div>
+
+            <!-- Data Export Card -->
+            <div class="glass rounded-xl p-4">
+                <h2 class="font-bold mb-4 text-purple-400"><i class="fas fa-share-alt"></i> Veri Paylaşımı</h2>
+                <div class="grid grid-cols-1 gap-2">
+                    <a href="/api/export/csv" download
+                       class="block text-center py-2 rounded bg-emerald-600 hover:bg-emerald-700 transition text-sm">
+                        <i class="fas fa-file-csv"></i> CSV İndir
+                    </a>
+                    <a href="/api/export/geojson" download
+                       class="block text-center py-2 rounded bg-sky-600 hover:bg-sky-700 transition text-sm">
+                        <i class="fas fa-map-marked-alt"></i> GeoJSON İndir
+                    </a>
+                    <a href="/api/export/darwincore" download
+                       class="block text-center py-2 rounded bg-amber-600 hover:bg-amber-700 transition text-sm">
+                        <i class="fas fa-archive"></i> DarwinCore (GBIF/OBIS)
+                    </a>
+                </div>
+                <div class="mt-3 border-t border-gray-700 pt-3">
+                    <p class="text-xs text-gray-400 mb-2">Webhook Bildirimleri</p>
+                    <div class="flex gap-2">
+                        <input id="webhook-name" type="text" placeholder="İsim (ör: slack)"
+                               class="flex-1 px-2 py-1 rounded bg-gray-800 border border-gray-600 text-xs text-white focus:border-purple-400 outline-none">
+                        <input id="webhook-url" type="url" placeholder="https://hooks.slack.com/..."
+                               class="flex-[2] px-2 py-1 rounded bg-gray-800 border border-gray-600 text-xs text-white focus:border-purple-400 outline-none">
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="addWebhook()"
+                                class="flex-1 py-1 rounded bg-purple-600 hover:bg-purple-700 transition text-xs">
+                            <i class="fas fa-plus"></i> Ekle
+                        </button>
+                        <button onclick="listWebhooks()"
+                                class="flex-1 py-1 rounded bg-gray-600 hover:bg-gray-700 transition text-xs">
+                            <i class="fas fa-list"></i> Listele
+                        </button>
+                    </div>
+                    <div id="webhook-list" class="mt-2 text-xs text-gray-300 hidden"></div>
+                </div>
             </div>
 
             <!-- Stats Card -->
@@ -308,9 +358,17 @@
         </div>
     </div>
 
+    <!-- Live GIS Map -->
+    <div class="glass rounded-xl p-4 mt-4">
+        <h2 class="font-bold mb-3 text-green-400">
+            <i class="fas fa-map-marked-alt"></i> Live GIS Map
+        </h2>
+        <div id="map" style="height: 300px; width: 100%;" class="rounded-lg"></div>
+    </div>
+
     <!-- Lightbox -->
     <div id="lightbox" onclick="closeLightbox()" class="flex flex-col gap-4 cursor-pointer">
-        <img id="lightbox-img" src="" class="shadow-2xl">
+        <img id="lightbox-img" alt="Enlarged View" class="shadow-2xl">
         <p class="text-gray-400 text-sm"><kbd class="bg-gray-800 px-2 py-1 rounded">Esc</kbd> to close</p>
     </div>
 
@@ -371,6 +429,47 @@
             document.getElementById('conf-val').textContent = data.confidence.toFixed(2);
             document.getElementById('clahe-slider').value = data.clahe_clip;
             document.getElementById('clahe-val').textContent = data.clahe_clip.toFixed(1);
+            applyRecordState(!!data.recording);
+        });
+
+        // GIS Map Initialization
+        const maxMapPoints = 5000;
+        let mapPoints = [];
+        const map = L.map('map').setView([36.5, 32.0], 5); // Default to Mediterranean
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        }).addTo(map);
+        
+        const heatLayer = L.heatLayer([], {
+            radius: 20,
+            blur: 15,
+            maxZoom: 17,
+            gradient: {0.4: 'cyan', 0.65: 'yellow', 1: 'red'}
+        }).addTo(map);
+
+        let latestMarker = null;
+
+        socket.on('gis_detection', (data) => {
+            const { lat, lon, confidence, timestamp } = data;
+            
+            // Add to heat array
+            mapPoints.push([lat, lon, confidence]);
+            
+            // Limit memory usage (FIFO)
+            if (mapPoints.length > maxMapPoints) {
+                mapPoints.shift();
+            }
+            
+            heatLayer.setLatLngs(mapPoints);
+            
+            // Update latest marker
+            if (latestMarker) map.removeLayer(latestMarker);
+            latestMarker = L.marker([lat, lon])
+                .bindPopup(`<b>Pufferfish</b><br>Conf: ${(confidence*100).toFixed(0)}%<br>Time: ${timestamp}`)
+                .addTo(map);
+                
+            // Pan map smoothly to new detection
+            map.flyTo([lat, lon], 14, {animate: true, duration: 1});
         });
 
         // Functions
@@ -420,7 +519,7 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.status === 'ok') {
-                        alert('📸 Snapshot saved: ' + data.filename);
+                        alert('📸 Snapshot saved: ' + data.file);
                     }
                 });
         }
@@ -429,16 +528,88 @@
             fetch('/api/record', { method: 'POST' })
                 .then(r => r.json())
                 .then(data => {
-                    isRecording = data.recording;
-                    const btn = document.getElementById('btn-record');
-                    if (isRecording) {
-                        btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
-                        btn.classList.add('glow-red');
-                    } else {
-                        btn.innerHTML = '<i class="fas fa-circle"></i> Record';
-                        btn.classList.remove('glow-red');
-                    }
+                    applyRecordState(!!data.recording);
                 });
+        }
+
+        function applyRecordState(recording) {
+            isRecording = recording;
+            const btn = document.getElementById('btn-record');
+            const state = document.getElementById('record-state');
+            if (isRecording) {
+                btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+                btn.classList.add('glow-red');
+                state.textContent = 'ON';
+                state.className = 'px-2 py-1 rounded bg-red-600 text-white';
+            } else {
+                btn.innerHTML = '<i class="fas fa-circle"></i> Record';
+                btn.classList.remove('glow-red');
+                state.textContent = 'OFF';
+                state.className = 'px-2 py-1 rounded bg-gray-700 text-gray-200';
+            }
+        }
+
+        // -- Webhook yönetimi --
+        function addWebhook() {
+            const name = document.getElementById('webhook-name').value.trim();
+            const url = document.getElementById('webhook-url').value.trim();
+            if (!name || !url) { alert('İsim ve URL gerekli'); return; }
+            fetch('/api/webhooks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, url })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    document.getElementById('webhook-name').value = '';
+                    document.getElementById('webhook-url').value = '';
+                    showToast('Webhook eklendi: ' + name);
+                    renderWebhooks(data.targets);
+                }
+            });
+        }
+
+        function listWebhooks() {
+            fetch('/api/webhooks')
+                .then(r => r.json())
+                .then(data => renderWebhooks(data.targets, data.stats));
+        }
+
+        function removeWebhook(name) {
+            fetch('/api/webhooks', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            })
+            .then(r => r.json())
+            .then(data => {
+                showToast('Webhook silindi: ' + name);
+                renderWebhooks(data.targets);
+            });
+        }
+
+        function renderWebhooks(targets, stats) {
+            const el = document.getElementById('webhook-list');
+            el.classList.remove('hidden');
+            const entries = Object.entries(targets || {});
+            if (entries.length === 0) {
+                el.innerHTML = '<p class="text-gray-500 italic">Kayıtlı webhook yok</p>';
+            } else {
+                let html = entries.map(([name, url]) =>
+                    `<div class="flex justify-between items-center py-1 border-b border-gray-700">
+                        <span class="text-purple-300">${name}</span>
+                        <span class="text-gray-500 truncate max-w-[150px]" title="${url}">${url}</span>
+                        <button onclick="removeWebhook('${name}')" class="text-red-400 hover:text-red-300 ml-2">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>`
+                ).join('');
+                if (stats) {
+                    html += `<p class="mt-1 text-gray-500">Gönderilen: ${stats.sent} | Hata: ${stats.failed} | Rate-limited: ${stats.rate_limited}</p>`;
+                }
+                el.innerHTML = html;
+            }
         }
 
         function setViewMode(mode) {
@@ -473,7 +644,7 @@
             const entry = document.createElement('div');
             entry.className = 'flex items-center gap-3 p-2 rounded bg-black/30 hover:bg-black/50 transition';
             entry.innerHTML = `
-                <img src="/detections/thumbs/${data.thumbnail}" 
+                <img src="/detections/thumbs/${data.thumbnail}" alt="Thumbnail"
                      class="w-12 h-12 rounded object-cover thumbnail"
                      onclick="showLightbox('/detections/thumbs/${data.thumbnail}')">
                 <div class="flex-1">
@@ -497,7 +668,7 @@
             const toast = document.createElement('div');
             toast.className = 'toast';
             toast.innerHTML = `
-                <img src="/detections/thumbs/${thumbnail}" class="w-10 h-10 rounded object-cover border border-green-500">
+                <img src="/detections/thumbs/${thumbnail}" alt="Alert Thumbnail" class="w-10 h-10 rounded object-cover border border-green-500">
                 <div>
                     <div class="text-green-400 font-bold text-sm">Target Detected!</div>
                     <div class="text-xs text-gray-300">Confidence: ${(conf * 100).toFixed(0)}%</div>
