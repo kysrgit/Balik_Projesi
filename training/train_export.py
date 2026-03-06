@@ -1,16 +1,20 @@
 import os
+from dotenv import load_dotenv
 from ultralytics import YOLO
 from roboflow import Roboflow
 from onnxruntime.quantization import quantize_dynamic, QuantType
 
 def main():
+    # Load environment variables
+    load_dotenv()
+
     # ---------------------------------------------------------
     # 1. Configuration
     # ---------------------------------------------------------
-    API_KEY = "YOUR_API_KEY"  # TODO: User must fill this in
-    WORKSPACE = "YOUR_WORKSPACE" # TODO: User must fill this in
-    PROJECT = "YOUR_PROJECT" # TODO: User must fill this in
-    VERSION = 1 # TODO: User must fill this in
+    API_KEY = os.getenv("ROBOFLOW_API_KEY", "YOUR_API_KEY")
+    WORKSPACE = os.getenv("ROBOFLOW_WORKSPACE", "YOUR_WORKSPACE")
+    PROJECT = os.getenv("ROBOFLOW_PROJECT", "YOUR_PROJECT")
+    VERSION = int(os.getenv("ROBOFLOW_VERSION", 1))
     
     MODEL_NAME = "yolo11n.pt"  # YOLO11 Nano
     IMG_SIZE = 640
