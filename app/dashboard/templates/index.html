@@ -179,6 +179,10 @@
                     data-stream="detection">
                     <i class="fas fa-crosshairs"></i> Detection
                 </button>
+                <button onclick="toggleWsStream()" id="btn-ws-stream" class="px-4 py-2 rounded glass ml-auto"
+                    data-ws="off">
+                    <i class="fas fa-bolt"></i> WS Stream
+                </button>
             </div>
 
             <!-- Main Video -->
@@ -267,15 +271,15 @@
                 <h2 class="font-bold mb-4 text-purple-400"><i class="fas fa-share-alt"></i> Veri Paylaşımı</h2>
                 <div class="grid grid-cols-1 gap-2">
                     <a href="/api/export/csv" download
-                       class="block text-center py-2 rounded bg-emerald-600 hover:bg-emerald-700 transition text-sm">
+                        class="block text-center py-2 rounded bg-emerald-600 hover:bg-emerald-700 transition text-sm">
                         <i class="fas fa-file-csv"></i> CSV İndir
                     </a>
                     <a href="/api/export/geojson" download
-                       class="block text-center py-2 rounded bg-sky-600 hover:bg-sky-700 transition text-sm">
+                        class="block text-center py-2 rounded bg-sky-600 hover:bg-sky-700 transition text-sm">
                         <i class="fas fa-map-marked-alt"></i> GeoJSON İndir
                     </a>
                     <a href="/api/export/darwincore" download
-                       class="block text-center py-2 rounded bg-amber-600 hover:bg-amber-700 transition text-sm">
+                        class="block text-center py-2 rounded bg-amber-600 hover:bg-amber-700 transition text-sm">
                         <i class="fas fa-archive"></i> DarwinCore (GBIF/OBIS)
                     </a>
                 </div>
@@ -283,17 +287,17 @@
                     <p class="text-xs text-gray-400 mb-2">Webhook Bildirimleri</p>
                     <div class="flex gap-2">
                         <input id="webhook-name" type="text" placeholder="İsim (ör: slack)"
-                               class="flex-1 px-2 py-1 rounded bg-gray-800 border border-gray-600 text-xs text-white focus:border-purple-400 outline-none">
+                            class="flex-1 px-2 py-1 rounded bg-gray-800 border border-gray-600 text-xs text-white focus:border-purple-400 outline-none">
                         <input id="webhook-url" type="url" placeholder="https://hooks.slack.com/..."
-                               class="flex-[2] px-2 py-1 rounded bg-gray-800 border border-gray-600 text-xs text-white focus:border-purple-400 outline-none">
+                            class="flex-[2] px-2 py-1 rounded bg-gray-800 border border-gray-600 text-xs text-white focus:border-purple-400 outline-none">
                     </div>
                     <div class="flex gap-2 mt-2">
                         <button onclick="addWebhook()"
-                                class="flex-1 py-1 rounded bg-purple-600 hover:bg-purple-700 transition text-xs">
+                            class="flex-1 py-1 rounded bg-purple-600 hover:bg-purple-700 transition text-xs">
                             <i class="fas fa-plus"></i> Ekle
                         </button>
                         <button onclick="listWebhooks()"
-                                class="flex-1 py-1 rounded bg-gray-600 hover:bg-gray-700 transition text-xs">
+                            class="flex-1 py-1 rounded bg-gray-600 hover:bg-gray-700 transition text-xs">
                             <i class="fas fa-list"></i> Listele
                         </button>
                     </div>
@@ -343,6 +347,18 @@
                         <span>Fan</span>
                         <span id="stat-fan">-- RPM</span>
                     </div>
+                    <div class="flex justify-between border-t border-gray-700 pt-2 mt-2">
+                        <span>GPS Signal</span>
+                        <span id="stat-gps-status" class="text-red-400">No Fix</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>GPS Lat/Lon</span>
+                        <span id="stat-gps-pos">-- / --</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Satellites</span>
+                        <span id="stat-gps-sats">--</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -378,6 +394,7 @@
         let currentStream = 'detection';
         let isRecording = false;
         let viewMode = 'debug';
+        let useWsStream = false;
 
         // Socket events
         socket.on('connect', () => {
@@ -418,6 +435,25 @@
             document.getElementById('stat-throttle').textContent = data.throttled ? '⚠️ THROTTLED' : 'OK';
             document.getElementById('stat-throttle').className = data.throttled ? 'text-red-500' : 'text-green-400';
             document.getElementById('stat-fan').textContent = data.fan_rpm + ' RPM';
+
+            if (data.gps && data.gps.is_valid) {
+                document.getElementById('stat-gps-status').textContent = 'Valid Fix';
+                document.getElementById('stat-gps-status').className = 'text-green-400';
+                document.getElementById('stat-gps-pos').textContent = `${data.gps.latitude.toFixed(4)} / ${data.gps.longitude.toFixed(4)}`;
+                document.getElementById('stat-gps-sats').textContent = data.gps.satellites || '--';
+            } else {
+                document.getElementById('stat-gps-status').textContent = 'No Fix / Stale';
+                document.getElementById('stat-gps-status').className = 'text-red-400';
+                document.getElementById('stat-gps-pos').textContent = '-- / --';
+                document.getElementById('stat-gps-sats').textContent = '--';
+            }
+        });
+
+        socket.on('ws_frame', (data) => {
+            if (useWsStream && data.type === 'detection') {
+                const imgEl = document.getElementById('main-stream');
+                imgEl.src = 'data:image/jpeg;base64,' + data.image;
+            }
         });
 
         socket.on('detection', (data) => {
@@ -439,43 +475,69 @@
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
         }).addTo(map);
-        
+
         const heatLayer = L.heatLayer([], {
             radius: 20,
             blur: 15,
             maxZoom: 17,
-            gradient: {0.4: 'cyan', 0.65: 'yellow', 1: 'red'}
+            gradient: { 0.4: '#1e3a8a', 0.65: '#06b6d4', 1: '#00ff88' } // Deniz / Okyanus tarzı heat map
         }).addTo(map);
 
-        let latestMarker = null;
+        let latestMarkers = []; // Son 5 marker'ı tutmak için
 
         socket.on('gis_detection', (data) => {
             const { lat, lon, confidence, timestamp } = data;
-            
+
             // Add to heat array
             mapPoints.push([lat, lon, confidence]);
-            
+
             // Limit memory usage (FIFO)
             if (mapPoints.length > maxMapPoints) {
                 mapPoints.shift();
             }
-            
+
             heatLayer.setLatLngs(mapPoints);
-            
-            // Update latest marker
-            if (latestMarker) map.removeLayer(latestMarker);
-            latestMarker = L.marker([lat, lon])
-                .bindPopup(`<b>Pufferfish</b><br>Conf: ${(confidence*100).toFixed(0)}%<br>Time: ${timestamp}`)
-                .addTo(map);
-                
+
+            // Update latest markers (keep only last 5)
+            const marker = L.circleMarker([lat, lon], {
+                radius: 8,
+                fillColor: "#00ff88",
+                color: "#1e3a8a",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).bindPopup(`<b>Pufferfish</b><br>Conf: ${(confidence * 100).toFixed(0)}%<br>Time: ${timestamp}`).addTo(map);
+
+            latestMarkers.push(marker);
+            if (latestMarkers.length > 5) {
+                const oldMarker = latestMarkers.shift();
+                map.removeLayer(oldMarker);
+            }
+
             // Pan map smoothly to new detection
-            map.flyTo([lat, lon], 14, {animate: true, duration: 1});
+            map.flyTo([lat, lon], 14, { animate: true, duration: 1 });
         });
 
         // Functions
+        function toggleWsStream() {
+            useWsStream = !useWsStream;
+            const btn = document.getElementById('btn-ws-stream');
+            if (useWsStream) {
+                btn.classList.add('bg-green-500/30');
+                btn.classList.add('text-green-400');
+            } else {
+                btn.classList.remove('bg-green-500/30');
+                btn.classList.remove('text-green-400');
+                // Mevcut MJPEG strama geri dön
+                switchStream(currentStream);
+            }
+        }
+
         function switchStream(type) {
             currentStream = type;
-            document.getElementById('main-stream').src = '/video/' + type + '?' + Date.now();
+            if (!useWsStream) {
+                document.getElementById('main-stream').src = '/video/' + type + '?' + Date.now();
+            }
 
             document.querySelectorAll('.stream-tab').forEach(tab => {
                 tab.classList.remove('bg-green-500/30');
@@ -559,15 +621,15 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, url })
             })
-            .then(r => r.json())
-            .then(data => {
-                if (data.status === 'ok') {
-                    document.getElementById('webhook-name').value = '';
-                    document.getElementById('webhook-url').value = '';
-                    showToast('Webhook eklendi: ' + name);
-                    renderWebhooks(data.targets);
-                }
-            });
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        document.getElementById('webhook-name').value = '';
+                        document.getElementById('webhook-url').value = '';
+                        showToast('Webhook Eklendi', name);
+                        renderWebhooks(data.targets);
+                    }
+                });
         }
 
         function listWebhooks() {
@@ -582,11 +644,11 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
             })
-            .then(r => r.json())
-            .then(data => {
-                showToast('Webhook silindi: ' + name);
-                renderWebhooks(data.targets);
-            });
+                .then(r => r.json())
+                .then(data => {
+                    showToast('Webhook Silindi', name);
+                    renderWebhooks(data.targets);
+                });
         }
 
         function renderWebhooks(targets, stats) {
@@ -655,7 +717,7 @@
             `;
             log.insertBefore(entry, log.firstChild);
 
-            showToast(data.thumbnail, data.confidence);
+            showToast('Target Detected!', `Confidence: ${(data.confidence * 100).toFixed(0)}%`, `/detections/thumbs/${data.thumbnail}`);
 
             // Limit entries
             while (log.children.length > 20) {
@@ -663,15 +725,21 @@
             }
         }
 
-        function showToast(thumbnail, conf) {
+        function showToast(title, subtitle, imgSrc = null) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'toast';
+
+            let imgHtml = '';
+            if (imgSrc) {
+                imgHtml = `<img src="${imgSrc}" alt="Icon" class="w-10 h-10 rounded object-cover border border-green-500">`;
+            }
+
             toast.innerHTML = `
-                <img src="/detections/thumbs/${thumbnail}" alt="Alert Thumbnail" class="w-10 h-10 rounded object-cover border border-green-500">
+                ${imgHtml}
                 <div>
-                    <div class="text-green-400 font-bold text-sm">Target Detected!</div>
-                    <div class="text-xs text-gray-300">Confidence: ${(conf * 100).toFixed(0)}%</div>
+                    <div class="text-green-400 font-bold text-sm">${title}</div>
+                    <div class="text-xs text-gray-300">${subtitle}</div>
                 </div>
             `;
             container.appendChild(toast);

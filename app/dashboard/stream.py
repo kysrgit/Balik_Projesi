@@ -2,6 +2,7 @@
 import threading
 import time
 import cv2
+import base64
 
 class FrameBuffer:
     """Thread-safe frame storage"""
@@ -66,3 +67,15 @@ def generate_mjpeg(buffer, stream_type='detection', target_fps=15):
                b'Content-Type: image/jpeg\r\n\r\n' + jpg.tobytes() + b'\r\n')
         
         last_time = now
+
+def get_base64_frame(buffer, stream_type='detection', quality=50):
+    """WebSocket üzerinden gönderim için frame'i base64 string yapar"""
+    frame = buffer.get(stream_type)
+    if frame is None:
+        return None
+    
+    if stream_type in ['raw', 'clahe']:
+        frame = cv2.resize(frame, (320, 240))
+        
+    _, jpg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
+    return base64.b64encode(jpg).decode('utf-8')

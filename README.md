@@ -15,7 +15,7 @@ app/
 ├── utils/
 │   └── image.py             # CLAHE ve görüntü işleme
 ├── dashboard/
-│   ├── server.py            # Flask + Socket.IO web sunucu
+│   ├── server.py            # Flask + Socket.IO (Eventlet) web sunucu
 │   ├── stream.py            # MJPEG streaming & FrameBuffer
 │   └── templates/
 │       └── index.html       # Dashboard arayüzü
@@ -64,7 +64,7 @@ tests/                       # Pytest test altyapısı (64 test)
 ### Yazılım
 - Raspberry Pi OS (Debian Trixie) veya Windows 10/11
 - Python 3.11+
-- picamera2 (Pi), OpenCV, Flask, Ultralytics, ONNX Runtime, pyserial, pynmea2
+- picamera2 (Pi), OpenCV, Flask, Ultralytics, ONNX Runtime, pyserial, pynmea2, eventlet
 
 ## Kurulum
 
@@ -129,7 +129,8 @@ python3 scripts/gps_simulator.py
 ## Dashboard Özellikleri
 
 - **3 Görüntü Modu:** Raw, CLAHE, Detection
-- **Canlı Metrikler:** FPS, confidence, CPU sıcaklığı, throttle durumu
+- **Canlı Metrikler:** FPS, confidence, CPU sıcaklığı, throttle durumu, GPS Durumu
+- **Alternatif Akış:** Düşük bant genişliği için WebSocket Base64 Streaming
 - **Ayarlanabilir Parametreler:** Confidence eşiği, CLAHE clip limit (canlı slider)
 - **Tespit Logu:** Zaman damgalı kayıtlar ve thumbnail önizleme
 - **Anlık Bildirimler:** Toast notification ile tespit uyarısı
@@ -199,9 +200,9 @@ python -m pytest tests/ -v
 | Inference | ONNX Runtime (XNNPACK Pi / CPU PC) |
 | Ön İşleme | Lab renk uzayında CLAHE |
 | GPS | pyserial + pynmea2 (GPGGA/GPRMC) |
-| Veritabanı | SpatiaLite (spatial index + MakePoint) |
+| Veritabanı | SpatiaLite (WKT format, spatial index + ST_GeomFromText) |
 | Streaming | MJPEG over HTTP |
-| İletişim | Flask-SocketIO (WebSocket, threading mode) |
+| İletişim | Flask-SocketIO (WebSocket, Eventlet asenkron mod) |
 | Veri Standartı | DarwinCore (GBIF/OBIS uyumlu) |
 
 ## Model Eğitimi

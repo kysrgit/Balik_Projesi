@@ -36,9 +36,18 @@ def _read_detections_db(db_path: str) -> List[Dict[str, Any]]:
         if not os.path.exists(db_path):
             return rows
         conn = sqlite3.connect(db_path)
+        conn.enable_load_extension(True)
+        # Try loading spatialite (similar to spatial.py)
+        for ext in ['mod_spatialite', 'libspatialite.so', 'mod_spatialite.dylib', 'mod_spatialite.dll']:
+            try:
+                conn.execute(f"SELECT load_extension('{ext}')")
+                break
+            except sqlite3.OperationalError:
+                pass
+                
         conn.row_factory = sqlite3.Row
         cursor = conn.execute(
-            "SELECT species, confidence, timestamp, latitude, longitude FROM spatial_log ORDER BY timestamp"
+            "SELECT species, confidence, timestamp, ST_Y(geom) as latitude, ST_X(geom) as longitude FROM spatial_log ORDER BY timestamp"
         )
         for row in cursor:
             rows.append(dict(row))

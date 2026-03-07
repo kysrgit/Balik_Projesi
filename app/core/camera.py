@@ -2,8 +2,10 @@
 import cv2
 import numpy as np
 import time
+import threading
 
-class Camera:
+class CameraThread:
+    """Thread-safe asenkron kamera yakalama sinifi (RULE 1 uyumlu)"""
     def __init__(self, width=640, height=480, fps=30, use_pi=True):
         self.width = width
         self.height = height
@@ -11,6 +13,10 @@ class Camera:
         self.picam = None
         self.cap = None  # OpenCV fallback
         self.error_msg = "Unknown Error"
+        
+        self._lock = threading.Lock()
+        self._frame = None
+        self._running = False
         
         # Kamera hic acilmazsa basacagimiz siyah ekran
         self.blank_frame = np.zeros((self.height, self.width, 3), dtype=np.uint8)
@@ -21,7 +27,7 @@ class Camera:
         # Pi kamerasi acilmadiysa OpenCV ile dene (PC/USB webcam fallback)
         if self.picam is None:
             self._init_opencv()
-    
+            
     def _init_picamera(self):
         try:
             from picamera2 import Picamera2
@@ -63,7 +69,26 @@ class Camera:
             print(f"❌ {self.error_msg}")
             self.cap = None
 
-    def read(self):
+    def start(self):
+        """Kamera okuma döngüsünü arka planda başlatır."""
+        self._running = True
+        self._thread = threading.Thread(target=self._capture_loop, daemon=True)
+        self._thread.start()
+        return self
+        
+    def _capture_loop(self):
+        """Asenkron frame toplama döngüsü."""
+        while self._running:
+            frame = self._read_raw()
+            if frame is not None:
+                with self._lock:
+                    self._frame = frame
+            else:
+                # Olası bir donma durumunu engellemek için küçük bir bekleme
+                time.sleep(0.01)
+
+    def _read_raw(self):
+        """Doğrudan cihazdan veya fallback'ten fiziksel frame okur."""
         # 1. Pi kamera
         if self.picam is not None:
             try:
@@ -97,10 +122,32 @@ class Camera:
         cv2.putText(error_frame, "Lutfen Terminal ve Kablolari Kontrol Edin", (50, 350), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         time.sleep(0.5) # Bu ekran saniyede 2 kere guncellense yeter, CPU'yu yemeyelim
         return error_frame
+
+    def get_frame(self):
+        """Thread-safe son okunan kareyi döndür"""
+        with self._lock:
+            if self._frame is not None:
+                return self._frame.copy()
+            return None
+
+    def read(self):
+        """Geriye dönük uyumluluk ve basitlik için"""
+        return self.get_frame()
     
+    def stop(self):
+        """Arka plan işlemini durdurur"""
+        self._running = False
+        if hasattr(self, '_thread'):
+            self._thread.join(timeout=1.0)
+            
     def release(self):
+        """Kaynakları temizler"""
+        self.stop()
         if self.picam:
             self.picam.stop()
             self.picam.close()
         if self.cap:
             self.cap.release()
+
+# İleri uyumluluk için alias
+Camera = CameraThread

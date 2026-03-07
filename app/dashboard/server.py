@@ -3,6 +3,9 @@
 Dashboard Web Server
 Flask + SocketIO ile gercek zamanli izleme paneli
 """
+import eventlet
+eventlet.monkey_patch()
+
 import os
 import sys
 import time
@@ -20,7 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from app.core import config, Detector
 from app.utils import draw_boxes
-from app.dashboard.stream import FrameBuffer, generate_mjpeg
+from app.dashboard.stream import FrameBuffer, generate_mjpeg, get_base64_frame
 from app.core import Camera # Moved Camera import here as it's no longer from app.core directly
 from app.core.gps import gps_state, gps_reader_thread
 from app.db.spatial import init_db, insert_detection
@@ -30,7 +33,7 @@ from app.export import to_geojson, to_csv_download, to_darwincore_archive, Webho
 app = Flask(__name__)
 # Guvenlik: Secret key ortam degiskeninden alinir
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', os.urandom(32).hex())
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 # Global state
 buffer = FrameBuffer()
@@ -169,6 +172,7 @@ def on_stats():
     stats = get_stats()
     stats['fps'] = buffer.fps
     stats['detections'] = buffer.count
+    stats['gps'] = gps_state.get_dict()
     emit('stats', stats)
 
 
@@ -176,9 +180,9 @@ def on_stats():
 def camera_producer():
     """Surekli kameradan kare okuyarak guncel tutar (30 FPS)"""
     
-    # Yeni native pi5 libcamera uzerinden baslar
+    # Yeni native pi5 libcamera uzerinden baslar, thread asenkron çalışır
     try:
-        cam = Camera(width=640, height=480, fps=30)
+        cam = Camera(width=640, height=480, fps=30).start()
     except Exception as e:
         print(f"Kamera hatasi: {e}")
         return
@@ -188,14 +192,17 @@ def camera_producer():
         try:
             frame = cam.read()
             if frame is None:
+                socketio.sleep(0.01)
                 continue
                 
             now = time.time()
+            # Yalnızca kare değiştiğinde FPS hesabını güncellemek için kaba bir koruma
+            # Ancak wait vs kullanılmadığı için her döngüde frame alınabilir, bu yüzden uyuma ekliyoruz.
             buffer.fps = 1.0 / (now - prev_time) if now > prev_time else 0
             prev_time = now
             
             # Display buffer update
-            buffer.update(raw=frame.copy())
+            buffer.update(raw=frame)
             
             # Send latest raw frame to inference queue
             try:
@@ -205,11 +212,13 @@ def camera_producer():
                 frame_queue.put_nowait(frame.copy())
             except:
                 pass
-
+            
+            # CPU döngü koruması, 30fps ~= 33ms
+            socketio.sleep(0.03)
 
         except Exception as e:
             print(f"Producer Hata: {e}")
-            time.sleep(0.1)
+            socketio.sleep(0.1)
 
 
 # -- Consumer Thread: Sadece Tespit Yap --
@@ -301,9 +310,12 @@ def detection_loop():
             dets = [(x1, y1, x2, y2, c) for (x1, y1, x2, y2), c in zip(boxes, confs)]
             buffer.update(detections=dets)
             
+            # CPU serbest bırakma, cooperations sağlar
+            socketio.sleep(0)
+            
         except Exception as e:
             print(f"Consumer Hata: {e}")
-            time.sleep(0.1)
+            socketio.sleep(0.1)
 
 
 # -- Stream Thread: Gorselleri Birlestir --
@@ -315,10 +327,23 @@ def render_loop():
                 # Kutulari bellekteki guncel durumdan ciz
                 det_frame = draw_boxes(raw.copy(), [d[:4] for d in buffer.detections], [d[4] for d in buffer.detections])
                 buffer.update(detection=det_frame)
-            time.sleep(0.03) # 30fps render limit
+            socketio.sleep(0.03) # 30fps render limit
         except:
-             time.sleep(0.1)
+             socketio.sleep(0.1)
 
+# -- WS Base64 Stream Loop --
+def ws_stream_loop():
+    """Base64 kodlanmış frameleri WebSocket üzerinden gönderir (Alternatif Stream)"""
+    interval = 1.0 / config.STREAM_FPS
+    while True:
+        try:
+            # Şimdilik sadece detection stream'ini gönderiyoruz
+            frame_b64 = get_base64_frame(buffer, stream_type='detection', quality=config.WS_STREAM_QUALITY)
+            if frame_b64:
+                socketio.emit('ws_frame', {'image': frame_b64, 'type': 'detection'})
+            socketio.sleep(interval)
+        except Exception as e:
+            socketio.sleep(0.1)
 
 # -- Stats emitter --
 def stats_loop():
@@ -326,10 +351,11 @@ def stats_loop():
         stats = get_stats()
         stats['fps'] = round(buffer.fps, 1)
         stats['detections'] = buffer.count
+        stats['gps'] = gps_state.get_dict()
         confs = [d[4] for d in buffer.detections]
         stats['confidence'] = max(confs) if confs else 0.0
         socketio.emit('stats', stats)
-        time.sleep(1)
+        socketio.sleep(1)
 
 
 # -- Main --
@@ -344,14 +370,15 @@ def main():
     except Exception as e:
         print(f"SpatiaLite DB Init Error: {e}")
 
-    # Thread'leri baslat (Asenkron ucloud yapi)
-    threading.Thread(target=camera_producer, daemon=True).start()
-    threading.Thread(target=detection_loop, daemon=True).start()
-    threading.Thread(target=render_loop, daemon=True).start()
-    threading.Thread(target=stats_loop, daemon=True).start()
+    # Eventlet thread'leri (GreenThread) başlatılır
+    socketio.start_background_task(camera_producer)
+    socketio.start_background_task(detection_loop)
+    socketio.start_background_task(render_loop)
+    socketio.start_background_task(ws_stream_loop)
+    socketio.start_background_task(stats_loop)
     
-    # GPS Thread
-    threading.Thread(target=gps_reader_thread, daemon=True).start()
+    # GPS okumaları Eventlet sleep desteklesin diye monkey patch ile tam uyumludur
+    socketio.start_background_task(gps_reader_thread)
     
     print(f"http://0.0.0.0:{config.DASHBOARD_PORT}")
     print("=" * 40)
