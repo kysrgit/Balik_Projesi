@@ -33,12 +33,12 @@ from app.export import to_geojson, to_csv_download, to_darwincore_archive, Webho
 app = Flask(__name__)
 # Guvenlik: Secret key ortam degiskeninden alinir
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', os.urandom(32).hex())
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins=config.ALLOWED_ORIGINS, async_mode='eventlet')
 
-# Global state
+# Global state initialized from config
 buffer = FrameBuffer()
-conf_thresh = 0.60
-clahe_clip = 3.0
+conf_thresh = config.CONF_THRESH
+clahe_clip = config.CLAHE_CLIP
 is_recording = False
 log = []
 
@@ -179,14 +179,14 @@ def on_stats():
 # -- Producer Thread: Sadece Kameradan Oku --
 def camera_producer():
     """Surekli kameradan kare okuyarak guncel tutar (30 FPS)"""
-    
+
     # Yeni native pi5 libcamera uzerinden baslar, thread asenkron çalışır
     try:
-        cam = Camera(width=640, height=480, fps=30).start()
+        cam = Camera(width=config.CAM_WIDTH, height=config.CAM_HEIGHT, fps=config.TARGET_FPS).start()
     except Exception as e:
         print(f"Kamera hatasi: {e}")
         return
-        
+
     prev_time = time.time()
     while True:
         try:
@@ -194,16 +194,16 @@ def camera_producer():
             if frame is None:
                 socketio.sleep(0.01)
                 continue
-                
+
             now = time.time()
             # Yalnızca kare değiştiğinde FPS hesabını güncellemek için kaba bir koruma
             # Ancak wait vs kullanılmadığı için her döngüde frame alınabilir, bu yüzden uyuma ekliyoruz.
             buffer.fps = 1.0 / (now - prev_time) if now > prev_time else 0
             prev_time = now
-            
+
             # Display buffer update
             buffer.update(raw=frame)
-            
+
             # Send latest raw frame to inference queue
             try:
                 # Drop oldest frame if queue full to keep real-time
@@ -212,9 +212,9 @@ def camera_producer():
                 frame_queue.put_nowait(frame.copy())
             except:
                 pass
-            
+
             # CPU döngü koruması, 30fps ~= 33ms
-            socketio.sleep(0.03)
+            socketio.sleep(1.0 / config.TARGET_FPS)
 
         except Exception as e:
             print(f"Producer Hata: {e}")
@@ -224,36 +224,36 @@ def camera_producer():
 # -- Consumer Thread: Sadece Tespit Yap --
 def detection_loop():
     global is_recording
-    
+
     # Model yukle
     try:
         detector = Detector(config.MODEL_PATH)
     except Exception as e:
         print(f"Model hatasi: {e}")
         return
-    
+
     os.makedirs('detections/thumbs', exist_ok=True)
-    
+
     last_save_time = 0.0
-    
+
     while True:
         try:
             # Wait for next frame
             frame = frame_queue.get()
-            
+
             # Tespit (CLAHE sadece inference edilen frame'e ve kucultulmus tensore uygulanacak)
             boxes, confs = detector.detect(frame, conf=conf_thresh, use_clahe=True, clahe_clip=clahe_clip)
-            
+
             # Olay bazli islemler
             for (x1, y1, x2, y2), c in zip(boxes, confs):
                 if c >= conf_thresh and is_recording: # Kayit acikken, dashboard slider esigini kullan
                     now_time = time.time()
-                    
+
                     # Rate limiting: Ziplamalari ve disk yorgunlugunu engelle
                     if now_time - last_save_time >= config.DASHBOARD_SAVE_INTERVAL:
                         now_dt = datetime.now()
                         ts = now_dt.strftime('%H%M%S_%f')
-                        
+
                         # 1. Bildirim Icin Thumbnail
                         thumb = frame[max(0,y1-10):y2+10, max(0,x1-10):x2+10]
                         if thumb.size > 0:
@@ -265,7 +265,7 @@ def detection_loop():
                                 'confidence': round(c, 2),
                                 'thumbnail': thumbnail_name
                             })
-                        
+
                         # 2. Kalici Veri Sistikcasi Icin CSV Kayit
                         with open(CSV_LOG_FILE, 'a', newline='') as f:
                             writer = csv.writer(f)
@@ -273,14 +273,14 @@ def detection_loop():
                                 ts, now_dt.strftime('%Y-%m-%d'), now_dt.strftime('%H:%M:%S'),
                                 round(c, 4), x1, y1, x2, y2
                             ])
-                        
+
                         # 3. Canli GIS Loglama: Eger GPS verisi gecerliyse
                         lat, lon, gps_ts, is_valid = gps_state.get()
                         if is_valid:
                             try:
                                 # SpatiaLite Log
                                 insert_detection("Pufferfish", c, lat, lon, now_time)
-                                
+
                                 # Frontend'e event yolla
                                 socketio.emit('gis_detection', {
                                     'lat': lat,
@@ -294,7 +294,7 @@ def detection_loop():
                                 print(f"Spatial Log Hata: {spatial_err}")
 
                         last_save_time = now_time
-                        
+
                         # 4. Webhook bildirimi (arka planda, ana thread'i bloklamaz)
                         webhook_notifier.notify_async(
                             species="Lagocephalus sceleratus",
@@ -303,16 +303,16 @@ def detection_loop():
                             lon=lon if is_valid else None,
                             timestamp=now_dt.strftime('%Y-%m-%d %H:%M:%S')
                         )
-                        
+
                         break # Bu frame icin ilk gecerli objeyi (en yuksek guven) loglamak yeterlidir
-            
+
             # Buffer'i guncelle (Diger asenkron thread cizecek)
             dets = [(x1, y1, x2, y2, c) for (x1, y1, x2, y2), c in zip(boxes, confs)]
             buffer.update(detections=dets)
-            
+
             # CPU serbest bırakma, cooperations sağlar
             socketio.sleep(0)
-            
+
         except Exception as e:
             print(f"Consumer Hata: {e}")
             socketio.sleep(0.1)
@@ -363,7 +363,7 @@ def main():
     print("=" * 40)
     print("Balon Baligi Dashboard")
     print("=" * 40)
-    
+
     # DB Init
     try:
         init_db()
@@ -376,14 +376,14 @@ def main():
     socketio.start_background_task(render_loop)
     socketio.start_background_task(ws_stream_loop)
     socketio.start_background_task(stats_loop)
-    
+
     # GPS okumaları Eventlet sleep desteklesin diye monkey patch ile tam uyumludur
     socketio.start_background_task(gps_reader_thread)
-    
+
     print(f"http://0.0.0.0:{config.DASHBOARD_PORT}")
     print("=" * 40)
-    
-    socketio.run(app, host='0.0.0.0', port=config.DASHBOARD_PORT, 
+
+    socketio.run(app, host='0.0.0.0', port=config.DASHBOARD_PORT,
                  debug=False, allow_unsafe_werkzeug=True)
 
 

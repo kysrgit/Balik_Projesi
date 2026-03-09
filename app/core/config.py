@@ -1,4 +1,5 @@
 # Merkezi ayarlar
+import os
 from pathlib import Path
 
 # Proje kök dizini
@@ -7,7 +8,7 @@ ROOT_DIR = Path(__file__).parent.parent.parent
 # Model
 MODEL_PATH = ROOT_DIR / "models" / "pufferfish_pi_int8.onnx"
 CONF_THRESH = 0.60
-DETECTOR_IMGSZ = 640 # Model ONNX olarak 640x640 boyutunda sabit (fixed) ihraç edildiği için değiştirilemez. 
+DETECTOR_IMGSZ = 640 # Model ONNX olarak 640x640 boyutunda sabit (fixed) ihraç edildiği için değiştirilemez.
 
 # GIS & Veritabanı
 GPS_PORT = "/dev/ttyAMA0"
@@ -28,6 +29,14 @@ THUMB_DIR = DETECTION_DIR / "thumbs"
 
 # Dashboard
 DASHBOARD_PORT = 5000
+# CORS: Listen only on same-origin by default. Set ALLOWED_ORIGINS env var (comma-separated) for cross-origin access.
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', None)
+if ALLOWED_ORIGINS:
+    if ',' in str(ALLOWED_ORIGINS):
+        ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS.split(',')]
+    else:
+        ALLOWED_ORIGINS = str(ALLOWED_ORIGINS).strip()
+
 STREAM_FPS = 15
 JPEG_QUALITY = 70
 WS_STREAM_QUALITY = 50  # WebSocket base64 stream JPEG kalitesi
