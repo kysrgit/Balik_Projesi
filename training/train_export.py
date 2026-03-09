@@ -12,8 +12,8 @@ def main():
     # 1. Configuration
     # ---------------------------------------------------------
     API_KEY = os.getenv("ROBOFLOW_API_KEY", "YOUR_API_KEY")
-    WORKSPACE = os.getenv("ROBOFLOW_WORKSPACE", "YOUR_WORKSPACE")
-    PROJECT = os.getenv("ROBOFLOW_PROJECT", "YOUR_PROJECT")
+    WORKSPACE = os.getenv("ROBOFLOW_WORKSPACE", "baliktespitprojesi")
+    PROJECT = os.getenv("ROBOFLOW_PROJECT", "balon-baligi-tespiti-oa6kg")
     VERSION = int(os.getenv("ROBOFLOW_VERSION", 1))
 
     MODEL_NAME = "yolo11n.pt"  # YOLO11 Nano
@@ -59,7 +59,6 @@ def main():
         epochs=EPOCHS,
         imgsz=IMG_SIZE,
         plots=True,
-        # device='cpu' # Removed to let it auto-detect (likely GPU on PC)
     )
 
     # ---------------------------------------------------------
