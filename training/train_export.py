@@ -59,10 +59,7 @@ def main():
         epochs=EPOCHS,
         imgsz=IMG_SIZE,
         plots=True,
-        device='cpu' # Force CPU if no GPU available, or let it auto-detect.
-                     # For RPi training isn't recommended, but this script is likely run on a PC.
-                     # We'll leave it to auto (remove device='cpu') or keep it if user wants strict control.
-                     # Removing device arg to let Ultralytics decide (likely GPU on PC).
+        # device='cpu' # Removed to let it auto-detect (likely GPU on PC)
     )
 
     # ---------------------------------------------------------
