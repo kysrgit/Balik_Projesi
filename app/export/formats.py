@@ -6,7 +6,6 @@ Veri Export Formatları
 """
 import csv
 import io
-import json
 import os
 import zipfile
 from datetime import datetime, timezone
