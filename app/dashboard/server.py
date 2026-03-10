@@ -9,7 +9,6 @@ eventlet.monkey_patch()
 import os
 import sys
 import time
-import threading
 import queue
 import json
 import cv2
