@@ -17,6 +17,7 @@ class CameraThread:
         self._lock = threading.Lock()
         self._frame = None
         self._running = False
+        self._stop_event = threading.Event()
         
         # Kamera hic acilmazsa basacagimiz siyah ekran
         self.blank_frame = np.zeros((self.height, self.width, 3), dtype=np.uint8)
@@ -72,6 +73,7 @@ class CameraThread:
     def start(self):
         """Kamera okuma döngüsünü arka planda başlatır."""
         self._running = True
+        self._stop_event.clear()
         self._thread = threading.Thread(target=self._capture_loop, daemon=True)
         self._thread.start()
         return self
@@ -85,7 +87,7 @@ class CameraThread:
                     self._frame = frame
             else:
                 # Olası bir donma durumunu engellemek için küçük bir bekleme
-                time.sleep(0.01)
+                self._stop_event.wait(0.01)
 
     def _read_raw(self):
         """Doğrudan cihazdan veya fallback'ten fiziksel frame okur."""
@@ -100,7 +102,7 @@ class CameraThread:
                 return None
             except Exception as e:
                 print(f"Kamera okuma hatasi: {e}")
-                time.sleep(1)
+                self._stop_event.wait(1.0)
                 return None
         
         # 2. OpenCV fallback
@@ -112,7 +114,7 @@ class CameraThread:
                 return None
             except Exception as e:
                 print(f"OpenCV okuma hatasi: {e}")
-                time.sleep(1)
+                self._stop_event.wait(1.0)
                 return None
         
         # 3. Hic kamera yoksa hata frame'i goster
@@ -120,7 +122,7 @@ class CameraThread:
         cv2.putText(error_frame, "KAMERA HATASI!", (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 3)
         cv2.putText(error_frame, self.error_msg, (50, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
         cv2.putText(error_frame, "Lutfen Terminal ve Kablolari Kontrol Edin", (50, 350), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-        time.sleep(0.5) # Bu ekran saniyede 2 kere guncellense yeter, CPU'yu yemeyelim
+        self._stop_event.wait(0.5) # Bu ekran saniyede 2 kere guncellense yeter, CPU'yu yemeyelim
         return error_frame
 
     def get_frame(self):
@@ -137,6 +139,7 @@ class CameraThread:
     def stop(self):
         """Arka plan işlemini durdurur"""
         self._running = False
+        self._stop_event.set()
         if hasattr(self, '_thread'):
             self._thread.join(timeout=1.0)
             
