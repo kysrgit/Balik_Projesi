@@ -90,7 +90,7 @@ def run(use_clahe=True, show_gui=False):
     
     try:
         while True:
-            frame = cam.read()
+            frame = cam.get_frame()
             if frame is None:
                 time.sleep(0.1)
                 continue

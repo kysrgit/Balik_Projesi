@@ -190,7 +190,7 @@ def camera_producer():
     prev_time = time.time()
     while True:
         try:
-            frame = cam.read()
+            frame = cam.get_frame()
             if frame is None:
                 socketio.sleep(0.01)
                 continue
