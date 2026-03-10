@@ -7,8 +7,10 @@ import os
 import sqlite3
 import time
 import tempfile
+from unittest.mock import patch, MagicMock
 import pytest
 
+from app.db.spatial import get_db_connection
 
 class TestSpatialFallback:
     """SpatiaLite olmayan ortamda (Windows/CI) düz SQLite ile test"""
@@ -103,3 +105,31 @@ class TestSpatialFallback:
     def test_empty_table(self):
         rows = self.conn.execute("SELECT COUNT(*) FROM spatial_log").fetchone()
         assert rows[0] == 0
+
+    @patch('app.db.spatial.sqlite3.connect')
+    def test_get_db_connection_fallback_warning(self, mock_connect, capsys):
+        """Test the untested error path in get_db_connection"""
+        # Create a mock connection
+        mock_conn = MagicMock()
+        mock_connect.return_value = mock_conn
+
+        # The execute method should always raise sqlite3.OperationalError
+        mock_conn.execute.side_effect = sqlite3.OperationalError("Could not load extension")
+
+        # Call the method
+        conn = get_db_connection()
+
+        # Check that we got the mocked connection back
+        assert conn == mock_conn
+
+        # Assert the standard warning was printed
+        captured = capsys.readouterr()
+        assert "WARNING: Could not load SpatiaLite extension. Spatial indexing will not work." in captured.out
+
+        # Verify execute was called 4 times with the different extension attempts
+        assert mock_conn.execute.call_count == 4
+        calls = mock_conn.execute.call_args_list
+        assert calls[0][0][0] == "SELECT load_extension('mod_spatialite')"
+        assert calls[1][0][0] == "SELECT load_extension('libspatialite.so')"
+        assert calls[2][0][0] == "SELECT load_extension('mod_spatialite.dylib')"
+        assert calls[3][0][0] == "SELECT load_extension('mod_spatialite.dll')"
