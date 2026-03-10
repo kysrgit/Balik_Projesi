@@ -6,7 +6,7 @@ Desteklenen hedefler: Slack, Discord, Teams, özel API endpoint'leri.
 import json
 import time
 import threading
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, Any
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
