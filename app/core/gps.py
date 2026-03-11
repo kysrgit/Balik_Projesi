@@ -75,8 +75,8 @@ def gps_reader_thread():
         except serial.SerialException as e:
             print(f"GPS Serial Error: {e}, retrying in 5 seconds...")
             time.sleep(5)
-        except Exception as e:
-            print(f"GPS Unexpected Error: {e}")
+        except (pynmea2.ParseError, ValueError, UnicodeDecodeError) as e:
+            print(f"GPS Data Error: {e}")
             time.sleep(5)
         finally:
             try:
