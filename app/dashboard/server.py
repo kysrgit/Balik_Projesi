@@ -47,6 +47,22 @@ frame_queue = queue.Queue(maxsize=5)
 
 # Init CSV logger
 CSV_LOG_FILE = "detections_log.csv"
+csv_log_queue = queue.Queue()
+
+def csv_logger_thread():
+    # Write header if file doesn't exist
+    if not os.path.exists(CSV_LOG_FILE):
+        with open(CSV_LOG_FILE, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Timestamp", "Date", "Time", "Confidence", "BBox_X1", "BBox_Y1", "BBox_X2", "BBox_Y2"])
+
+    with open(CSV_LOG_FILE, 'a', newline='') as f:
+        writer = csv.writer(f)
+        while True:
+            row = csv_log_queue.get()
+            writer.writerow(row)
+            f.flush()
+
 if not os.path.exists(CSV_LOG_FILE):
     with open(CSV_LOG_FILE, 'w', newline='') as f:
         writer = csv.writer(f)
@@ -267,12 +283,10 @@ def detection_loop():
                             })
 
                         # 2. Kalici Veri Sistikcasi Icin CSV Kayit
-                        with open(CSV_LOG_FILE, 'a', newline='') as f:
-                            writer = csv.writer(f)
-                            writer.writerow([
-                                ts, now_dt.strftime('%Y-%m-%d'), now_dt.strftime('%H:%M:%S'),
-                                round(c, 4), x1, y1, x2, y2
-                            ])
+                        csv_log_queue.put([
+                            ts, now_dt.strftime('%Y-%m-%d'), now_dt.strftime('%H:%M:%S'),
+                            round(c, 4), x1, y1, x2, y2
+                        ])
 
                         # 3. Canli GIS Loglama: Eger GPS verisi gecerliyse
                         lat, lon, gps_ts, is_valid = gps_state.get()
@@ -379,6 +393,9 @@ def main():
 
     # GPS okumaları Eventlet sleep desteklesin diye monkey patch ile tam uyumludur
     socketio.start_background_task(gps_reader_thread)
+
+    # Arka plan CSV loglama thread'i
+    socketio.start_background_task(csv_logger_thread)
 
     print(f"http://0.0.0.0:{config.DASHBOARD_PORT}")
     print("=" * 40)
