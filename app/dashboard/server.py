@@ -70,10 +70,15 @@ if not os.path.exists(CSV_LOG_FILE):
 
 # -- Sistem bilgileri --
 def get_stats():
+    import eventlet.tpool
     stats = {'cpu_temp': 0, 'throttled': False, 'fan_rpm': 0}
     try:
-        with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
-            stats['cpu_temp'] = int(f.read().strip()) / 1000
+        def _read_temp():
+            with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+                return f.read().strip()
+
+        temp_str = eventlet.tpool.execute(_read_temp)
+        stats['cpu_temp'] = int(temp_str) / 1000
     except:
         pass
     return stats
