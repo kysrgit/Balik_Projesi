@@ -173,7 +173,10 @@ def api_webhooks():
         url = data.get('url', '')
         if not name or not url:
             return jsonify({'status': 'error', 'message': 'name ve url gerekli'}), 400
-        webhook_notifier.add_target(name, url)
+        try:
+            webhook_notifier.add_target(name, url)
+        except ValueError as e:
+            return jsonify({'status': 'error', 'message': str(e)}), 400
         return jsonify({'status': 'ok', 'targets': webhook_notifier.get_targets()})
     elif request.method == 'DELETE':
         data = request.json or {}

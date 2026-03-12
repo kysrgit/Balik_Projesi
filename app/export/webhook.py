@@ -6,6 +6,9 @@ Desteklenen hedefler: Slack, Discord, Teams, özel API endpoint'leri.
 import json
 import time
 import threading
+import socket
+import ipaddress
+from urllib.parse import urlparse
 from typing import Dict, Any
 from urllib.request import Request, urlopen
 from urllib.error import URLError
@@ -28,8 +31,34 @@ class WebhookNotifier:
         self._rate_limit = rate_limit_seconds
         self._stats = {'sent': 0, 'failed': 0, 'rate_limited': 0}
 
+    def _is_safe_url(self, url: str) -> bool:
+        """URL'nin güvenli (SSRF'ye karşı korumalı) olup olmadığını kontrol et"""
+        try:
+            parsed = urlparse(url)
+            if parsed.scheme not in ('http', 'https'):
+                return False
+
+            hostname = parsed.hostname
+            if not hostname:
+                return False
+
+            # Resolve hostname to IP
+            ip = socket.gethostbyname(hostname)
+            ip_obj = ipaddress.ip_address(ip)
+
+            # Reject private, loopback, multicast, etc.
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_multicast or ip_obj.is_link_local or ip_obj.is_unspecified or ip_obj.is_reserved:
+                return False
+
+            return True
+        except (ValueError, socket.gaierror):
+            return False
+
     def add_target(self, name: str, url: str) -> None:
         """Webhook hedefi ekle"""
+        if not self._is_safe_url(url):
+            raise ValueError(f"Güvensiz veya geçersiz URL: {url}")
+
         with self._lock:
             self._targets[name] = url
 
