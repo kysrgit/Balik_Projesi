@@ -1,0 +1,130 @@
+diff --git a/app/dashboard/server.py b/app/dashboard/server.py
+index ab1d244..852e222 100644
+--- a/app/dashboard/server.py
++++ b/app/dashboard/server.py
+@@ -153,7 +153,10 @@ def api_webhooks():
+         url = data.get('url', '')
+         if not name or not url:
+             return jsonify({'status': 'error', 'message': 'name ve url gerekli'}), 400
+-        webhook_notifier.add_target(name, url)
++        try:
++            webhook_notifier.add_target(name, url)
++        except ValueError as e:
++            return jsonify({'status': 'error', 'message': str(e)}), 400
+         return jsonify({'status': 'ok', 'targets': webhook_notifier.get_targets()})
+     elif request.method == 'DELETE':
+         data = request.json or {}
+diff --git a/app/export/__init__.py b/app/export/__init__.py
+index 27a0591..0f2eff0 100644
+--- a/app/export/__init__.py
++++ b/app/export/__init__.py
+@@ -1,4 +1,3 @@
+-# Export modulleri
+ from .formats import to_geojson, to_csv_download, to_darwincore_archive
+ from .webhook import WebhookNotifier
+ 
+diff --git a/app/export/webhook.py b/app/export/webhook.py
+index 80f1aa6..991df30 100644
+--- a/app/export/webhook.py
++++ b/app/export/webhook.py
+@@ -6,6 +6,9 @@
+ import json
+ import time
+ import threading
++import socket
++import ipaddress
++from urllib.parse import urlparse
+ from typing import Optional, Dict, List, Any
+ from urllib.request import Request, urlopen
+ from urllib.error import URLError
+@@ -28,8 +31,34 @@ def __init__(self, rate_limit_seconds: float = 60.0):
+         self._rate_limit = rate_limit_seconds
+         self._stats = {'sent': 0, 'failed': 0, 'rate_limited': 0}
+ 
++    def _is_safe_url(self, url: str) -> bool:
++        """URL'nin güvenli (SSRF'ye karşı korumalı) olup olmadığını kontrol et"""
++        try:
++            parsed = urlparse(url)
++            if parsed.scheme not in ('http', 'https'):
++                return False
++
++            hostname = parsed.hostname
++            if not hostname:
++                return False
++
++            # Resolve hostname to IP
++            ip = socket.gethostbyname(hostname)
++            ip_obj = ipaddress.ip_address(ip)
++
++            # Reject private, loopback, multicast, etc.
++            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_multicast or ip_obj.is_link_local or ip_obj.is_unspecified or ip_obj.is_reserved:
++                return False
++
++            return True
++        except (ValueError, socket.gaierror):
++            return False
++
+     def add_target(self, name: str, url: str) -> None:
+         """Webhook hedefi ekle"""
++        if not self._is_safe_url(url):
++            raise ValueError(f"Güvensiz veya geçersiz URL: {url}")
++
+         with self._lock:
+             self._targets[name] = url
+ 
+diff --git a/tests/test_export.py b/tests/test_export.py
+index 5f5b5ab..bc8c39c 100644
+--- a/tests/test_export.py
++++ b/tests/test_export.py
+@@ -256,9 +256,35 @@ def test_empty_targets_no_error(self):
+         result = n.notify(species="test", confidence=0.8)
+         assert result == {}
+ 
++    def test_add_target_safe_url(self):
++        n = WebhookNotifier()
++        n.add_target("safe", "https://hooks.slack.com/test")
++        assert "safe" in n.get_targets()
++
++    def test_add_target_invalid_scheme(self):
++        n = WebhookNotifier()
++        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
++            n.add_target("file", "file:///etc/passwd")
++
++    def test_add_target_private_ip(self):
++        n = WebhookNotifier()
++        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
++            n.add_target("localhost", "http://localhost:5000/hook")
++
++        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
++            n.add_target("loopback", "http://127.0.0.1/hook")
++
++        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
++            n.add_target("private", "http://192.168.1.1/hook")
++
++    def test_add_target_invalid_url(self):
++        n = WebhookNotifier()
++        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
++            n.add_target("invalid", "not-a-url")
++
+     def test_format_payload_generic(self):
+         n = WebhookNotifier()
+-        n.add_target("custom", "https://myapi.example.com/hook")
++        n.add_target("custom", "https://httpbin.org/post")
+         payload = n._format_payload("custom", {
+             'species': 'Lagocephalus sceleratus',
+             'confidence': 0.85,
+@@ -352,6 +378,14 @@ def test_webhook_crud(self):
+         data = resp.get_json()
+         assert 'test' in data['targets']
+ 
++        # POST: Ekle Güvensiz
++        resp = self.client.post('/api/webhooks',
++                                json={'name': 'unsafe', 'url': 'http://localhost/hook'},
++                                content_type='application/json')
++        assert resp.status_code == 400
++        data = resp.get_json()
++        assert data['status'] == 'error'
++
+         # GET: Listele
+         resp = self.client.get('/api/webhooks')
+         data = resp.get_json()
