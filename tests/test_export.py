@@ -256,9 +256,35 @@ class TestWebhookNotifier:
         result = n.notify(species="test", confidence=0.8)
         assert result == {}
 
+    def test_add_target_safe_url(self):
+        n = WebhookNotifier()
+        n.add_target("safe", "https://hooks.slack.com/test")
+        assert "safe" in n.get_targets()
+
+    def test_add_target_invalid_scheme(self):
+        n = WebhookNotifier()
+        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
+            n.add_target("file", "file:///etc/passwd")
+
+    def test_add_target_private_ip(self):
+        n = WebhookNotifier()
+        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
+            n.add_target("localhost", "http://localhost:5000/hook")
+
+        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
+            n.add_target("loopback", "http://127.0.0.1/hook")
+
+        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
+            n.add_target("private", "http://192.168.1.1/hook")
+
+    def test_add_target_invalid_url(self):
+        n = WebhookNotifier()
+        with pytest.raises(ValueError, match="Güvensiz veya geçersiz URL"):
+            n.add_target("invalid", "not-a-url")
+
     def test_format_payload_generic(self):
         n = WebhookNotifier()
-        n.add_target("custom", "https://myapi.example.com/hook")
+        n.add_target("custom", "https://httpbin.org/post")
         payload = n._format_payload("custom", {
             'species': 'Lagocephalus sceleratus',
             'confidence': 0.85,
@@ -351,6 +377,14 @@ class TestExportEndpoints:
         assert resp.status_code == 200
         data = resp.get_json()
         assert 'test' in data['targets']
+
+        # POST: Ekle Güvensiz
+        resp = self.client.post('/api/webhooks',
+                                json={'name': 'unsafe', 'url': 'http://localhost/hook'},
+                                content_type='application/json')
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert data['status'] == 'error'
 
         # GET: Listele
         resp = self.client.get('/api/webhooks')

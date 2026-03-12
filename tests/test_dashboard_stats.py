@@ -7,13 +7,28 @@ from unittest.mock import MagicMock, patch, mock_open
 
 # 1. Mock all external and problematic dependencies *before* importing anything from the app.
 # This avoids side effects like trying to import cv2, flask, or eventlet.
+
 mock_modules = [
-    'eventlet', 'cv2', 'flask', 'flask_socketio',
+    'cv2', 'flask', 'flask_socketio',
     'app.core', 'app.utils', 'app.dashboard.stream',
     'app.core.gps', 'app.db.spatial', 'app.export'
 ]
+
 for mod in mock_modules:
     sys.modules[mod] = MagicMock()
+
+# Mock eventlet and eventlet.tpool properly
+sys.modules['eventlet'] = MagicMock()
+tpool_mock = MagicMock()
+sys.modules['eventlet.tpool'] = tpool_mock
+sys.modules['eventlet'].tpool = tpool_mock
+
+def mock_execute(func, *args, **kwargs):
+    return func(*args, **kwargs)
+
+tpool_mock.execute = mock_execute
+
+
 
 # 2. Mock top-level side effects in app.dashboard.server (like CSV file creation)
 # before importing the function we want to test.

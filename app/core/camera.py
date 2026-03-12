@@ -132,9 +132,6 @@ class CameraThread:
                 return self._frame.copy()
             return None
 
-    def read(self):
-        """Geriye dönük uyumluluk ve basitlik için"""
-        return self.get_frame()
     
     def stop(self):
         """Arka plan işlemini durdurur"""
