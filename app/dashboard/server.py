@@ -9,7 +9,6 @@ eventlet.monkey_patch()
 import os
 import sys
 import time
-import threading
 import queue
 import json
 import cv2
@@ -47,6 +46,22 @@ frame_queue = queue.Queue(maxsize=5)
 
 # Init CSV logger
 CSV_LOG_FILE = "detections_log.csv"
+csv_log_queue = queue.Queue()
+
+def csv_logger_thread():
+    # Write header if file doesn't exist
+    if not os.path.exists(CSV_LOG_FILE):
+        with open(CSV_LOG_FILE, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Timestamp", "Date", "Time", "Confidence", "BBox_X1", "BBox_Y1", "BBox_X2", "BBox_Y2"])
+
+    with open(CSV_LOG_FILE, 'a', newline='') as f:
+        writer = csv.writer(f)
+        while True:
+            row = csv_log_queue.get()
+            writer.writerow(row)
+            f.flush()
+
 if not os.path.exists(CSV_LOG_FILE):
     with open(CSV_LOG_FILE, 'w', newline='') as f:
         writer = csv.writer(f)
@@ -55,10 +70,15 @@ if not os.path.exists(CSV_LOG_FILE):
 
 # -- Sistem bilgileri --
 def get_stats():
+    import eventlet.tpool
     stats = {'cpu_temp': 0, 'throttled': False, 'fan_rpm': 0}
     try:
-        with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
-            stats['cpu_temp'] = int(f.read().strip()) / 1000
+        def _read_temp():
+            with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+                return f.read().strip()
+
+        temp_str = eventlet.tpool.execute(_read_temp)
+        stats['cpu_temp'] = int(temp_str) / 1000
     except:
         pass
     return stats
@@ -193,7 +213,7 @@ def camera_producer():
     prev_time = time.time()
     while True:
         try:
-            frame = cam.read()
+            frame = cam.get_frame()
             if frame is None:
                 socketio.sleep(0.01)
                 continue
@@ -270,12 +290,10 @@ def detection_loop():
                             })
 
                         # 2. Kalici Veri Sistikcasi Icin CSV Kayit
-                        with open(CSV_LOG_FILE, 'a', newline='') as f:
-                            writer = csv.writer(f)
-                            writer.writerow([
-                                ts, now_dt.strftime('%Y-%m-%d'), now_dt.strftime('%H:%M:%S'),
-                                round(c, 4), x1, y1, x2, y2
-                            ])
+                        csv_log_queue.put([
+                            ts, now_dt.strftime('%Y-%m-%d'), now_dt.strftime('%H:%M:%S'),
+                            round(c, 4), x1, y1, x2, y2
+                        ])
 
                         # 3. Canli GIS Loglama: Eger GPS verisi gecerliyse
                         lat, lon, gps_ts, is_valid = gps_state.get()
@@ -382,6 +400,9 @@ def main():
 
     # GPS okumaları Eventlet sleep desteklesin diye monkey patch ile tam uyumludur
     socketio.start_background_task(gps_reader_thread)
+
+    # Arka plan CSV loglama thread'i
+    socketio.start_background_task(csv_logger_thread)
 
     print(f"http://0.0.0.0:{config.DASHBOARD_PORT}")
     print("=" * 40)

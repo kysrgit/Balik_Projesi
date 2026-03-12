@@ -9,7 +9,7 @@ import threading
 import socket
 import ipaddress
 from urllib.parse import urlparse
-from typing import Optional, Dict, List, Any
+from typing import Dict, Any
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 

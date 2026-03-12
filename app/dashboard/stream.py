@@ -15,9 +15,11 @@ class FrameBuffer:
         self.detections = []
         self.last_conf = 0
         self.count = 0
-    
+        self.sequence = 0
+
     def update(self, raw=None, clahe=None, detection=None, detections=None):
         with self.lock:
+            self.sequence += 1
             if raw is not None:
                 self.raw = raw.copy()
             if clahe is not None:
@@ -29,7 +31,7 @@ class FrameBuffer:
                 self.count = len(detections)
                 if detections:
                     self.last_conf = max(d[4] for d in detections)
-    
+
     def get(self, stream_type):
         with self.lock:
             if stream_type == 'raw':
@@ -44,38 +46,67 @@ def generate_mjpeg(buffer, stream_type='detection', target_fps=15):
     """MJPEG stream generator"""
     interval = 1.0 / target_fps
     last_time = 0
-    
+
+    last_sequence = -1
+    last_jpeg_bytes = None
+
     while True:
         now = time.time()
         if now - last_time < interval:
             time.sleep(0.01)
             continue
-        
+
         frame = buffer.get(stream_type)
         if frame is None:
             time.sleep(0.05)
             continue
-        
+
+        current_sequence = buffer.sequence
+        if current_sequence == last_sequence and last_jpeg_bytes is not None:
+            yield last_jpeg_bytes
+            last_time = now
+            continue
+
+        last_sequence = current_sequence
+
         # Kucuk streamler icin resize
         if stream_type in ['raw', 'clahe']:
             frame = cv2.resize(frame, (320, 240))
-        
+
         quality = 60 if stream_type != 'detection' else 70
         _, jpg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
-        
-        yield (b'--frame\r\n'
+
+        last_jpeg_bytes = (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jpg.tobytes() + b'\r\n')
-        
+
+        yield last_jpeg_bytes
+
         last_time = now
+
+
+_base64_cache = {}
 
 def get_base64_frame(buffer, stream_type='detection', quality=50):
     """WebSocket üzerinden gönderim için frame'i base64 string yapar"""
     frame = buffer.get(stream_type)
     if frame is None:
         return None
-    
+
+    current_sequence = buffer.sequence
+    cache_key = f"{id(buffer)}_{stream_type}_{quality}"
+
+    if cache_key in _base64_cache:
+        cached_seq, cached_b64 = _base64_cache[cache_key]
+        if cached_seq == current_sequence:
+            return cached_b64
+
+    # Need to generate new base64
     if stream_type in ['raw', 'clahe']:
         frame = cv2.resize(frame, (320, 240))
-        
+
     _, jpg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
-    return base64.b64encode(jpg).decode('utf-8')
+    b64_str = base64.b64encode(jpg).decode('utf-8')
+
+    _base64_cache[cache_key] = (current_sequence, b64_str)
+
+    return b64_str
