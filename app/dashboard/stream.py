@@ -46,7 +46,6 @@ def generate_mjpeg(buffer, stream_type='detection', target_fps=15):
     """MJPEG stream generator"""
     interval = 1.0 / target_fps
     last_time = 0
-
     last_sequence = -1
     last_jpeg_bytes = None
 
@@ -80,10 +79,10 @@ def generate_mjpeg(buffer, stream_type='detection', target_fps=15):
                b'Content-Type: image/jpeg\r\n\r\n' + jpg.tobytes() + b'\r\n')
 
         yield last_jpeg_bytes
-
         last_time = now
 
 
+# Cache for base64 encoded frames to avoid re-encoding the same frame multiple times.
 _base64_cache = {}
 
 def get_base64_frame(buffer, stream_type='detection', quality=50):
@@ -108,5 +107,4 @@ def get_base64_frame(buffer, stream_type='detection', quality=50):
     b64_str = base64.b64encode(jpg).decode('utf-8')
 
     _base64_cache[cache_key] = (current_sequence, b64_str)
-
     return b64_str
