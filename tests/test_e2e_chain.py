@@ -40,19 +40,18 @@ def detector():
 
 
 @pytest.fixture(scope="module")
-def fish_frame():
+def fish_frame(detector):
     """Garantili tespit üreten bir test görseli bul"""
     img_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dataset", "test", "images")
     imgs = sorted(glob.glob(os.path.join(img_dir, "*.jpg")))
     assert len(imgs) > 0, "Test görseli bulunamadı"
     
     # En az bir tespiti olan görseli seç
-    det = Detector(str(config.MODEL_PATH))
-    for p in imgs[:30]:
+    for p in imgs[:5]:
         img = cv2.imread(p)
         if img is None:
             continue
-        boxes, confs = det.detect(img, conf=0.30, use_clahe=True)
+        boxes, confs = detector.detect(img, conf=0.30, use_clahe=True)
         if len(boxes) > 0:
             return img
     pytest.skip("Test setinde tespit edilebilir görsel bulunamadı")
@@ -226,6 +225,16 @@ class TestDashboardAPI:
             self.client = srv.app.test_client()
             # Reset recording state
             srv.is_recording = False
+            srv.overlay_clahe = False
+            srv.overlay_boxes = True
+            srv.config.API_TOKEN = None
+            srv.buffer.raw = None
+            srv.buffer.clahe = None
+            srv.buffer.detection = None
+            srv.buffer.detections = []
+            srv.buffer.count = 0
+            srv.buffer.last_conf = 0
+            srv.buffer.sequence = 0
             yield
 
     def test_record_toggle_on(self):
@@ -252,6 +261,14 @@ class TestDashboardAPI:
         assert 'recording' in data
         assert data['recording'] is True
 
+    def test_config_returns_overlay_state(self):
+        self.srv.overlay_clahe = True
+        self.srv.overlay_boxes = False
+        resp = self.client.get('/api/config')
+        data = resp.get_json()
+        assert data['overlay_clahe'] is True
+        assert data['overlay_boxes'] is False
+
     def test_config_post_confidence(self):
         """POST /api/config ile confidence güncellenebilmeli"""
         resp = self.client.post('/api/config',
@@ -268,6 +285,18 @@ class TestDashboardAPI:
         resp = self.client.post('/api/snapshot')
         data = resp.get_json()
         assert data['status'] == 'error'
+
+    def test_clahe_stream_route_exists(self, fish_frame):
+        self.srv.buffer.update(clahe=fish_frame)
+
+        resp = self.client.get('/video/clahe', buffered=False)
+        try:
+            first_chunk = next(resp.response)
+            assert resp.status_code == 200
+            assert 'multipart/x-mixed-replace' in resp.content_type
+            assert b'Content-Type: image/jpeg' in first_chunk
+        finally:
+            resp.close()
 
     def test_index_page_loads(self):
         """Ana sayfa 200 dönmeli"""

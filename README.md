@@ -88,10 +88,18 @@ Kurulum betiği şunları yapar:
 ```bash
 git clone https://github.com/kysrgit/Balik_Projesi.git
 cd Balik_Projesi
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 > **Not:** PC'de kamera otomatik olarak OpenCV VideoCapture üzerinden çalışır (picamera2 gerekmez).
+
+### Eğitim / Quantization Ortamı
+
+```bash
+pip install -r requirements-train.txt
+```
+
+> **Not:** `training/export_quantize.py` için `onnx`, `Pillow` ve kalibrasyon verisi gerekir.
 
 ## Kullanım
 
@@ -129,15 +137,16 @@ python3 scripts/gps_simulator.py
 ## Dashboard Özellikleri
 
 - **3 Görüntü Modu:** Raw, CLAHE, Detection
-- **Canlı Metrikler:** FPS, confidence, CPU sıcaklığı, throttle durumu, GPS Durumu
+- **Canlı Metrikler:** FPS, confidence, CPU sıcaklığı, throttle durumu, GPS durumu
 - **Alternatif Akış:** Düşük bant genişliği için WebSocket Base64 Streaming
-- **Ayarlanabilir Parametreler:** Confidence eşiği, CLAHE clip limit (canlı slider)
+- **Ayarlanabilir Parametreler:** Confidence eşiği, CLAHE clip limit, overlay CLAHE / overlay boxes
 - **Tespit Logu:** Zaman damgalı kayıtlar ve thumbnail önizleme
 - **Anlık Bildirimler:** Toast notification ile tespit uyarısı
 - **Snapshot & Kayıt:** Anlık görüntü alma, Record ON/OFF kontrolü
 - **GIS Haritası:** Leaflet.js + heatmap ile canlı tespit haritası
 - **Veri Export:** CSV, GeoJSON, DarwinCore Archive tek tıkla indirme
 - **Webhook Yönetimi:** Slack/Discord/Teams bildirim ekleme/silme
+- **Opsiyonel API Token:** `DASHBOARD_API_TOKEN` ayarlıysa mutating endpoint'ler korunur
 
 ## Veri Paylaşım Katmanı
 
@@ -174,20 +183,19 @@ curl -X DELETE http://localhost:5000/api/webhooks \
 
 ## Test Altyapısı
 
-64 otomatik test ile tüm bileşenler doğrulanmıştır:
+Pytest tabanlı test paketi ile temel bileşenler doğrulanır:
 
 ```bash
+python -m pip install -r requirements-dev.txt
 python -m pytest tests/ -v
 ```
 
-| Test Dosyası | Kapsam | Test Sayısı |
-|---|---|---|
-| `test_detector.py` | ONNX model, inference, CLAHE, draw_boxes | 11 |
-| `test_logging.py` | CSV başlık, yazma, append, boş tespit | 5 |
-| `test_spatial.py` | DB insert, confidence/region sorgusu, şema | 6 |
-| `test_e2e_chain.py` | Tespit→CSV+thumb, API, queue, recording gate | 13 |
-| `test_export.py` | GeoJSON, CSV, DarwinCore, webhook, endpoint'ler | 29 |
-| **Toplam** | | **64** |
+Kapsam:
+- Runtime ve kamera akışı
+- SQLite fallback + SpatiaLite uyumluluğu
+- Export formatları ve webhook yönetimi
+- Dashboard API sözleşmesi
+- Import smoke testleri
 
 ## Teknik Detaylar
 
@@ -208,10 +216,11 @@ python -m pytest tests/ -v
 ## Model Eğitimi
 
 1. Görselleri `balon_baligi_fotograflari/` klasörüne koy
-2. `python training/data_prep.py` — Train/val bölümlemesi
-3. LabelImg veya Roboflow ile YOLO formatında etiketle
-4. `python training/train_yolo.py` — 50 epoch eğitim (GPU önerilir)
-5. `python training/export_quantize.py` — INT8 ONNX export
+2. `python training/data_prep.py` — `dataset/train|valid|test` yapısını ve `dataset/data.yaml` dosyasını üret
+3. LabelImg veya Roboflow ile YOLO etiketlerini `dataset/<split>/labels` klasörlerine yerleştir
+4. `python training/collect_negatives.py` — İsteğe bağlı negatif örnek üretimi
+5. `python training/train_yolo.py` — 50 epoch eğitim (GPU varsa otomatik kullanılır)
+6. `python training/export_quantize.py` — INT8 ONNX export
 
 ## Ayarlar
 
@@ -228,6 +237,7 @@ Tüm ayarlar `app/core/config.py` dosyasında:
 | `GPS_BAUDRATE` | 9600 | GPS baud rate |
 | `DASHBOARD_SAVE_INTERVAL` | 1.0 | Max 1 tespit kaydı/saniye |
 | `MAX_MAP_POINTS` | 5000 | Haritada max nokta sayısı |
+| `DASHBOARD_API_TOKEN` | unset | Ayarlıysa mutating API çağrıları token ister |
 
 ## API Referansı
 

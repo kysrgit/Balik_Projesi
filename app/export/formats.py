@@ -11,6 +11,8 @@ import zipfile
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 
+from app.db.spatial import SPATIALITE_EXTENSIONS, supports_spatialite
+
 
 # ─────────────────────────────────────────────────────────────────
 # Ortak: CSV dosyasından tespitleri oku
@@ -35,24 +37,45 @@ def _read_detections_db(db_path: str) -> List[Dict[str, Any]]:
         if not os.path.exists(db_path):
             return rows
         conn = sqlite3.connect(db_path)
-        conn.enable_load_extension(True)
-        # Try loading spatialite (similar to spatial.py)
-        for ext in ['mod_spatialite', 'libspatialite.so', 'mod_spatialite.dylib', 'mod_spatialite.dll']:
-            try:
-                conn.execute(f"SELECT load_extension('{ext}')")
-                break
-            except sqlite3.OperationalError:
-                pass
-                
         conn.row_factory = sqlite3.Row
-        cursor = conn.execute(
-            "SELECT species, confidence, timestamp, ST_Y(geom) as latitude, ST_X(geom) as longitude FROM spatial_log ORDER BY timestamp"
-        )
+
+        try:
+            conn.enable_load_extension(True)
+            for ext in SPATIALITE_EXTENSIONS:
+                try:
+                    conn.execute(f"SELECT load_extension('{ext}')")
+                    break
+                except sqlite3.OperationalError:
+                    continue
+        except sqlite3.OperationalError:
+            pass
+
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(spatial_log)").fetchall()}
+        if {"latitude", "longitude"}.issubset(columns):
+            query = """
+                SELECT species, confidence, timestamp, latitude, longitude
+                FROM spatial_log
+                ORDER BY timestamp
+            """
+        elif "geom" in columns and supports_spatialite(conn):
+            query = """
+                SELECT species, confidence, timestamp, ST_Y(geom) as latitude, ST_X(geom) as longitude
+                FROM spatial_log
+                ORDER BY timestamp
+            """
+        else:
+            query = """
+                SELECT species, confidence, timestamp, NULL as latitude, NULL as longitude
+                FROM spatial_log
+                ORDER BY timestamp
+            """
+
+        cursor = conn.execute(query)
         for row in cursor:
             rows.append(dict(row))
         conn.close()
-    except Exception:
-        pass
+    except Exception as exc:
+        print(f"WARNING: Could not read detections DB '{db_path}': {exc}")
     return rows
 
 

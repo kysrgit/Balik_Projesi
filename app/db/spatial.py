@@ -1,114 +1,186 @@
 import sqlite3
 from contextlib import contextmanager
+
 from app.core import config
 
-def get_db_connection():
-    """Create a thread-local database connection with SpatiaLite enabled"""
-    conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
-    # Enable extension loading
-    conn.enable_load_extension(True)
-    
-    # Try different extension paths depending on the OS / sqlite build
+
+SPATIALITE_EXTENSIONS = [
+    "mod_spatialite",
+    "libspatialite.so",
+    "mod_spatialite.dylib",
+    "mod_spatialite.dll",
+]
+
+
+def _load_spatialite(conn: sqlite3.Connection) -> bool:
+    """Try to load the SpatiaLite extension for the current connection."""
     try:
-        conn.execute("SELECT load_extension('mod_spatialite')")
-    except sqlite3.OperationalError:
+        conn.enable_load_extension(True)
+    except (AttributeError, sqlite3.OperationalError):
+        return False
+
+    for extension in SPATIALITE_EXTENSIONS:
         try:
-            # Maybe linux format
-            conn.execute("SELECT load_extension('libspatialite.so')")
+            conn.execute(f"SELECT load_extension('{extension}')")
+            return True
         except sqlite3.OperationalError:
-            try:
-                # Maybe macos
-                conn.execute("SELECT load_extension('mod_spatialite.dylib')")
-            except sqlite3.OperationalError:
-                try:
-                    # Windows alternative
-                    conn.execute("SELECT load_extension('mod_spatialite.dll')")
-                except sqlite3.OperationalError:
-                    print("WARNING: Could not load SpatiaLite extension. Spatial indexing will not work.")
-    
+            continue
+
+    return False
+
+
+def supports_spatialite(conn: sqlite3.Connection) -> bool:
+    try:
+        conn.execute("SELECT spatialite_version()").fetchone()
+        return True
+    except sqlite3.OperationalError:
+        return False
+
+
+def table_columns(conn: sqlite3.Connection, table_name: str) -> set[str]:
+    cursor = conn.execute(f"PRAGMA table_info({table_name})")
+    return {row["name"] if isinstance(row, sqlite3.Row) else row[1] for row in cursor.fetchall()}
+
+
+def _has_spatial_metadata(conn: sqlite3.Connection) -> bool:
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='spatial_ref_sys'"
+    ).fetchone()
+    return row is not None
+
+
+def _geom_query_fragment(conn: sqlite3.Connection) -> tuple[str, bool]:
+    columns = table_columns(conn, "spatial_log")
+    if {"latitude", "longitude"}.issubset(columns):
+        return "latitude, longitude", False
+
+    if "geom" in columns and supports_spatialite(conn):
+        return "ST_Y(geom) as latitude, ST_X(geom) as longitude", True
+
+    return "NULL as latitude, NULL as longitude", False
+
+
+def get_db_connection(db_path=None):
+    """Create a database connection and try to enable SpatiaLite if available."""
+    conn = sqlite3.connect(db_path or config.DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+
+    if not _load_spatialite(conn):
+        print("WARNING: Could not load SpatiaLite extension. Falling back to plain SQLite coordinates.")
+
     return conn
 
+
 @contextmanager
-def db_session():
-    """Context manager for DB connections"""
-    conn = get_db_connection()
+def db_session(db_path=None):
+    """Context manager for DB connections."""
+    conn = get_db_connection(db_path=db_path)
     try:
         yield conn
     finally:
         conn.commit()
         conn.close()
 
-def init_db():
-    """Initialize SpatiaLite database and tables if they don't exist"""
-    print(f"Initializing SpatiaLite database at {config.DB_PATH} ...")
-    
-    with db_session() as conn:
+
+def init_db(db_path=None):
+    """Initialize the database for both SpatiaLite and plain SQLite modes."""
+    target_path = db_path or config.DB_PATH
+    print(f"Initializing database at {target_path} ...")
+
+    with db_session(db_path=target_path) as conn:
         cursor = conn.cursor()
-        
-        # Iniliaize SpatiaLite internal metadata tables
-        cursor.execute("SELECT InitSpatialMetaData(1);")
-        
-        # Create our detection log table
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS spatial_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 species TEXT NOT NULL,
                 confidence REAL NOT NULL,
-                timestamp REAL NOT NULL
+                timestamp REAL NOT NULL,
+                latitude REAL,
+                longitude REAL
             )
-        ''')
-        
-        # Add the geometry column (POINT)
-        # Check if geometry column already exists
-        cursor.execute("PRAGMA table_info(spatial_log)")
-        columns = [col['name'] for col in cursor.fetchall()]
-        if 'geom' not in columns:
-            cursor.execute("SELECT AddGeometryColumn('spatial_log', 'geom', 4326, 'POINT', 'XY')")
-            
-            # Create a spatial index
-            cursor.execute("SELECT CreateSpatialIndex('spatial_log', 'geom')")
-            
+            """
+        )
+
+        columns = table_columns(conn, "spatial_log")
+        if "latitude" not in columns:
+            cursor.execute("ALTER TABLE spatial_log ADD COLUMN latitude REAL")
+        if "longitude" not in columns:
+            cursor.execute("ALTER TABLE spatial_log ADD COLUMN longitude REAL")
+
+        if supports_spatialite(conn):
+            if not _has_spatial_metadata(conn):
+                cursor.execute("SELECT InitSpatialMetaData(1);")
+
+            columns = table_columns(conn, "spatial_log")
+            if "geom" not in columns:
+                cursor.execute("SELECT AddGeometryColumn('spatial_log', 'geom', 4326, 'POINT', 'XY')")
+                cursor.execute("SELECT CreateSpatialIndex('spatial_log', 'geom')")
+
     print("Database initialization successful.")
 
-def insert_detection(species, confidence, lat, lon, timestamp):
-    """Insert a new detection with spatial coordinates into the database"""
-    with db_session() as conn:
-        cursor = conn.cursor()
-        
-        # RULE 3: ST_GeomFromText('POINT(lon lat)', 4326)
-        wkt_point = f"POINT({lon} {lat})"
-        
-        query = '''
-            INSERT INTO spatial_log (species, confidence, timestamp, geom)
-            VALUES (?, ?, ?, ST_GeomFromText(?, 4326))
-        '''
-        cursor.execute(query, (species, confidence, timestamp, wkt_point))
 
-def query_detections(limit=100):
-    """Son N tespiti döndür. Koordinatları okurken ST_X (lon) ve ST_Y (lat) kullanır."""
-    with db_session() as conn:
+def insert_detection(species, confidence, lat, lon, timestamp, db_path=None):
+    """Insert a new detection into the database with or without SpatiaLite."""
+    with db_session(db_path=db_path) as conn:
         cursor = conn.cursor()
-        query = '''
-            SELECT id, species, confidence, timestamp, ST_Y(geom) as latitude, ST_X(geom) as longitude
+        columns = table_columns(conn, "spatial_log")
+        use_geom = "geom" in columns and supports_spatialite(conn)
+
+        if use_geom:
+            wkt_point = f"POINT({lon} {lat})"
+            cursor.execute(
+                """
+                INSERT INTO spatial_log (species, confidence, timestamp, latitude, longitude, geom)
+                VALUES (?, ?, ?, ?, ?, ST_GeomFromText(?, 4326))
+                """,
+                (species, confidence, timestamp, lat, lon, wkt_point),
+            )
+        else:
+            cursor.execute(
+                """
+                INSERT INTO spatial_log (species, confidence, timestamp, latitude, longitude)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (species, confidence, timestamp, lat, lon),
+            )
+
+
+def query_detections(limit=100, db_path=None):
+    """Return the latest detections regardless of DB backend mode."""
+    with db_session(db_path=db_path) as conn:
+        cursor = conn.cursor()
+        coords_fragment, _ = _geom_query_fragment(conn)
+        cursor.execute(
+            f"""
+            SELECT id, species, confidence, timestamp, {coords_fragment}
             FROM spatial_log
             ORDER BY timestamp DESC
             LIMIT ?
-        '''
-        cursor.execute(query, (limit,))
+            """,
+            (limit,),
+        )
         return [dict(row) for row in cursor.fetchall()]
 
-def query_detections_bbox(min_lat, min_lon, max_lat, max_lon):
-    """Bölgesel sorgu - Bounding box"""
-    with db_session() as conn:
+
+def query_detections_bbox(min_lat, min_lon, max_lat, max_lon, db_path=None):
+    """Bounding-box query that works in both SQLite fallback and SpatiaLite mode."""
+    with db_session(db_path=db_path) as conn:
         cursor = conn.cursor()
-        # SpatiaLite BuildMbr / MbrWithin veya basit lat/lon
-        query = '''
-            SELECT id, species, confidence, timestamp, ST_Y(geom) as latitude, ST_X(geom) as longitude
+        coords_fragment, using_geom = _geom_query_fragment(conn)
+
+        if using_geom:
+            where_clause = "ST_Y(geom) BETWEEN ? AND ? AND ST_X(geom) BETWEEN ? AND ?"
+        else:
+            where_clause = "latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?"
+
+        cursor.execute(
+            f"""
+            SELECT id, species, confidence, timestamp, {coords_fragment}
             FROM spatial_log
-            WHERE ST_Y(geom) BETWEEN ? AND ?
-              AND ST_X(geom) BETWEEN ? AND ?
+            WHERE {where_clause}
             ORDER BY timestamp DESC
-        '''
-        cursor.execute(query, (min_lat, max_lat, min_lon, max_lon))
+            """,
+            (min_lat, max_lat, min_lon, max_lon),
+        )
         return [dict(row) for row in cursor.fetchall()]

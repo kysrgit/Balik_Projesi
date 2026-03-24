@@ -6,6 +6,11 @@ from pathlib import Path
 from ultralytics import YOLO
 from onnxruntime.quantization import quantize_static, CalibrationDataReader, QuantType, QuantFormat
 
+try:
+    import onnx  # noqa: F401
+except ImportError as exc:
+    raise SystemExit("onnx paketi eksik. Lutfen requirements-train.txt kurun.") from exc
+
 MODEL_PT = Path(__file__).parent.parent / "models" / "yolo11m_pufferfish.pt"
 MODEL_ONNX = MODEL_PT.with_suffix('.onnx')
 MODEL_INT8 = Path(__file__).parent.parent / "models" / "pufferfish_pi_int8.onnx"
@@ -35,6 +40,10 @@ class CalibReader(CalibrationDataReader):
 def export():
     if not MODEL_PT.exists():
         print(f"Model yok: {MODEL_PT}")
+        return
+    if not CALIB_DIR.exists():
+        print(f"Kalibrasyon klasoru yok: {CALIB_DIR}")
+        print("Once dataset/valid/images yapisini olusturun.")
         return
     
     # ONNX export

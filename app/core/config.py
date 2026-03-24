@@ -26,6 +26,10 @@ SKIP_FRAMES = 5  # her N frame'de tespit yap
 # Kayit
 DETECTION_DIR = ROOT_DIR / "detections"
 THUMB_DIR = DETECTION_DIR / "thumbs"
+CSV_LOG_FILE = ROOT_DIR / "detections_log.csv"
+MAX_DETECTION_FILES = 250
+MAX_THUMB_FILES = 500
+MAX_SNAPSHOT_FILES = 100
 
 # Dashboard
 DASHBOARD_PORT = 5000
@@ -41,6 +45,7 @@ STREAM_FPS = 15
 JPEG_QUALITY = 70
 WS_STREAM_QUALITY = 50  # WebSocket base64 stream JPEG kalitesi
 DASHBOARD_SAVE_INTERVAL = 1.0  # Max 1 detection log/save per second
+API_TOKEN = os.environ.get("DASHBOARD_API_TOKEN")
 
 # CLAHE
 CLAHE_CLIP = 3.0

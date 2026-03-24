@@ -1,6 +1,9 @@
 # YOLO11m egitim scripti
-from ultralytics import YOLO
+import os
 from pathlib import Path
+
+import torch
+from ultralytics import YOLO
 
 # --- Sualti Agresif Veri Artirimi (Albumentations Monkey-Patch) ---
 # Bu bolum, egitim sirasinda rastgele sualti kosullari simulasyonu yapar.
@@ -55,6 +58,9 @@ def train():
     
     print(f"Egitim basliyor: {MODEL}")
     model = YOLO(MODEL)
+    device = os.environ.get("YOLO_DEVICE")
+    if device is None:
+        device = 0 if torch.cuda.is_available() else "cpu"
     
     model.train(
         data=str(DATA_YAML),
@@ -75,7 +81,7 @@ def train():
         mixup=0.15,   # Karmaşıklığı artırmak (balıkları iç içe gizlemek)
         bgr=0.1,      # Channel swap ile rastgele renk şoku
         
-        device=0,
+        device=device,
         exist_ok=True,
         workers=2,    # Windows'da DataLoader worker crash'lerini önle
         batch=8       # 6GB GPU bellek sınırı için güvenli batch boyutu

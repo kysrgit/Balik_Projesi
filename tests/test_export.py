@@ -225,7 +225,7 @@ class TestDarwinCore:
 class TestWebhookNotifier:
     def test_add_remove_target(self):
         n = WebhookNotifier()
-        n.add_target("slack", "https://hooks.slack.com/test")
+        n.add_target("slack", "https://example.com/slack")
         assert "slack" in n.get_targets()
         n.remove_target("slack")
         assert "slack" not in n.get_targets()
@@ -240,7 +240,7 @@ class TestWebhookNotifier:
 
     def test_rate_limiting(self):
         n = WebhookNotifier(rate_limit_seconds=10)
-        n.add_target("test", "https://httpbin.org/post")  # Won't actually send
+        n.add_target("test", "https://example.com/post")  # Won't actually send
         
         # İlk çağrı (rate limit yok)
         with patch.object(n, '_send_one', return_value=True):
@@ -258,7 +258,7 @@ class TestWebhookNotifier:
 
     def test_add_target_safe_url(self):
         n = WebhookNotifier()
-        n.add_target("safe", "https://hooks.slack.com/test")
+        n.add_target("safe", "https://example.com/safe")
         assert "safe" in n.get_targets()
 
     def test_add_target_invalid_scheme(self):
@@ -284,7 +284,7 @@ class TestWebhookNotifier:
 
     def test_format_payload_generic(self):
         n = WebhookNotifier()
-        n.add_target("custom", "https://httpbin.org/post")
+        n.add_target("custom", "https://example.com/post")
         payload = n._format_payload("custom", {
             'species': 'Lagocephalus sceleratus',
             'confidence': 0.85,
@@ -298,7 +298,7 @@ class TestWebhookNotifier:
 
     def test_format_payload_slack(self):
         n = WebhookNotifier()
-        n.add_target("slack", "https://hooks.slack.com/test")
+        n.add_target("slack", "https://example.com/slack")
         payload = n._format_payload("slack", {
             'species': 'Lagocephalus sceleratus',
             'confidence': 0.9,
@@ -311,7 +311,7 @@ class TestWebhookNotifier:
 
     def test_format_payload_discord(self):
         n = WebhookNotifier()
-        n.add_target("discord", "https://discord.com/api/webhooks/test")
+        n.add_target("discord", "https://example.com/discord")
         payload = n._format_payload("discord", {
             'species': 'test', 'confidence': 0.7,
             'lat': None, 'lon': None, 'timestamp': ''
@@ -346,6 +346,7 @@ class TestExportEndpoints:
             srv.app.config['TESTING'] = True
             self.client = srv.app.test_client()
             self.srv = srv
+            srv.config.API_TOKEN = None
             yield
 
     def test_geojson_endpoint(self):
@@ -404,3 +405,14 @@ class TestExportEndpoints:
                                 json={'name': '', 'url': ''},
                                 content_type='application/json')
         assert resp.status_code == 400
+
+    def test_token_protects_mutating_endpoints(self):
+        self.srv.config.API_TOKEN = 'secret-token'
+        try:
+            resp = self.client.post('/api/record')
+            assert resp.status_code == 401
+
+            resp = self.client.post('/api/record', headers={'X-API-Token': 'secret-token'})
+            assert resp.status_code == 200
+        finally:
+            self.srv.config.API_TOKEN = None

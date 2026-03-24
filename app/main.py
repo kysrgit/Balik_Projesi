@@ -7,51 +7,47 @@ import argparse
 import time
 import os
 import sys
-import csv
 import cv2
-from datetime import datetime
 
 # Proje path ayari
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core import config, Camera, Detector, gpio
+from app.core.detection_store import (
+    append_detection_rows,
+    build_detection_rows,
+    ensure_csv_header,
+    save_image_with_retention,
+)
 from app.utils import draw_boxes
 
 # CSV log dosyasi
-CSV_LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "detections_log.csv")
+CSV_LOG_FILE = str(config.CSV_LOG_FILE)
 
 
 def _ensure_csv_header():
     """CSV dosyasi yoksa basliklari olustur"""
-    if not os.path.exists(CSV_LOG_FILE):
-        with open(CSV_LOG_FILE, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(["Timestamp", "Date", "Time", "Confidence", "BBox_X1", "BBox_Y1", "BBox_X2", "BBox_Y2"])
+    ensure_csv_header(CSV_LOG_FILE)
 
 
 def _log_detection_csv(boxes, confs):
     """Tespitleri CSV'ye yaz"""
-    now_dt = datetime.now()
-    ts = now_dt.strftime('%H%M%S_%f')
-    with open(CSV_LOG_FILE, 'a', newline='') as f:
-        writer = csv.writer(f)
-        for (x1, y1, x2, y2), c in zip(boxes, confs):
-            writer.writerow([
-                ts, now_dt.strftime('%Y-%m-%d'), now_dt.strftime('%H:%M:%S'),
-                round(c, 4), x1, y1, x2, y2
-            ])
+    append_detection_rows(CSV_LOG_FILE, build_detection_rows(boxes, confs))
 
 
 def save_detection(frame, boxes, confs, save_dir):
     """Tespit edilen frame'i kaydet"""
-    os.makedirs(save_dir, exist_ok=True)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    path = os.path.join(save_dir, f"fish_{timestamp}.jpg")
-    
+    filename = f"fish_{timestamp}.jpg"
     result = draw_boxes(frame, boxes, confs)
-    cv2.imwrite(path, result)
+    path = save_image_with_retention(
+        result,
+        save_dir,
+        filename,
+        max_files=config.MAX_DETECTION_FILES,
+    )
     print(f"Kaydedildi: {path}")
-    return path
+    return str(path)
 
 
 def run(use_clahe=True, show_gui=False):
@@ -76,7 +72,7 @@ def run(use_clahe=True, show_gui=False):
     try:
         # Pi'de mi calisiyoruz kontrol et
         is_pi = os.path.exists('/sys/class/thermal/thermal_zone0/temp')
-        cam = Camera(config.CAM_WIDTH, config.CAM_HEIGHT, use_pi=is_pi)
+        cam = Camera(config.CAM_WIDTH, config.CAM_HEIGHT, fps=config.TARGET_FPS, use_pi=is_pi).start()
     except Exception as e:
         print(f"Kamera hatasi: {e}")
         return

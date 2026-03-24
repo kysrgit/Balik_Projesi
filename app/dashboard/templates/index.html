@@ -175,6 +175,9 @@
                 <button onclick="switchStream('raw')" class="stream-tab px-4 py-2 rounded glass" data-stream="raw">
                     <i class="fas fa-camera"></i> Raw
                 </button>
+                <button onclick="switchStream('clahe')" class="stream-tab px-4 py-2 rounded glass" data-stream="clahe">
+                    <i class="fas fa-sun"></i> CLAHE
+                </button>
                 <button onclick="switchStream('detection')" class="stream-tab px-4 py-2 rounded glass bg-green-500/30"
                     data-stream="detection">
                     <i class="fas fa-crosshairs"></i> Detection
@@ -212,6 +215,12 @@
                         <i class="fas fa-camera text-2xl text-gray-500"></i>
                     </div>
                     <p class="text-xs text-center mt-1 text-gray-400">Raw</p>
+                </div>
+                <div class="glass rounded-lg p-1 w-32 cursor-pointer hover:bg-white/10" onclick="switchStream('clahe')">
+                    <div class="w-full aspect-video bg-gray-800 rounded flex items-center justify-center">
+                        <i class="fas fa-sun text-2xl text-cyan-400"></i>
+                    </div>
+                    <p class="text-xs text-center mt-1 text-gray-400">CLAHE</p>
                 </div>
                 <div class="glass rounded-lg p-1 w-32 cursor-pointer hover:bg-white/10"
                     onclick="switchStream('detection')">
@@ -263,6 +272,18 @@
                 <div class="mt-3 flex items-center justify-between text-sm">
                     <span class="text-gray-300">Recording</span>
                     <span id="record-state" class="px-2 py-1 rounded bg-gray-700 text-gray-200">OFF</span>
+                </div>
+                <div id="token-panel" class="mt-4 hidden border-t border-gray-700 pt-4">
+                    <label class="block text-xs text-gray-400 mb-2">API Token</label>
+                    <div class="flex gap-2">
+                        <input id="api-token" type="password" placeholder="DASHBOARD_API_TOKEN"
+                            class="flex-1 px-2 py-2 rounded bg-gray-800 border border-gray-600 text-xs text-white focus:border-green-400 outline-none">
+                        <button onclick="saveApiToken()"
+                            class="px-3 py-2 rounded bg-green-600 hover:bg-green-700 transition text-xs">
+                            Kaydet
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-2">Mutating endpoint'ler token gerektiriyorsa bu alan kullanılır.</p>
                 </div>
             </div>
 
@@ -345,7 +366,7 @@
                     </div>
                     <div class="flex justify-between">
                         <span>Fan</span>
-                        <span id="stat-fan">-- RPM</span>
+                        <span id="stat-fan">N/A</span>
                     </div>
                     <div class="flex justify-between border-t border-gray-700 pt-2 mt-2">
                         <span>GPS Signal</span>
@@ -395,6 +416,51 @@
         let isRecording = false;
         let viewMode = 'debug';
         let useWsStream = false;
+        let tokenRequired = {{ token_required|tojson }};
+
+        function getApiToken() {
+            return localStorage.getItem('dashboard_api_token') || '';
+        }
+
+        function saveApiToken() {
+            const token = document.getElementById('api-token').value.trim();
+            localStorage.setItem('dashboard_api_token', token);
+            showToast('API Token', token ? 'Kaydedildi' : 'Temizlendi');
+        }
+
+        function buildApiHeaders(extra = {}) {
+            const headers = { ...extra };
+            const token = getApiToken();
+            if (token) {
+                headers['X-API-Token'] = token;
+            }
+            return headers;
+        }
+
+        function apiFetch(url, options = {}) {
+            const opts = { ...options };
+            opts.headers = buildApiHeaders(options.headers || {});
+            return fetch(url, opts).then(async response => {
+                if (response.status === 401) {
+                    if (tokenRequired) {
+                        document.getElementById('token-panel').classList.remove('hidden');
+                    }
+                    showToast('Yetki Gerekli', 'API token gerekli');
+                }
+                return response;
+            });
+        }
+
+        function syncTokenPanel() {
+            const panel = document.getElementById('token-panel');
+            const input = document.getElementById('api-token');
+            input.value = getApiToken();
+            if (tokenRequired) {
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
 
         // Socket events
         socket.on('connect', () => {
@@ -434,7 +500,7 @@
 
             document.getElementById('stat-throttle').textContent = data.throttled ? '⚠️ THROTTLED' : 'OK';
             document.getElementById('stat-throttle').className = data.throttled ? 'text-red-500' : 'text-green-400';
-            document.getElementById('stat-fan').textContent = data.fan_rpm + ' RPM';
+            document.getElementById('stat-fan').textContent = data.fan_rpm ? `${data.fan_rpm} RPM` : 'N/A';
 
             if (data.gps && data.gps.is_valid) {
                 document.getElementById('stat-gps-status').textContent = 'Valid Fix';
@@ -465,7 +531,11 @@
             document.getElementById('conf-val').textContent = data.confidence.toFixed(2);
             document.getElementById('clahe-slider').value = data.clahe_clip;
             document.getElementById('clahe-val').textContent = data.clahe_clip.toFixed(1);
+            document.getElementById('overlay-clahe').checked = !!data.overlay_clahe;
+            document.getElementById('overlay-boxes').checked = !!data.overlay_boxes;
             applyRecordState(!!data.recording);
+            tokenRequired = !!data.token_required;
+            syncTokenPanel();
         });
 
         // GIS Map Initialization
@@ -523,6 +593,8 @@
             useWsStream = !useWsStream;
             const btn = document.getElementById('btn-ws-stream');
             if (useWsStream) {
+                currentStream = 'detection';
+                document.getElementById('main-stream').src = '/video/detection?' + Date.now();
                 btn.classList.add('bg-green-500/30');
                 btn.classList.add('text-green-400');
             } else {
@@ -549,7 +621,7 @@
 
         function updateConfidence(val) {
             document.getElementById('conf-val').textContent = parseFloat(val).toFixed(2);
-            fetch('/api/config', {
+            apiFetch('/api/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ confidence: parseFloat(val) })
@@ -558,7 +630,7 @@
 
         function updateClahe(val) {
             document.getElementById('clahe-val').textContent = parseFloat(val).toFixed(1);
-            fetch('/api/config', {
+            apiFetch('/api/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ clahe_clip: parseFloat(val) })
@@ -566,7 +638,7 @@
         }
 
         function updateOverlay() {
-            fetch('/api/config', {
+            apiFetch('/api/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -577,7 +649,7 @@
         }
 
         function takeSnapshot() {
-            fetch('/api/snapshot', { method: 'POST' })
+            apiFetch('/api/snapshot', { method: 'POST' })
                 .then(r => r.json())
                 .then(data => {
                     if (data.status === 'ok') {
@@ -587,10 +659,12 @@
         }
 
         function toggleRecord() {
-            fetch('/api/record', { method: 'POST' })
+            apiFetch('/api/record', { method: 'POST' })
                 .then(r => r.json())
                 .then(data => {
-                    applyRecordState(!!data.recording);
+                    if (data.status === 'ok') {
+                        applyRecordState(!!data.recording);
+                    }
                 });
         }
 
@@ -616,7 +690,7 @@
             const name = document.getElementById('webhook-name').value.trim();
             const url = document.getElementById('webhook-url').value.trim();
             if (!name || !url) { alert('İsim ve URL gerekli'); return; }
-            fetch('/api/webhooks', {
+            apiFetch('/api/webhooks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, url })
@@ -633,13 +707,13 @@
         }
 
         function listWebhooks() {
-            fetch('/api/webhooks')
+            apiFetch('/api/webhooks')
                 .then(r => r.json())
                 .then(data => renderWebhooks(data.targets, data.stats));
         }
 
         function removeWebhook(name) {
-            fetch('/api/webhooks', {
+            apiFetch('/api/webhooks', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
@@ -769,6 +843,7 @@
         });
 
         // Initialize
+        syncTokenPanel();
         setViewMode('debug');
     </script>
 </body>

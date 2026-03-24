@@ -1,68 +1,72 @@
 """
 Tests for get_stats in app/dashboard/server.py
 """
+import importlib
 import sys
 import unittest
-from unittest.mock import MagicMock, patch, mock_open
-
-# 1. Mock all external and problematic dependencies *before* importing anything from the app.
-# This avoids side effects like trying to import cv2, flask, or eventlet.
-
-mock_modules = [
-    'cv2', 'flask', 'flask_socketio',
-    'app.core', 'app.utils', 'app.dashboard.stream',
-    'app.core.gps', 'app.db.spatial', 'app.export'
-]
-
-for mod in mock_modules:
-    sys.modules[mod] = MagicMock()
-
-# Mock eventlet and eventlet.tpool properly
-sys.modules['eventlet'] = MagicMock()
-tpool_mock = MagicMock()
-sys.modules['eventlet.tpool'] = tpool_mock
-sys.modules['eventlet'].tpool = tpool_mock
-
-def mock_execute(func, *args, **kwargs):
-    return func(*args, **kwargs)
-
-tpool_mock.execute = mock_execute
+from pathlib import Path
+from unittest.mock import MagicMock, mock_open, patch
 
 
+def _load_get_stats():
+    mock_modules = {
+        "cv2": MagicMock(),
+        "flask": MagicMock(),
+        "flask_socketio": MagicMock(),
+        "app.core": MagicMock(),
+        "app.utils": MagicMock(),
+        "app.utils.image": MagicMock(),
+        "app.dashboard.stream": MagicMock(),
+        "app.core.gps": MagicMock(),
+        "app.core.detection_store": MagicMock(),
+        "app.db.spatial": MagicMock(),
+        "app.export": MagicMock(),
+    }
+    eventlet_mock = MagicMock()
+    tpool_mock = MagicMock()
+    tpool_mock.execute.side_effect = lambda func, *args, **kwargs: func(*args, **kwargs)
+    eventlet_mock.tpool = tpool_mock
+    mock_modules["eventlet"] = eventlet_mock
+    mock_modules["eventlet.tpool"] = tpool_mock
 
-# 2. Mock top-level side effects in app.dashboard.server (like CSV file creation)
-# before importing the function we want to test.
-with patch('os.path.exists', return_value=True), \
-     patch('builtins.open', mock_open()):
-    from app.dashboard.server import get_stats
+    with patch.dict(sys.modules, mock_modules, clear=False), \
+         patch("os.path.exists", return_value=True), \
+         patch("builtins.open", mock_open()):
+        server = importlib.import_module("app.dashboard.server")
+        get_stats = server.get_stats
+
+    sys.modules.pop("app.dashboard.server", None)
+    return get_stats
+
+
+get_stats = _load_get_stats()
+
 
 class TestGetStats(unittest.TestCase):
     def test_get_stats_success(self):
-        """Test get_stats when system file exists and contains valid data."""
-        # Note: We patch builtins.open again inside the test to control the read data.
-        with patch('builtins.open', mock_open(read_data='45000\n')):
+        with patch.object(Path, "exists", return_value=True), \
+             patch.object(Path, "read_text", return_value="45000\n"):
             stats = get_stats()
-            self.assertEqual(stats['cpu_temp'], 45.0)
-            self.assertFalse(stats['throttled'])
-            self.assertEqual(stats['fan_rpm'], 0)
+            self.assertEqual(stats["cpu_temp"], 45.0)
+            self.assertFalse(stats["throttled"])
+            self.assertIsNone(stats["fan_rpm"])
 
     def test_get_stats_file_not_found(self):
-        """Test get_stats when system file does not exist (e.g., non-Raspberry Pi environment)."""
-        with patch('builtins.open', side_effect=FileNotFoundError):
+        with patch.object(Path, "exists", return_value=True), \
+             patch.object(Path, "read_text", side_effect=FileNotFoundError):
             stats = get_stats()
-            # Should return default values
-            self.assertEqual(stats['cpu_temp'], 0)
-            self.assertFalse(stats['throttled'])
-            self.assertEqual(stats['fan_rpm'], 0)
+            self.assertEqual(stats["cpu_temp"], 0)
+            self.assertFalse(stats["throttled"])
+            self.assertIsNone(stats["fan_rpm"])
 
     def test_get_stats_permission_error(self):
-        """Test get_stats when system file cannot be accessed due to permissions."""
-        with patch('builtins.open', side_effect=PermissionError):
+        with patch.object(Path, "exists", return_value=True), \
+             patch.object(Path, "read_text", side_effect=PermissionError):
             stats = get_stats()
-            self.assertEqual(stats['cpu_temp'], 0)
+            self.assertEqual(stats["cpu_temp"], 0)
 
     def test_get_stats_invalid_data(self):
-        """Test get_stats when system file contains non-numeric data."""
-        with patch('builtins.open', mock_open(read_data='invalid_temp')):
+        with patch.object(Path, "exists", return_value=True), \
+             patch.object(Path, "read_text", return_value="invalid_temp"):
             stats = get_stats()
-            self.assertEqual(stats['cpu_temp'], 0)
+            self.assertEqual(stats["cpu_temp"], 0)
