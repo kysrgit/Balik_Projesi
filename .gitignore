@@ -53,9 +53,17 @@ desktop.ini
 .DS_Store
 Thumbs.db
 
-# Documentation
+# Office / manuscript documents — kept locally (archive/) for AI to read, never committed
 *.docx
+*.doc
 *.pdf
+*.xlsx
+*.xls
+*.xlsm
+*.pptx
+*.ppt
+*.odt
+*.ods
 
 # Temporary files
 *.tmp
