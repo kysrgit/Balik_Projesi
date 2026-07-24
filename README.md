@@ -7,9 +7,10 @@ Raspberry Pi 5 üzerinde çalışan, gerçek zamanlı sualtı balon balığı (*
 ```
 app/
 ├── core/                    # Çekirdek modüller
-│   ├── config.py            # Merkezi ayarlar
+│   ├── config.py            # Merkezi ayarlar (model yolu, eşikler, CORS, CLAHE)
 │   ├── camera.py            # Pi 5 native kamera + OpenCV fallback
-│   ├── detector.py          # YOLO ONNX wrapper (INT8)
+│   ├── detector.py          # YOLO11m ONNX çıkarım motoru (XNNPACK + thread tuning)
+│   ├── detection_store.py   # Tespit geçmişi / durum yönetimi (thread-safe)
 │   ├── gpio.py              # LED kontrolü (GPIO 17)
 │   └── gps.py               # GPS okuyucu (pyserial + pynmea2)
 ├── utils/
@@ -24,12 +25,15 @@ app/
 ├── export/                  # Veri paylaşım modülleri
 │   ├── formats.py           # GeoJSON, CSV, DarwinCore Archive
 │   └── webhook.py           # Webhook bildirim sistemi
-└── main.py                  # Headless/GUI çalıştırıcı + CSV loglama
+├── main.py                  # Headless/GUI çalıştırıcı + CSV loglama
+└── main_pi.py               # Raspberry Pi 5 üretim giriş noktası
 
 training/
 ├── data_prep.py             # Dataset hazırlama (YOLO formatı)
-├── train_yolo.py            # Model eğitimi (YOLO11m, 50 epoch)
+├── collect_negatives.py     # Negatif (balıksız) örnek toplama
+├── train_yolo.py            # Model eğitimi (YOLO11m)
 ├── train_yolo_retrain.py    # YOLO11m yeniden eğitim betiği
+├── train_export.py          # Eğitim + ONNX export akışı
 ├── train_eval_tensorflow.py # TensorFlow / Keras benchmark modeli ve eğitimi
 └── export_quantize.py       # ONNX export + INT8 quantization
 
@@ -39,20 +43,28 @@ scripts/
 ├── gps_simulator.py         # GPS simülatörü (geliştirme amaçlı)
 └── compare_yolo_tensorflow.py # YOLO vs TensorFlow karşılaştırma rapor betiği
 
-models/
-└── pufferfish_pi_int8.onnx  # INT8 quantized ONNX model
+models/                      # Model ağırlıkları (.onnx/.pt büyük olduğundan git'te tutulmaz, eğitim/export ile üretilir)
+├── yolo11m_pufferfish.onnx  # Varsayılan çalışma modeli (FP32 ONNX)
+├── pufferfish_pi_int8.onnx  # INT8 kuantize ONNX (opsiyonel, düşük güçlü uçlar için)
+└── pufferfish_tf_model.keras  # TensorFlow / MobileNetV2 karşılaştırma modeli
 
-tests/                       # Pytest test altyapısı (64 test)
+tests/                       # Pytest test altyapısı (102 test)
 ├── test_detector.py         # Model, inference, CLAHE testleri
+├── test_detection_store.py  # Tespit durum yönetimi testleri
+├── test_dashboard_stats.py  # Dashboard istatistik / API testleri
 ├── test_logging.py          # CSV loglama testleri
 ├── test_spatial.py          # Veritabanı testleri
+├── test_security_cors.py    # CORS güvenlik testleri
+├── test_smoke_imports.py    # Modül import smoke testleri
 ├── test_e2e_chain.py        # Uçtan uca zincir testleri
 └── test_export.py           # Export & webhook testleri
 ```
 
+> **Çalışma modeli:** Sistem varsayılan olarak **FP32 `yolo11m_pufferfish.onnx`** kullanır. INT8 kuantize sürüm (`pufferfish_pi_int8.onnx`) daha küçük ve hızlı olsa da yerel değerlendirmelerde doğruluk kaybı gösterdiğinden varsayılan değildir. Modeli değiştirmek için `app/core/config.py` içindeki `MODEL_PATH` ayarını düzenleyin.
+
 ## 📊 Fugaeus (Balon Balığı) YOLO vs TensorFlow Benchmark Karşılaştırması
 
-Detaylı karşılaştırma analizi ve metrik raporu için: [TENSORFLOW_VS_YOLO_COMPARISON.md](file:///c:/AI/Balik_Projesi_Antigravity/TENSORFLOW_VS_YOLO_COMPARISON.md)
+Detaylı karşılaştırma analizi ve metrik raporu için: [TENSORFLOW_VS_YOLO_COMPARISON.md](TENSORFLOW_VS_YOLO_COMPARISON.md)
 
 | Metrik / Özellik | YOLO11m (Ultralytics / PyTorch) | TensorFlow (Keras / MobileNetV2) | Kazanan |
 |---|---|---|---|
@@ -148,6 +160,14 @@ python scripts/gps_simulator.py
 
 # Linux (PTY):
 python3 scripts/gps_simulator.py
+```
+
+## Test
+
+```bash
+# Tüm test paketini çalıştır (102 test):
+pip install -r requirements-dev.txt
+pytest -q
 ```
 
 ## Dashboard Özellikleri
