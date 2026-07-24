@@ -62,3 +62,12 @@ Thumbs.db
 *.bak
 *.swp
 spatial_log.sqlite
+
+# Archived research outputs (manuscripts, benchmarks, report figures) — kept locally, out of git
+archive/
+
+# Coverage & test/scratch artifacts
+.coverage
+.pytest_cache/
+htmlcov/
+scratch/
