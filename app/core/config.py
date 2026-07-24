@@ -6,7 +6,10 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent.parent.parent
 
 # Model
-MODEL_PATH = ROOT_DIR / "models" / "pufferfish_pi_int8.onnx"
+# Varsayılan çalışma modeli olarak FP32 ONNX sürümü seçildi.
+# INT8 nicemlenmiş model dosyası projede tutuluyor, ancak yerel rapor değerlendirmelerinde
+# bu sürüm belirgin doğruluk kaybı gösterdiği için varsayılan dağıtım tercihi değildir.
+MODEL_PATH = ROOT_DIR / "models" / "yolo11m_pufferfish.onnx"
 CONF_THRESH = 0.60
 DETECTOR_IMGSZ = 640 # Model ONNX olarak 640x640 boyutunda sabit (fixed) ihraç edildiği için değiştirilemez.
 
