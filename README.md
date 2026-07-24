@@ -69,11 +69,11 @@ Detaylı karşılaştırma analizi ve metrik raporu için: [TENSORFLOW_VS_YOLO_C
 | Metrik / Özellik | YOLO11m (Ultralytics / PyTorch) | TensorFlow (Keras / MobileNetV2) | Kazanan |
 |---|---|---|---|
 | **Model Mimarisi** | YOLO11m (Anchor-Free Detector) | MobileNetV2 Regressor | **YOLO11m** |
-| **Presizyon (Precision)** | **0.6821** (%68.21) | 0.0000 (%0.00) | **YOLO11m** |
-| **Duyarlılık (Recall)** | **0.5252** (%52.52) | 0.0000 (%0.00) | **YOLO11m** |
-| **mAP@50** | **0.5809** (%58.09) | 0.0000 (%0.00) | **YOLO11m** |
+| **Presizyon (Precision)** | **0.9642** (%96.42) | 0.0000 (%0.00) | **YOLO11m** |
+| **Duyarlılık (Recall)** | **0.8470** (%84.70) | 0.0000 (%0.00) | **YOLO11m** |
+| **mAP@50** | **0.9466** (%94.66) | 0.0000 (%0.00) | **YOLO11m** |
 | **Çıkarım Gecikmesi (GPU)** | **17.38 ms/kare** | 121.89 ms/kare | **YOLO11m** |
-| **Model Disk Boyutu** | 38.63 MB | **23.50 MB** | **TensorFlow** |
+| **Model Disk Boyutu** | 40.50 MB | **23.50 MB** | **TensorFlow** |
 
 ## Gereksinimler
 
