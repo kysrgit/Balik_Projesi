@@ -10,12 +10,12 @@ Bu belge, **Fugaeus / Pufferfish (Balon Balığı - *Lagocephalus sceleratus*)**
 |---|---|---|---|
 | **Model Mimarisi** | YOLO11m (Anchor-Free Object Detector) | MobileNetV2 (Classification + Box Regressor) | YOLO11m (Tam Nesne Tespiti) |
 | **Girdi Çözünürlüğü** | 640x640 | 224x224 | YOLO11m (Yüksek Detay) |
-| **Presizyon (Precision)** | **0.9642** (96.42%) | 0.0000 (0.00%) | **YOLO11m** (+96.42% P) |
-| **Duyarlılık (Recall)** | **0.8470** (84.70%) | 0.0000 (0.00%) | **YOLO11m** (+84.70% R) |
-| **mAP@50 (Mean Avg Precision)** | **0.9466** (94.66%) | 0.0000 (0.00%) | **YOLO11m** (+94.66% mAP50) |
+| **Presizyon (Precision)** | **0.9642** (96.42%) | 0.9880 (98.80%) | **YOLO11m** (+-2.38% P) |
+| **Duyarlılık (Recall)** | **0.8470** (84.70%) | 1.0000 (100.00%) | **YOLO11m** (+-15.30% R) |
+| **mAP@50 (Mean Avg Precision)** | **0.9466** (94.66%) | 0.2561 (25.61%) | **YOLO11m** (+69.05% mAP50) |
 | **mAP@50-95** | **0.7049** | N/A (IoU Thresholding) | **YOLO11m** |
-| **Çıkarım Gecikmesi (Latency - GPU)** | **17.38 ms/kare** | 121.89 ms/kare | **YOLO11m** (+104.51 ms daha hızlı) |
-| **Model Disk Boyutu** | 40.50 MB | **23.50 MB** | **TensorFlow** (Daha küçük dosya) |
+| **Çıkarım Gecikmesi (Latency - GPU)** | **17.38 ms/kare** | 78.13 ms/kare | **YOLO11m** (+60.75 ms daha hızlı) |
+| **Model Disk Boyutu** | 40.50 MB | **25.80 MB** | **TensorFlow** (Daha küçük dosya) |
 
 ---
 

@@ -1,6 +1,7 @@
 # Fugaeus (Balon Balığı) Veri Seti TensorFlow / Keras Model Eğitim ve Değerlendirme Betiği
-# Bu betik, dataset/ klasöründeki verileri TensorFlow/Keras mimarisi (MobileNetV2 Tabanlı Tespit Ağları)
-# üzerinde eğitir, doğrulama ve test metriklerini hesaplayarak benchmark_pc/ klasörüne kaydeder.
+# Bu betik, MobileNetV2 omurgalı TensorFlow/Keras nesne tespit ve sınıflandırma ağını
+# dataset/ klasöründe ince ayar (fine-tuning) ile eğitir, optimum eşik arama ile doğrulama
+# ve test metriklerini hesaplayıp benchmark_pc/ klasörüne yazar.
 
 import os
 import glob
@@ -18,9 +19,9 @@ DATASET_DIR = BASE_DIR / "dataset"
 MODELS_DIR = BASE_DIR / "models"
 BENCHMARK_DIR = BASE_DIR / "benchmark_pc"
 
-IMG_SIZE = 224  # TensorFlow kıyaslama girdi boyutu
+IMG_SIZE = 224
 BATCH_SIZE = 16
-EPOCHS = 3
+EPOCHS = 10
 NUM_CLASSES = 1
 
 def load_dataset_split(split_name="train"):
@@ -44,14 +45,12 @@ def load_dataset_split(split_name="train"):
         base_name = Path(img_path).stem
         lbl_path = lbl_dir / f"{base_name}.txt"
         
-        # Görüntüyü oku ve yeniden boyutlandır
         img = cv2.imread(img_path)
         if img is None:
             continue
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img_resized = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
         
-        # Etiket oku
         has_box = 0
         bbox = [0.0, 0.0, 0.0, 0.0]
         if lbl_path.exists():
@@ -71,7 +70,7 @@ def load_dataset_split(split_name="train"):
 
 def build_tensorflow_model():
     """
-    MobileNetV2 omurgasına sahip TensorFlow / Keras Sınıflandırma ve Kutu Tespit Modeli oluşturur.
+    MobileNetV2 omurgasına sahip TensorFlow / Keras Sınıflandırma ve Bounding Box Regresyon Modeli.
     """
     base_model = tf.keras.applications.MobileNetV2(
         input_shape=(IMG_SIZE, IMG_SIZE, 3),
@@ -79,27 +78,28 @@ def build_tensorflow_model():
         weights="imagenet"
     )
     base_model.trainable = True
-    # Ilk katmanlari dondur
-    for layer in base_model.layers[:100]:
+    for layer in base_model.layers[:80]:
         layer.trainable = False
         
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
     x = base_model(inputs)
     x = layers.GlobalAveragePooling2D()(x)
+    x = layers.BatchNormalization()(x)
     x = layers.Dropout(0.3)(x)
     
     # Sınıflandırma başlığı (Balon Balığı Var/Yok)
     class_output = layers.Dense(1, activation="sigmoid", name="class_output")(x)
     
     # Bounding Box (Kutu Koordinatı) regresyon başlığı (x, y, w, h)
-    box_output = layers.Dense(4, activation="sigmoid", name="box_output")(x)
+    box_output = layers.Dense(64, activation="relu")(x)
+    box_output = layers.Dense(4, activation="sigmoid", name="box_output")(box_output)
     
     model = models.Model(inputs=inputs, outputs=[class_output, box_output])
     return model
 
 def compute_iou(box1, box2):
     """
-    YOLO formatındaki [cx, cy, w, h] iki kutu arasındaki IoU (Intersection over Union) değerini hesaplar.
+    [cx, cy, w, h] iki kutu arasındaki IoU (Intersection over Union) değerini hesaplar.
     """
     b1_x1, b1_y1 = box1[0] - box1[2]/2, box1[1] - box1[3]/2
     b1_x2, b1_y2 = box1[0] + box1[2]/2, box1[1] + box1[3]/2
@@ -116,15 +116,15 @@ def compute_iou(box1, box2):
     inter_h = max(0.0, inter_y2 - inter_y1)
     inter_area = inter_w * inter_h
     
-    b1_area = (b1_x2 - b1_x1) * (b1_y2 - b1_y1)
-    b2_area = (b2_x2 - b2_x1) * (b2_y2 - b2_y1)
+    b1_area = max(1e-6, (b1_x2 - b1_x1) * (b1_y2 - b1_y1))
+    b2_area = max(1e-6, (b2_x2 - b2_x1) * (b2_y2 - b2_y1))
     union_area = b1_area + b2_area - inter_area
     
-    return inter_area / union_area if union_area > 0 else 0.0
+    return float(inter_area / union_area) if union_area > 0 else 0.0
 
 def train_and_eval_tensorflow():
     """
-    TensorFlow modelini eğitir ve doğrulama/test metriklerini hesaplar.
+    TensorFlow modelini eğitir, optimum eşik değerini bulur ve test metriklerini hesaplar.
     """
     print("[+] TensorFlow Veri Seti Yükleniyor...")
     X_train, y_box_train, y_cls_train = load_dataset_split("train")
@@ -135,21 +135,18 @@ def train_and_eval_tensorflow():
     
     model = build_tensorflow_model()
     model.compile(
-        optimizer=optimizers.Adam(learning_rate=1e-4),
+        optimizer=optimizers.Adam(learning_rate=5e-4),
         loss={
             "class_output": "binary_crossentropy",
             "box_output": "mse"
         },
         loss_weights={
-            "class_output": 1.0,
-            "box_output": 5.0
-        },
-        metrics={
-            "class_output": ["accuracy", tf.keras.metrics.Precision(), tf.keras.metrics.Recall()]
+            "class_output": 2.0,
+            "box_output": 10.0
         }
     )
     
-    print("[+] TensorFlow / Keras Eğitimi Başlatılıyor...")
+    print("[+] TensorFlow / Keras İnce Ayar Eğitimi Başlatılıyor...")
     start_time = time.time()
     history = model.fit(
         X_train,
@@ -167,12 +164,27 @@ def train_and_eval_tensorflow():
     tf_model_path = MODELS_DIR / "pufferfish_tf_model.keras"
     model.save(tf_model_path)
     
+    # Doğrulama setinde optimum eşik arama
+    val_pred_cls, _ = model.predict(X_val, batch_size=BATCH_SIZE)
+    best_thresh = 0.5
+    best_f1 = 0.0
+    for thresh in np.linspace(0.05, 0.95, 91):
+        p_bin = (val_pred_cls.flatten() > thresh).astype(int)
+        tp = np.sum((p_bin == 1) & (y_cls_val == 1))
+        fp = np.sum((p_bin == 1) & (y_cls_val == 0))
+        fn = np.sum((p_bin == 0) & (y_cls_val == 1))
+        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
+        if f1 > best_f1:
+            best_f1 = f1
+            best_thresh = float(thresh)
+            
     # Test Değerlendirmesi
-    print("[+] TensorFlow Test Seti Değerlendirmesi...")
+    print(f"[+] TensorFlow Test Seti Değerlendirmesi (Eşik: {best_thresh:.3f})...")
     pred_cls, pred_box = model.predict(X_test, batch_size=BATCH_SIZE)
     
-    # Metrik Hesaplamaları
-    pred_binary = (pred_cls.flatten() > 0.5).astype(int)
+    pred_binary = (pred_cls.flatten() > best_thresh).astype(int)
     tp = np.sum((pred_binary == 1) & (y_cls_test == 1))
     fp = np.sum((pred_binary == 1) & (y_cls_test == 0))
     fn = np.sum((pred_binary == 0) & (y_cls_test == 1))
@@ -181,19 +193,12 @@ def train_and_eval_tensorflow():
     recall = float(tp / (tp + fn)) if (tp + fn) > 0 else 0.0
     f1_score = float(2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
     
-    # IoU Değerlendirmesi
-    ious = []
-    for i in range(len(X_test)):
-        if y_cls_test[i] == 1:
-            iou = compute_iou(pred_box[i], y_box_test[i])
-            ious.append(iou)
-            
+    ious = [compute_iou(pred_box[i], y_box_test[i]) for i in range(len(X_test)) if y_cls_test[i] == 1]
     mean_iou = float(np.mean(ious)) if len(ious) > 0 else 0.0
     map50_estimate = float(np.mean(np.array(ious) >= 0.5)) if len(ious) > 0 else 0.0
     
-    # Latency Benchmark
+    # Gecikme Ölçümü
     dummy_input = np.zeros((1, IMG_SIZE, IMG_SIZE, 3), dtype=np.float32)
-    # Warmup
     for _ in range(10):
         _ = model.predict(dummy_input, verbose=0)
         
@@ -209,6 +214,7 @@ def train_and_eval_tensorflow():
         "model": "TensorFlow MobileNetV2 Detector",
         "epochs": EPOCHS,
         "img_size": IMG_SIZE,
+        "optimal_threshold": round(best_thresh, 3),
         "total_training_time_sec": round(training_time, 2),
         "test_metrics": {
             "accuracy": float(np.mean(pred_binary == y_cls_test)),
