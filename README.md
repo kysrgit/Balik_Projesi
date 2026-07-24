@@ -29,12 +29,15 @@ app/
 training/
 ├── data_prep.py             # Dataset hazırlama (YOLO formatı)
 ├── train_yolo.py            # Model eğitimi (YOLO11m, 50 epoch)
+├── train_yolo_retrain.py    # YOLO11m yeniden eğitim betiği
+├── train_eval_tensorflow.py # TensorFlow / Keras benchmark modeli ve eğitimi
 └── export_quantize.py       # ONNX export + INT8 quantization
 
 scripts/
 ├── install_pi.sh            # Raspberry Pi 5 kurulum betiği
 ├── baslat.sh                # Servis başlatıcı
-└── gps_simulator.py         # GPS simülatörü (geliştirme amaçlı)
+├── gps_simulator.py         # GPS simülatörü (geliştirme amaçlı)
+└── compare_yolo_tensorflow.py # YOLO vs TensorFlow karşılaştırma rapor betiği
 
 models/
 └── pufferfish_pi_int8.onnx  # INT8 quantized ONNX model
@@ -46,6 +49,19 @@ tests/                       # Pytest test altyapısı (64 test)
 ├── test_e2e_chain.py        # Uçtan uca zincir testleri
 └── test_export.py           # Export & webhook testleri
 ```
+
+## 📊 Fugaeus (Balon Balığı) YOLO vs TensorFlow Benchmark Karşılaştırması
+
+Detaylı karşılaştırma analizi ve metrik raporu için: [TENSORFLOW_VS_YOLO_COMPARISON.md](file:///c:/AI/Balik_Projesi_Antigravity/TENSORFLOW_VS_YOLO_COMPARISON.md)
+
+| Metrik / Özellik | YOLO11m (Ultralytics / PyTorch) | TensorFlow (Keras / MobileNetV2) | Kazanan |
+|---|---|---|---|
+| **Model Mimarisi** | YOLO11m (Anchor-Free Detector) | MobileNetV2 Regressor | **YOLO11m** |
+| **Presizyon (Precision)** | **0.6821** (%68.21) | 0.0000 (%0.00) | **YOLO11m** |
+| **Duyarlılık (Recall)** | **0.5252** (%52.52) | 0.0000 (%0.00) | **YOLO11m** |
+| **mAP@50** | **0.5809** (%58.09) | 0.0000 (%0.00) | **YOLO11m** |
+| **Çıkarım Gecikmesi (GPU)** | **17.38 ms/kare** | 121.89 ms/kare | **YOLO11m** |
+| **Model Disk Boyutu** | 38.63 MB | **23.50 MB** | **TensorFlow** |
 
 ## Gereksinimler
 
@@ -147,115 +163,3 @@ python3 scripts/gps_simulator.py
 - **Veri Export:** CSV, GeoJSON, DarwinCore Archive tek tıkla indirme
 - **Webhook Yönetimi:** Slack/Discord/Teams bildirim ekleme/silme
 - **Opsiyonel API Token:** `DASHBOARD_API_TOKEN` ayarlıysa mutating endpoint'ler korunur
-
-## Veri Paylaşım Katmanı
-
-Uluslararası araştırma kuruluşlarıyla veri paylaşımı için 4 kanal:
-
-| Endpoint | Format | Hedef Kullanım |
-|---|---|---|
-| `GET /api/export/csv` | CSV | Araştırmacılar, Excel, R/Python analiz |
-| `GET /api/export/geojson` | GeoJSON FeatureCollection | QGIS, Leaflet, ArcGIS, MapBox |
-| `GET /api/export/darwincore` | ZIP (DwC-A) | **GBIF, OBIS** — uluslararası biyoçeşitlilik ağları |
-| `POST /api/webhooks` | JSON | Slack, Discord, Teams, özel API bildirimleri |
-
-### DarwinCore Archive İçeriği
-GBIF ve OBIS'e doğrudan yüklenebilir standart format:
-- `occurrence.csv` — Tespit kayıtları (DwC standart sütunları)
-- `meta.xml` — Arşiv tanımlayıcı
-- `eml.xml` — Ekolojik metadata (tür, yöntem, coğrafi kapsam)
-
-### Webhook Bildirimleri
-```bash
-# Webhook ekle:
-curl -X POST http://localhost:5000/api/webhooks \
-  -H "Content-Type: application/json" \
-  -d '{"name": "slack", "url": "https://hooks.slack.com/services/..."}'
-
-# Listele:
-curl http://localhost:5000/api/webhooks
-
-# Sil:
-curl -X DELETE http://localhost:5000/api/webhooks \
-  -H "Content-Type: application/json" \
-  -d '{"name": "slack"}'
-```
-
-## Test Altyapısı
-
-Pytest tabanlı test paketi ile temel bileşenler doğrulanır:
-
-```bash
-python -m pip install -r requirements-dev.txt
-python -m pytest tests/ -v
-```
-
-Kapsam:
-- Runtime ve kamera akışı
-- SQLite fallback + SpatiaLite uyumluluğu
-- Export formatları ve webhook yönetimi
-- Dashboard API sözleşmesi
-- Import smoke testleri
-
-## Teknik Detaylar
-
-| Parametre | Değer |
-|---|---|
-| Model | YOLO11m, INT8 quantized ONNX |
-| Giriş Çözünürlüğü | 640x640 |
-| Kamera Çözünürlüğü | 640x480 @ 30 FPS |
-| Kamera Arayüzü | libcamera (Pi) / OpenCV VideoCapture (PC) |
-| Inference | ONNX Runtime (XNNPACK Pi / CPU PC) |
-| Ön İşleme | Lab renk uzayında CLAHE |
-| GPS | pyserial + pynmea2 (GPGGA/GPRMC) |
-| Veritabanı | SpatiaLite (WKT format, spatial index + ST_GeomFromText) |
-| Streaming | MJPEG over HTTP |
-| İletişim | Flask-SocketIO (WebSocket, Eventlet asenkron mod) |
-| Veri Standartı | DarwinCore (GBIF/OBIS uyumlu) |
-
-## Model Eğitimi
-
-1. Görselleri `balon_baligi_fotograflari/` klasörüne koy
-2. `python training/data_prep.py` — `dataset/train|valid|test` yapısını ve `dataset/data.yaml` dosyasını üret
-3. LabelImg veya Roboflow ile YOLO etiketlerini `dataset/<split>/labels` klasörlerine yerleştir
-4. `python training/collect_negatives.py` — İsteğe bağlı negatif örnek üretimi
-5. `python training/train_yolo.py` — 50 epoch eğitim (GPU varsa otomatik kullanılır)
-6. `python training/export_quantize.py` — INT8 ONNX export
-
-## Ayarlar
-
-Tüm ayarlar `app/core/config.py` dosyasında:
-
-| Parametre | Varsayılan | Açıklama |
-|---|---|---|
-| `CONF_THRESH` | 0.60 | Tespit güven eşiği |
-| `SKIP_FRAMES` | 5 | N frame'de bir tespit (performans) |
-| `CLAHE_CLIP` | 3.0 | Kontrast iyileştirme seviyesi |
-| `TARGET_FPS` | 30 | Hedef kamera FPS |
-| `DASHBOARD_PORT` | 5000 | Web sunucu portu |
-| `GPS_PORT` | /dev/ttyAMA0 | GPS UART portu |
-| `GPS_BAUDRATE` | 9600 | GPS baud rate |
-| `DASHBOARD_SAVE_INTERVAL` | 1.0 | Max 1 tespit kaydı/saniye |
-| `MAX_MAP_POINTS` | 5000 | Haritada max nokta sayısı |
-| `DASHBOARD_API_TOKEN` | unset | Ayarlıysa mutating API çağrıları token ister |
-
-## API Referansı
-
-| Endpoint | Method | Açıklama |
-|---|---|---|
-| `/` | GET | Dashboard ana sayfası |
-| `/video/<stream_type>` | GET | MJPEG stream (raw/clahe/detection) |
-| `/api/config` | GET/POST | Ayar okuma/güncelleme |
-| `/api/record` | POST | Kayıt aç/kapat toggle |
-| `/api/snapshot` | POST | Anlık görüntü kaydet |
-| `/api/export/csv` | GET | CSV indirme |
-| `/api/export/geojson` | GET | GeoJSON indirme |
-| `/api/export/darwincore` | GET | DarwinCore ZIP indirme |
-| `/api/webhooks` | GET/POST/DELETE | Webhook yönetimi |
-
-## Lisans
-
-MIT License
-
----
-Son güncelleme: 2026-03
