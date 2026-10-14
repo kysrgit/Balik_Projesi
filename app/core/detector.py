@@ -1,4 +1,5 @@
 # YOLO tespit modulu
+import numpy as np
 from ultralytics import YOLO
 import cv2
 from app.core import config
@@ -56,20 +57,21 @@ class Detector:
         boxes = []
         confs = []
         
-        # Kutulari orijinal cozunurluge geri olcekle
+        # Kutulari orijinal cozunurluge geri olcekle (Vektörize performans optimizasyonu)
         x_scale = orig_w / tensor_size[0]
         y_scale = orig_h / tensor_size[1]
         
-        for box in results[0].boxes:
-            x1, y1, x2, y2 = map(float, box.xyxy[0].cpu().numpy())
+        boxes_obj = results[0].boxes
+        if boxes_obj is not None and len(boxes_obj) > 0:
+            # CPU/NumPy aktarimini döngü disinda tek seferde yap (2 transfer)
+            xyxy_arr = boxes_obj.xyxy.cpu().numpy()
+            conf_arr = boxes_obj.conf.cpu().numpy()
             
-            x1 = int(x1 * x_scale)
-            y1 = int(y1 * y_scale)
-            x2 = int(x2 * x_scale)
-            y2 = int(y2 * y_scale)
+            # Koordinatlari vektörize olarak olcekle
+            scales = np.array([x_scale, y_scale, x_scale, y_scale], dtype=np.float32)
+            scaled_xyxy = (xyxy_arr * scales).astype(int)
             
-            c = float(box.conf)
-            boxes.append((x1, y1, x2, y2))
-            confs.append(c)
+            boxes = [tuple(map(int, b)) for b in scaled_xyxy]
+            confs = [float(c) for c in conf_arr]
         
         return boxes, confs

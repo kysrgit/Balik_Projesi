@@ -26,7 +26,12 @@ def apply_clahe(img, clip=3.0, grid=(8, 8)):
     return cv2.cvtColor(cv2.merge((l, a, b)), cv2.COLOR_LAB2BGR)
 
 def draw_boxes(frame, boxes, confs, color=(0, 0, 255)):
-    """Tespit kutularini ciz"""
+    """Tespit kutularini ciz
+       Performans optimizasyonu: Kutular bos ise frame kopyalamadan direkt dondur.
+    """
+    if not boxes:
+        return frame
+
     result = frame.copy()
     for (x1, y1, x2, y2), conf in zip(boxes, confs):
         c = (0, 0, 255) if conf > 0.85 else (0, 255, 255)
