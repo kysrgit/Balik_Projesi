@@ -16,5 +16,5 @@ elif [ -d "venv" ]; then
     source venv/bin/activate
 fi
 
-echo "Starting Application..."
-python3 app/main.py
+echo "Starting dashboard on port 5000..."
+python3 app/dashboard/server.py
