@@ -125,6 +125,11 @@ class CameraThread:
         self._stop_event.wait(0.5) # Bu ekran saniyede 2 kere guncellense yeter, CPU'yu yemeyelim
         return error_frame
 
+    @property
+    def has_source(self):
+        """Gercek bir kamera (picamera2 veya OpenCV) acik mi? Degilse kareler hata ekranidir."""
+        return self.picam is not None or self.cap is not None
+
     def get_frame(self):
         """Thread-safe son okunan kareyi döndür"""
         with self._lock:

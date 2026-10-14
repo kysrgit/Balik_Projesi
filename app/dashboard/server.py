@@ -366,6 +366,12 @@ def camera_producer():
 
             buffer.update(raw=frame)
 
+            # Kamera yoksa kare sadece hata ekranidir; modeli bosuna calistirma
+            # (aksi halde tespit dongusu CPU'yu surekli %250+ kullanir).
+            if not getattr(cam, "has_source", True):
+                socketio.sleep(0.5)
+                continue
+
             try:
                 if frame_queue.full():
                     frame_queue.get_nowait()
@@ -398,7 +404,7 @@ def detection_loop():
         try:
             frame = frame_queue.get()
             clahe_frame = apply_clahe(frame.copy(), clip=clahe_clip, grid=config.CLAHE_GRID)
-            boxes, confs = detector.detect(frame, conf=conf_thresh, use_clahe=True, clahe_clip=clahe_clip)
+            boxes, confs = detector.detect(frame, conf=conf_thresh, use_clahe=config.DETECT_USE_CLAHE, clahe_clip=clahe_clip)
 
             for box, conf in zip(boxes, confs):
                 if conf < conf_thresh or not is_recording:
