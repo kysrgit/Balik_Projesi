@@ -10,8 +10,8 @@ import pytest
         "app.main",
         "app.dashboard.server",
         "training.data_prep",
-        "training.train_yolo",
-        "training.export_quantize",
+        "training.train_v2_improved",
+        "training.export_int8_v2",
     ],
 )
 def test_module_imports_in_fresh_process(module_name):

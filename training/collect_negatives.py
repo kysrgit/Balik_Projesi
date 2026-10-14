@@ -598,7 +598,7 @@ def main():
         print(f"\n  ⚠️  Negatif oranı hâlâ düşük: %{overall_neg_pct:.1f} (hedef: %8+)")
         print(f"      Tekrar çalıştırarak artırabilirsiniz.")
     
-    print("\n  Sonraki adım: python training/train_yolo.py")
+    print("\n  Sonraki adım: python training/train_v2_improved.py --model yolo11s.pt --imgsz 640")
     print("=" * 60)
 
 

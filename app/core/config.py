@@ -6,17 +6,19 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent.parent.parent
 
 # Model
-# Varsayılan çalışma modeli olarak FP32 ONNX sürümü seçildi.
-# INT8 nicemlenmiş model dosyası projede tutuluyor, ancak yerel rapor değerlendirmelerinde
-# bu sürüm belirgin doğruluk kaybı gösterdiği için varsayılan dağıtım tercihi değildir.
-MODEL_PATH = ROOT_DIR / "models" / "yolo11m_pufferfish.onnx"
+# Varsayilan model: YOLO11s, karma hassasiyetli INT8 ONNX (tespit basi FP32).
+# Uretmek icin: training/export_int8_v2.py
+MODEL_PATH = ROOT_DIR / "models" / "pufferfish_s_v2_int8.onnx"
 CONF_THRESH = 0.60
 DETECTOR_IMGSZ = 640 # Model ONNX olarak 640x640 boyutunda sabit (fixed) ihraç edildiği için değiştirilemez.
+
+# Calisma zamani verileri (tespit kayitlari, goruntuler, veritabani) tek klasorde
+DATA_DIR = ROOT_DIR / "data"
 
 # GIS & Veritabanı
 GPS_PORT = "/dev/ttyAMA0"
 GPS_BAUDRATE = 9600
-DB_PATH = ROOT_DIR / "spatial_log.sqlite"
+DB_PATH = DATA_DIR / "spatial_log.sqlite"
 MAX_MAP_POINTS = 5000
 GPS_STALE_TIMEOUT = 10.0  # GPS verisinin geçerlilik süresi (saniye)
 
@@ -27,9 +29,9 @@ TARGET_FPS = 30
 SKIP_FRAMES = 5  # her N frame'de tespit yap
 
 # Kayit
-DETECTION_DIR = ROOT_DIR / "detections"
+DETECTION_DIR = DATA_DIR / "detections"
 THUMB_DIR = DETECTION_DIR / "thumbs"
-CSV_LOG_FILE = ROOT_DIR / "detections_log.csv"
+CSV_LOG_FILE = DATA_DIR / "detections_log.csv"
 MAX_DETECTION_FILES = 250
 MAX_THUMB_FILES = 500
 MAX_SNAPSHOT_FILES = 100

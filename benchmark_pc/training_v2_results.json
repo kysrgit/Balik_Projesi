@@ -1,0 +1,26 @@
+{
+  "v2_s960": {
+    "base_model": "yolo11s.pt",
+    "imgsz": 960,
+    "batch": 4,
+    "epochs_requested": 80,
+    "weights": "runs/detect/v2_s960/weights/best.pt",
+    "metrics": {
+      "val": {
+        "precision": 0.8278,
+        "recall": 0.7760,
+        "mAP50": 0.8389,
+        "mAP50_95": 0.5292
+      },
+      "test": {
+        "precision": 0.7460,
+        "recall": 0.5612,
+        "mAP50": 0.6312,
+        "mAP50_95": 0.3742
+      }
+    },
+    "acceptance_met": false,
+    "baseline_640_test_mAP50": 0.7524,
+    "conclusion": "960px training degraded test mAP50 from 75.24% to 63.12%. YOLO11s@640 remains the official distribution model."
+  }
+}

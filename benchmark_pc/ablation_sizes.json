@@ -1,0 +1,42 @@
+{
+  "yolo11n": {
+    "run_name": "pufferfish_n",
+    "weights": "C:\\AI\\Balik_Projesi_Antigravity\\runs\\detect\\pufferfish_n\\weights\\best.pt",
+    "train_time_sec": 1930.3,
+    "model_size_mb": 5.47,
+    "metrics": {
+      "val": {
+        "precision": 0.9069,
+        "recall": 0.9048,
+        "mAP50": 0.9457,
+        "mAP50_95": 0.7515
+      },
+      "test": {
+        "precision": 0.9079,
+        "recall": 0.6475,
+        "mAP50": 0.7381,
+        "mAP50_95": 0.5404
+      }
+    }
+  },
+  "yolo11s": {
+    "run_name": "pufferfish_s",
+    "weights": "C:\\AI\\Balik_Projesi_Antigravity\\runs\\detect\\pufferfish_s\\weights\\best.pt",
+    "train_time_sec": 2067.8,
+    "model_size_mb": 19.18,
+    "metrics": {
+      "val": {
+        "precision": 0.9518,
+        "recall": 0.8743,
+        "mAP50": 0.9504,
+        "mAP50_95": 0.7543
+      },
+      "test": {
+        "precision": 0.8578,
+        "recall": 0.6906,
+        "mAP50": 0.7524,
+        "mAP50_95": 0.5693
+      }
+    }
+  }
+}

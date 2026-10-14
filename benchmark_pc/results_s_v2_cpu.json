@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "device_arg": "cpu",
+    "resolved_device": "cpu",
+    "python": "3.14.3",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "torch": "2.11.0+cpu",
+    "cuda_available": false,
+    "gpu_name": null,
+    "onnxruntime": "1.24.4",
+    "ort_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ]
+  },
+  "eval_conf": 0.6,
+  "iou": 0.5,
+  "warmup": 15,
+  "runs": {
+    "PyTorch (.pt)": {
+      "file_mb": 19.176979,
+      "provider_used": null,
+      "splits": {
+        "valid": {
+          "images": 197,
+          "tp": 154,
+          "fp": 19,
+          "fn": 29,
+          "precision": 0.8901734104046243,
+          "recall": 0.8415300546448088,
+          "f1": 0.8651685393258426,
+          "mean_latency_ms": 124.28753147210485,
+          "median_latency_ms": 122.17910000026677,
+          "p90_latency_ms": 132.64467999997578,
+          "fps": 8.045859372663141
+        },
+        "test": {
+          "images": 83,
+          "tp": 76,
+          "fp": 7,
+          "fn": 63,
+          "precision": 0.9156626506024096,
+          "recall": 0.5467625899280576,
+          "f1": 0.6846846846846847,
+          "mean_latency_ms": 118.47901445783585,
+          "median_latency_ms": 117.62169999974503,
+          "p90_latency_ms": 123.12291999996887,
+          "fps": 8.440313287344896
+        }
+      }
+    },
+    "ONNX FP32": {
+      "file_mb": 37.92784,
+      "provider_used": [
+        "CPUExecutionProvider"
+      ],
+      "splits": {
+        "valid": {
+          "images": 197,
+          "tp": 154,
+          "fp": 19,
+          "fn": 29,
+          "precision": 0.8901734104046243,
+          "recall": 0.8415300546448088,
+          "f1": 0.8651685393258426,
+          "mean_latency_ms": 99.7914360405948,
+          "median_latency_ms": 98.09409999979835,
+          "p90_latency_ms": 105.9368600000198,
+          "fps": 10.020899985778374
+        },
+        "test": {
+          "images": 83,
+          "tp": 76,
+          "fp": 7,
+          "fn": 63,
+          "precision": 0.9156626506024096,
+          "recall": 0.5467625899280576,
+          "f1": 0.6846846846846847,
+          "mean_latency_ms": 98.298922891527,
+          "median_latency_ms": 98.01669999978913,
+          "p90_latency_ms": 101.15317999998297,
+          "fps": 10.173051449439598
+        }
+      }
+    },
+    "ONNX INT8 (s_v2)": {
+      "file_mb": 12.526461,
+      "provider_used": [
+        "CPUExecutionProvider"
+      ],
+      "splits": {
+        "valid": {
+          "images": 197,
+          "tp": 154,
+          "fp": 19,
+          "fn": 29,
+          "precision": 0.8901734104046243,
+          "recall": 0.8415300546448088,
+          "f1": 0.8651685393258426,
+          "mean_latency_ms": 54.01217512690675,
+          "median_latency_ms": 52.12500000016007,
+          "p90_latency_ms": 57.974319999811996,
+          "fps": 18.514344176112235
+        },
+        "test": {
+          "images": 83,
+          "tp": 75,
+          "fp": 6,
+          "fn": 64,
+          "precision": 0.9259259259259259,
+          "recall": 0.539568345323741,
+          "f1": 0.6818181818181819,
+          "mean_latency_ms": 56.89402771086719,
+          "median_latency_ms": 55.28389999972205,
+          "p90_latency_ms": 60.91071999990163,
+          "fps": 17.576537296356545
+        }
+      }
+    }
+  }
+}

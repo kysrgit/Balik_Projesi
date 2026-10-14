@@ -1,4 +1,5 @@
 import sqlite3
+from pathlib import Path
 from contextlib import contextmanager
 
 from app.core import config
@@ -85,6 +86,7 @@ def db_session(db_path=None):
 def init_db(db_path=None):
     """Initialize the database for both SpatiaLite and plain SQLite modes."""
     target_path = db_path or config.DB_PATH
+    Path(target_path).parent.mkdir(parents=True, exist_ok=True)
     print(f"Initializing database at {target_path} ...")
 
     with db_session(db_path=target_path) as conn:
