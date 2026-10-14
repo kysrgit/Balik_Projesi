@@ -38,12 +38,15 @@ training/
 
 scripts/
 ├── install_pi.sh            # Raspberry Pi 5 kurulum betiği
-├── baslat.sh                # Uygulamayı başlatır
-├── benchmark_pc.py          # .pt / ONNX / INT8 gecikme + P/R/F1 ölçümü
+├── balik-dashboard.service  # systemd servis şablonu
+├── baslat.sh                # Dashboard'ı elle başlatır
+├── benchmark_pc.py          # .pt / ONNX / INT8 gecikme + P/R/F1 ölçümü (PC)
+├── benchmark_pi5.py         # Pi 5 cihaz-içi gecikme ölçümü
 ├── gps_simulator.py         # Geliştirme için sahte GPS
 └── generate_fig5.py         # Makale Şekil 5 grafiği
 
-benchmark_pc/                # Ölçüm sonuçları (JSON)
+benchmark_pc/                # PC ölçüm sonuçları (JSON)
+benchmark_pi5/               # Pi 5 ölçüm sonuçları (JSON + özet)
 models/                      # Model dosyaları (git'te yok, aşağıya bakın)
 data/                        # Çalışma zamanı verisi: tespit logu, görüntüler, SQLite (git'te yok)
 tests/                       # Pytest test altyapısı (102 test)
@@ -75,8 +78,17 @@ Test seti (83 görüntü), PC CPU (i7-11800H). Gecikme: `scripts/benchmark_pc.py
 | ONNX FP32 | 37,9 MB | 75,92% | 57,87% | 98,3 ms | 0 / 33 |
 | **ONNX INT8 (karma)** | **12,5 MB** | **75,38%** | **58,20%** | **56,9 ms** | **0 / 33** |
 
-> mAP değerleri `ultralytics val` ile CPU'da `batch=1` kullanılarak ölçüldü; ablasyon tablosundaki (GPU, batch'li) değerlerden ~1 puan farklı olabilir. Karşılaştırma için eski YOLO11m modeli aynı 33 negatifte 1 yanlış alarm verdi.
-> **Raspberry Pi 5 üzerinde cihaz-içi ölçüm henüz yapılmadı.**
+> mAP değerleri `ultralytics val` (8.3.x) ile CPU'da `batch=1` kullanılarak ölçüldü. Precision/recall sürümden bağımsızdır; mAP hesabı ultralytics sürümüne göre ~0,7 puan oynayabilir (Pi'deki 8.4.x ile INT8: mAP@50 %74,52, mAP@50-95 %57,08). Karşılaştırma için eski YOLO11m modeli aynı 33 negatifte 1 yanlış alarm verdi.
+
+### Raspberry Pi 5 üzerinde (cihaz-içi ölçüm)
+Pi 5 (16 GB, aktif soğutucu), Raspberry Pi OS 64-bit (Debian 13), ONNX Runtime 1.31 CPUExecutionProvider, 4 çekirdek. Test görüntüleri, 20 ısınma + 200 kare, ön işleme + çıkarım + NMS dahil, CLAHE kapalı. Ölçüm boyunca throttling yok (en yüksek 66 °C). Betik: `scripts/benchmark_pi5.py`, sonuçlar: `benchmark_pi5/`.
+
+| Model | Ortalama gecikme | p95 | FPS |
+|---|---|---|---|
+| **ONNX INT8 (karma)** | **171,1 ms** | 171,7 ms | **5,85** |
+| ONNX FP32 | 362,1 ms | 364,0 ms | 2,76 |
+
+INT8, Pi 5'te FP32'ye göre **2,1× hızlı**. Uygulama varsayılan olarak her 5 karede bir tespit yapar (`SKIP_FRAMES`), bu yüzden kamera akışı tespitten bağımsız akıcı kalır.
 
 ## Gereksinimler
 
@@ -101,18 +113,26 @@ Test seti (83 görüntü), PC CPU (i7-11800H). Gecikme: `scripts/benchmark_pc.py
 
 ### Raspberry Pi 5 (Üretim)
 
+Raspberry Pi OS 64-bit (Debian 13 "trixie") üzerinde test edildi.
+
 ```bash
 git clone https://github.com/kysrgit/Balik_Projesi.git
 cd Balik_Projesi
-chmod +x scripts/install_pi.sh
 ./scripts/install_pi.sh
 ```
 
-Kurulum betiği şunları yapar:
-1. Sistem paketlerini günceller
-2. Donanım kütüphanelerini OS seviyesinde kurar (picamera2, opencv, flask)
-3. `--system-site-packages` ile sanal ortam oluşturur
-4. Yapay zeka kütüphanelerini pip ile indirir (ultralytics, onnxruntime)
+Model dosyaları git'te olmadığı için INT8 modeli PC'den kopyalayın (PC'de proje kökünde):
+
+```bash
+scp models/pufferfish_s_v2_int8.onnx <kullanici>@<pi-adi>.local:~/Balik_Projesi/models/
+```
+
+Kurulum betiği şunları yapar (tekrar çalıştırılabilir):
+1. OS paketlerini kurar: `python3-picamera2`, `rpicam-apps`, SpatiaLite (picamera2 pip ile kurulamaz)
+2. `--system-site-packages` ile `.venv_pi` sanal ortamını oluşturur ve `requirements.txt`'i kurar
+3. Dashboard'ı açılışta başlayan `balik-dashboard` systemd servisi olarak kurar (`--no-service` ile atlanır)
+
+Servis yönetimi: `sudo systemctl restart balik-dashboard`, loglar: `journalctl -u balik-dashboard -f`. Kamera bağlı değilse dashboard yine açılır ve kamera hatasını gösterir.
 
 ### Windows / PC (Geliştirme)
 
@@ -136,9 +156,8 @@ pip install -r requirements-train.txt
 
 ### Web Dashboard (Önerilen)
 ```bash
-# Pi'de:
-source .venv_pi/bin/activate
-python3 app/dashboard/server.py
+# Pi'de (servis kurulduysa zaten çalışıyor):
+./scripts/baslat.sh
 
 # PC'de:
 python app/dashboard/server.py
