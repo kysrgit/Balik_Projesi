@@ -44,7 +44,10 @@ get_stats = _load_get_stats()
 
 class TestGetStats(unittest.TestCase):
     def test_get_stats_success(self):
+        # glob mock'u: gercek Pi'de /sys/class/hwmon/*/fan1_input bulunur ve
+        # read_text mock'u fan RPM'ine de sizar.
         with patch.object(Path, "exists", return_value=True), \
+             patch.object(Path, "glob", return_value=iter([])), \
              patch.object(Path, "read_text", return_value="45000\n"):
             stats = get_stats()
             self.assertEqual(stats["cpu_temp"], 45.0)
