@@ -1,7 +1,5 @@
 # YOLO tespit modulu
-import numpy as np
 from ultralytics import YOLO
-import cv2
 from app.core import config
 from app.utils.image import apply_clahe
 import onnxruntime as ort
@@ -39,41 +37,23 @@ class Detector:
         self.model = YOLO(str(model_path), task='detect')
         print(f"Model yuklendi: {model_path} (Cozunurluk: {config.DETECTOR_IMGSZ}x{config.DETECTOR_IMGSZ})")
     
-    def detect(self, frame, conf=0.6, use_clahe=True, clahe_clip=3.0):
-        """Tek frame uzerinde tespit yap, (boxes, confs) dondur
-           Performans optimizasyonu: Frame once kucultulur, sonra CLAHE uygulanir.
+    def detect(self, frame, conf=0.6, use_clahe=False, clahe_clip=3.0):
+        """Tek frame uzerinde tespit yap, (boxes, confs) dondur.
+
+        Kare oldugu gibi verilir; ultralytics en-boy oranini koruyarak 640'a
+        letterbox yapar (egitimdeki on isleme). Eskiden kare 640x640'a geriliyordu,
+        bu 4:3 kamera karelerinde baliklari dikey uzatip egitimle uyumsuzluk yaratiyordu.
+        Kutular dogrudan orijinal karenin koordinatlarinda doner.
         """
-        orig_h, orig_w = frame.shape[:2]
-        tensor_size = (config.DETECTOR_IMGSZ, config.DETECTOR_IMGSZ)
-        
-        # Inference sirasinda goruntuyu kucult ki algilama cok hizli olsun
-        # Ayrica algoritma sadeligi icin resize yapilip ustune CLAHE uygulaniyor
-        img_resized = cv2.resize(frame, tensor_size)
-        
-        if use_clahe:
-            img_resized = apply_clahe(img_resized, clip=clahe_clip)
-            
-        # Kucultulmus ve islenmis tensor ile predict
-        results = self.model.predict(source=img_resized, conf=conf, imgsz=config.DETECTOR_IMGSZ, verbose=False)
-        
-        boxes = []
-        confs = []
-        
-        # Kutulari orijinal cozunurluge geri olcekle (Vektörize performans optimizasyonu)
-        x_scale = orig_w / tensor_size[0]
-        y_scale = orig_h / tensor_size[1]
-        
+        img = apply_clahe(frame, clip=clahe_clip) if use_clahe else frame
+        results = self.model.predict(source=img, conf=conf, imgsz=config.DETECTOR_IMGSZ, verbose=False)
+
         boxes_obj = results[0].boxes
-        if boxes_obj is not None and len(boxes_obj) > 0:
-            # CPU/NumPy aktarimini döngü disinda tek seferde yap (2 transfer)
-            xyxy_arr = boxes_obj.xyxy.cpu().numpy()
-            conf_arr = boxes_obj.conf.cpu().numpy()
-            
-            # Koordinatlari vektörize olarak olcekle
-            scales = np.array([x_scale, y_scale, x_scale, y_scale], dtype=np.float32)
-            scaled_xyxy = (xyxy_arr * scales).astype(int)
-            
-            boxes = [tuple(map(int, b)) for b in scaled_xyxy]
-            confs = [float(c) for c in conf_arr]
-        
+        if boxes_obj is None or len(boxes_obj) == 0:
+            return [], []
+        # CPU/NumPy aktarimini dongu disinda tek seferde yap
+        xyxy_arr = boxes_obj.xyxy.cpu().numpy().astype(int)
+        conf_arr = boxes_obj.conf.cpu().numpy()
+        boxes = [tuple(map(int, b)) for b in xyxy_arr]
+        confs = [float(c) for c in conf_arr]
         return boxes, confs

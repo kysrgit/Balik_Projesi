@@ -50,7 +50,7 @@ def save_detection(frame, boxes, confs, save_dir):
     return str(path)
 
 
-def run(use_clahe=True, show_gui=False):
+def run(use_clahe=config.DETECT_USE_CLAHE, show_gui=False):
     print("=" * 40)
     print("Balon Baligi Tespit Sistemi")
     print("=" * 40)
@@ -140,10 +140,10 @@ def run(use_clahe=True, show_gui=False):
 def main():
     parser = argparse.ArgumentParser(description="Balon Baligi Tespit Sistemi")
     parser.add_argument('--gui', action='store_true', help='GUI modunda calistir')
-    parser.add_argument('--no-clahe', action='store_true', help='CLAHE on islemeyi kapat')
+    parser.add_argument('--clahe', action='store_true', help='Tespitten once CLAHE uygula (varsayilan kapali)')
     args = parser.parse_args()
     
-    run(use_clahe=not args.no_clahe, show_gui=args.gui)
+    run(use_clahe=args.clahe or config.DETECT_USE_CLAHE, show_gui=args.gui)
 
 
 if __name__ == "__main__":

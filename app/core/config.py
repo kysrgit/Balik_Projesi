@@ -53,6 +53,9 @@ DASHBOARD_SAVE_INTERVAL = 1.0  # Max 1 detection log/save per second
 API_TOKEN = os.environ.get("DASHBOARD_API_TOKEN")
 
 # CLAHE
+# Tespitten once CLAHE uygulansin mi? Olcum: test F1 %74,6 (kapali) vs %68,2 (acik),
+# bos sahnede 0 vs 2 yanlis alarm -> varsayilan KAPALI. Goruntuleme overlay'i bundan bagimsiz.
+DETECT_USE_CLAHE = False
 CLAHE_CLIP = 3.0
 CLAHE_GRID = (8, 8)
 
