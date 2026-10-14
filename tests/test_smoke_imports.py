@@ -9,6 +9,7 @@ import pytest
     [
         "app.main",
         "app.dashboard.server",
+        "app.review.server",
         "training.data_prep",
         "training.train_v2_improved",
         "training.export_int8_v2",
