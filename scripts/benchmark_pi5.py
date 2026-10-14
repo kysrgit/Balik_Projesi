@@ -568,6 +568,8 @@ class ONNXBenchmarkDetector:
         self.input_meta = self.session.get_inputs()[0]
         self.output_meta = self.session.get_outputs()[0]
         self.input_name = self.input_meta.name
+        # FP16 ONNX modelleri (half=True ile ihrac) float16 girdi bekler
+        self.input_dtype = np.float16 if self.input_meta.type == "tensor(float16)" else np.float32
         self.output_names = [output.name for output in self.session.get_outputs()]
         self.actual_providers = self.session.get_providers()
         self.actual_provider = self.actual_providers[0] if self.actual_providers else "unknown"
@@ -623,7 +625,7 @@ class ONNXBenchmarkDetector:
         if clahe_enabled:
             resized = apply_clahe(resized, clip=DEFAULT_CLAHE_CLIP, grid=DEFAULT_CLAHE_GRID)
         rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-        blob = np.transpose(rgb, (2, 0, 1))[None].astype(np.float32) / 255.0
+        blob = (np.transpose(rgb, (2, 0, 1))[None].astype(np.float32) / 255.0).astype(self.input_dtype)
         preprocess_end = time.perf_counter()
 
         inference_start = preprocess_end
@@ -631,7 +633,7 @@ class ONNXBenchmarkDetector:
         inference_end = time.perf_counter()
 
         postprocess_start = inference_end
-        boxes, confs = self._postprocess(outputs[0], orig_w=orig_w, orig_h=orig_h, conf=conf)
+        boxes, confs = self._postprocess(outputs[0].astype(np.float32), orig_w=orig_w, orig_h=orig_h, conf=conf)
         postprocess_end = time.perf_counter()
 
         preprocess_ms = (preprocess_end - preprocess_start) * 1000.0

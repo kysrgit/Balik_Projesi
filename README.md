@@ -20,6 +20,7 @@ app/
 │   ├── stream.py            # MJPEG streaming & FrameBuffer
 │   └── templates/
 │       └── index.html       # Dashboard arayüzü
+├── review/                  # PC tespit inceleme arayüzü (python -m app.review.server)
 ├── db/
 │   └── spatial.py           # SpatiaLite veritabanı katmanı
 ├── export/                  # Veri paylaşım modülleri
@@ -41,6 +42,7 @@ scripts/
 ├── balik-dashboard.service  # systemd servis şablonu
 ├── baslat.sh                # Dashboard'ı elle başlatır
 ├── benchmark_pc.py          # .pt / ONNX / INT8 gecikme + P/R/F1 ölçümü (PC)
+├── compare_models.py        # Aday modellerin doğruluk + yanlış alarm karşılaştırması
 ├── benchmark_pi5.py         # Pi 5 cihaz-içi gecikme ölçümü
 ├── gps_simulator.py         # Geliştirme için sahte GPS
 └── generate_fig5.py         # Makale Şekil 5 grafiği
@@ -69,6 +71,36 @@ Aynı veri, 640 px, aynı hiperparametreler, 50 epoch. Kaynak: `benchmark_pc/abl
 
 ~725 özgün eğitim fotoğrafı için YOLO11m aşırı öğreniyor; daha küçük model daha iyi genelliyor. 960 px eğitim denemesi test mAP@50'yi %63,12'ye düşürdü (`benchmark_pc/training_v2_results.json`), bu yüzden 640 px'te kalındı.
 
+### Model × hassasiyet karşılaştırması (Pi 5 için seçim)
+Altı aday aynı protokolle ölçüldü. Doğruluk PC'de ölçüldü (`scripts/compare_models.py` → `benchmark_pc/model_compare.json`); test seti 83 görüntü, yanlış alarm 33 balıksız görüntüde conf 0,60. Hız Pi 5'te ölçüldü (`scripts/benchmark_pi5.py` → `benchmark_pi5/cmp_*.json`), 200 kare, throttling yok.
+
+| Model | Hassasiyet | Boyut | Test mAP@50 | Test mAP@50-95 | Yanlış alarm | **Pi 5 gecikme** | Pi 5 FPS |
+|---|---|---|---|---|---|---|---|
+| **YOLO11s** | **INT8 (karma)** | **12,5 MB** | **75,38%** | **58,20%** | **0/33** | **173 ms** | **5,77** |
+| YOLO11s | FP16 | 19,0 MB | 75,92% | 57,93% | 0/33 | 368 ms | 2,72 |
+| YOLO11s | FP32 | 37,9 MB | 75,92% | 57,87% | 0/33 | 365 ms | 2,74 |
+| YOLO11m | INT8 (karma) | 25,1 MB | 70,06% | 51,93% | 1/33 | 375 ms | 2,67 |
+| YOLO11m | FP16 | 40,3 MB | 68,88% | 51,95% | 1/33 | 1373 ms | 0,73 |
+| YOLO11m | FP32 | 80,4 MB | 68,87% | 52,04% | 1/33 | 998 ms | 1,00 |
+
+**Karar: YOLO11s + INT8 (karma hassasiyet).**
+- **FP16 Pi 5'te hız kazandırmıyor.** ONNX Runtime'ın ARM CPU tarafında bu modeldeki katmanların çoğu için FP16 çekirdeği yok; bu katmanlar araya Cast (tür dönüşümü) eklenerek FP32'de çalışıyor (ölçülen sonuç bunu doğruluyor). YOLO11s'te FP16 ile FP32 aynı hızda. YOLO11m'de FP16, FP32'den %38 daha yavaş. FP16'nın tek kazancı dosya boyutunun yarıya inmesi; bunu INT8 daha iyi yapıyor. FP16 ancak GPU veya NPU olan cihazlarda (ör. Jetson, Hailo) anlamlı olur.
+- **INT8 tek gerçek hızlandırma.** Pi 5'in Cortex-A76 çekirdeklerindeki tamsayı nokta çarpım komutlarını kullanıyor. YOLO11s'te INT8, FP32'den 2,1 kat hızlı ve doğruluk kaybı yarım puanın altında (mAP@50-95 hatta biraz daha yüksek). Tespit başı FP32'de bırakıldığı için kutu konumları bozulmuyor.
+- **YOLO11m bu veri setinde hem daha yavaş hem daha kötü.** Test mAP@50'de 5-7 puan geride ve tek yanlış alarmı veren model. YOLO11m INT8 bile YOLO11s FP32 kadar yavaş. Sebep: yaklaşık 725 özgün eğitim fotoğrafı, YOLO11m'nin 20 milyon parametresi için az; model aşırı öğreniyor (bkz. üstteki ablasyon). YOLO11m ancak veri seti birkaç kat büyürse yeniden denenmeli.
+- 16 GB RAM bu kararı değiştirmiyor. Hepsi 100 MB'ın altında olduğu için bellek darboğaz değil; darboğaz 4 çekirdekli CPU'nun hesaplama hızı.
+
+### Ön işleme: CLAHE ve görüntü oranı
+Aynı model (YOLO11s INT8) ve eşik 0,60 ile, inceleme arayüzünde (`app/review`) ölçüldü:
+
+| | Test F1 | Valid F1 | Boş sahnede alarm |
+|---|---|---|---|
+| **CLAHE kapalı** | **74,6%** | **89,7%** | **0/33** |
+| CLAHE açık | 68,2% | 86,5% | 2/33 |
+
+Bu yüzden tespitten önce CLAHE varsayılan olarak **kapalı** (`DETECT_USE_CLAHE = False`). Önceden dashboard bunu her karede zorla açıyordu. Ayrıca uygulama kameradan gelen 4:3 kareyi önceden 640×640'a **geriyordu**; artık eğitimdeki gibi en-boy oranı korunarak letterbox yapılıyor.
+
+Eşik taraması (YOLO11s INT8, valid): 0,5 → F1 %87,0; **0,6 → F1 %89,7, boş sahnede 0 alarm**; 0,7 → F1 %90,2; 0,8 → F1 %88,9. Varsayılan eşik 0,60 olarak bırakıldı; dashboard'dan değiştirilebilir.
+
 ### Dağıtım formatları (YOLO11s)
 Test seti (83 görüntü), PC CPU (i7-11800H). Gecikme: `scripts/benchmark_pc.py` → `benchmark_pc/results_s_v2_cpu.json`. Yanlış alarm: doğrulama setindeki 33 balıksız görüntü, conf 0,60 (`training/eval_false_positives.py`).
 
@@ -88,7 +120,7 @@ Pi 5 (16 GB, aktif soğutucu), Raspberry Pi OS 64-bit (Debian 13), ONNX Runtime 
 | **ONNX INT8 (karma)** | **171,1 ms** | 171,7 ms | **5,85** |
 | ONNX FP32 | 362,1 ms | 364,0 ms | 2,76 |
 
-INT8, Pi 5'te FP32'ye göre **2,1× hızlı**. Uygulama varsayılan olarak her 5 karede bir tespit yapar (`SKIP_FRAMES`), bu yüzden kamera akışı tespitten bağımsız akıcı kalır.
+INT8, Pi 5'te FP32'ye göre **2,1× hızlı**. Dashboard'da kamera ve tespit ayrı döngülerde çalışır. Tespit döngüsü her seferinde en son kareyi alır, eski kareleri atar. Bu yüzden görüntü akışı tespit hızından bağımsız olarak akıcı kalır.
 
 ## Gereksinimler
 
@@ -164,6 +196,19 @@ python app/dashboard/server.py
 
 # Tarayıcıdan: http://<ip>:5000
 ```
+
+### Tespit İnceleme Arayüzü (PC) 🔍
+Modelin balon balığını doğru bulup bulmadığını gözle kontrol etmek için:
+```bash
+python -m app.review.server
+# Tarayıcıdan: http://localhost:5050
+```
+- **Etiketli veri setinde (test/valid/train):** Etiket ile tahminler üst üste çizilir. Yeşil kutu doğru tespit, kırmızı kutu yanlış alarm, turuncu kesikli kutu kaçırılan balık anlamına gelir. Precision, recall, F1 ve boş sahnede alarm sayısı canlı hesaplanır.
+- **Güven eşiği kaydırıcısı:** Eşiği değiştirince sonuçlar anında yeniden hesaplanır.
+- **Filtreler:** "Hatalı olanlar", "Kaçırılan var", "Yanlış alarm var", "Boş sahneler".
+- **Büyük görünüm:** Bir karta tıklayınca açılır; ← → ile gezilir.
+- **Kendi dosyaların:** Görüntü veya video yükleyebilirsin. Videodan saniyede yaklaşık 1 kare örneklenir (en fazla 120 kare).
+- **Model ve CLAHE seçimi:** `models/` ve `models/candidates/` altındaki herhangi bir model seçilebilir, CLAHE açılıp kapatılabilir.
 
 ### Headless Mod
 ```bash
