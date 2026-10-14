@@ -1,6 +1,6 @@
 # 🐡 Balon Balığı Tespit Sistemi
 
-Raspberry Pi 5 üzerinde çalışan, gerçek zamanlı sualtı balon balığı (*Lagocephalus sceleratus*) tespit sistemi. YOLO11m modeli, Pi 5 native kamera entegrasyonu (libcamera/picamera2), GPS geotagging, SpatiaLite veritabanı, canlı web dashboard ve uluslararası veri paylaşım altyapısı (GBIF/OBIS DarwinCore) içerir.
+Raspberry Pi 5 üzerinde çalışan, gerçek zamanlı sualtı balon balığı (*Lagocephalus sceleratus*) tespit sistemi. YOLO11s modeli, ONNX mixed-precision INT8 kuantizasyonu, Pi 5 native kamera entegrasyonu (libcamera/picamera2), GPS geotagging, SpatiaLite veritabanı, canlı web dashboard ve uluslararası veri paylaşım altyapısı (GBIF/OBIS DarwinCore) içerir.
 
 ## Sistem Mimarisi
 
@@ -9,7 +9,7 @@ app/
 ├── core/                    # Çekirdek modüller
 │   ├── config.py            # Merkezi ayarlar (model yolu, eşikler, CORS, CLAHE)
 │   ├── camera.py            # Pi 5 native kamera + OpenCV fallback
-│   ├── detector.py          # YOLO11m ONNX çıkarım motoru (XNNPACK + thread tuning)
+│   ├── detector.py          # YOLO11s ONNX çıkarım motoru (XNNPACK + thread tuning)
 │   ├── detection_store.py   # Tespit geçmişi / durum yönetimi (thread-safe)
 │   ├── gpio.py              # LED kontrolü (GPIO 17)
 │   └── gps.py               # GPS okuyucu (pyserial + pynmea2)
@@ -31,49 +31,52 @@ app/
 training/
 ├── data_prep.py             # Dataset hazırlama (YOLO formatı)
 ├── collect_negatives.py     # Negatif (balıksız) örnek toplama
-├── train_yolo.py            # Model eğitimi (YOLO11m)
-├── train_yolo_retrain.py    # YOLO11m yeniden eğitim betiği
-├── train_export.py          # Eğitim + ONNX export akışı
-├── train_eval_tensorflow.py # TensorFlow / Keras benchmark modeli ve eğitimi
-└── export_quantize.py       # ONNX export + INT8 quantization
+├── train_v2_improved.py     # Model eğitimi (YOLO11s, önerilen tarif)
+├── train_ablation_sizes.py  # n/s/m model boyutu karşılaştırması
+├── export_int8_v2.py        # .pt → ONNX FP32 + karma hassasiyetli INT8
+└── eval_false_positives.py  # Negatif görüntülerde yanlış alarm ölçümü
 
 scripts/
 ├── install_pi.sh            # Raspberry Pi 5 kurulum betiği
-├── baslat.sh                # Servis başlatıcı
-├── gps_simulator.py         # GPS simülatörü (geliştirme amaçlı)
-└── compare_yolo_tensorflow.py # YOLO vs TensorFlow karşılaştırma rapor betiği
+├── baslat.sh                # Uygulamayı başlatır
+├── benchmark_pc.py          # .pt / ONNX / INT8 gecikme + P/R/F1 ölçümü
+├── gps_simulator.py         # Geliştirme için sahte GPS
+└── generate_fig5.py         # Makale Şekil 5 grafiği
 
-models/                      # Model ağırlıkları (.onnx/.pt büyük olduğundan git'te tutulmaz, eğitim/export ile üretilir)
-├── yolo11m_pufferfish.onnx  # Varsayılan çalışma modeli (FP32 ONNX)
-├── pufferfish_pi_int8.onnx  # INT8 kuantize ONNX (opsiyonel, düşük güçlü uçlar için)
-└── pufferfish_tf_model.keras  # TensorFlow / MobileNetV2 karşılaştırma modeli
-
+benchmark_pc/                # Ölçüm sonuçları (JSON)
+models/                      # Model dosyaları (git'te yok, aşağıya bakın)
+data/                        # Çalışma zamanı verisi: tespit logu, görüntüler, SQLite (git'te yok)
 tests/                       # Pytest test altyapısı (102 test)
-├── test_detector.py         # Model, inference, CLAHE testleri
-├── test_detection_store.py  # Tespit durum yönetimi testleri
-├── test_dashboard_stats.py  # Dashboard istatistik / API testleri
-├── test_logging.py          # CSV loglama testleri
-├── test_spatial.py          # Veritabanı testleri
-├── test_security_cors.py    # CORS güvenlik testleri
-├── test_smoke_imports.py    # Modül import smoke testleri
-├── test_e2e_chain.py        # Uçtan uca zincir testleri
-└── test_export.py           # Export & webhook testleri
 ```
 
-> **Çalışma modeli:** Sistem varsayılan olarak **FP32 `yolo11m_pufferfish.onnx`** kullanır. INT8 kuantize sürüm (`pufferfish_pi_int8.onnx`) daha küçük ve hızlı olsa da yerel değerlendirmelerde doğruluk kaybı gösterdiğinden varsayılan değildir. Modeli değiştirmek için `app/core/config.py` içindeki `MODEL_PATH` ayarını düzenleyin.
+> **Model dosyaları git'e eklenmez** (`*.pt`, `*.onnx` .gitignore'da). Uygulama `models/pufferfish_s_v2_int8.onnx` dosyasını bekler; bu dosya eğitim PC'sinden kopyalanır ya da `training/export_int8_v2.py` ile yeniden üretilir.
 
-## 📊 Fugaeus (Balon Balığı) YOLO vs TensorFlow Benchmark Karşılaştırması
+> **Çalışma modeli:** `models/pufferfish_s_v2_int8.onnx` (YOLO11s, karma hassasiyetli INT8 — tespit başı FP32). Model yolu `app/core/config.py` içindeki `MODEL_PATH` ile değiştirilebilir.
 
-Detaylı karşılaştırma analizi ve metrik raporu için: [TENSORFLOW_VS_YOLO_COMPARISON.md](TENSORFLOW_VS_YOLO_COMPARISON.md)
+## 🏆 Model Performansı
 
-| Metrik / Özellik | YOLO11m (Ultralytics / PyTorch) | TensorFlow (Keras / MobileNetV2) | Kazanan |
-|---|---|---|---|
-| **Model Mimarisi** | YOLO11m (Anchor-Free Detector) | MobileNetV2 Regressor | **YOLO11m** |
-| **Presizyon (Precision)** | **0.9642** (%96.42) | 0.9880 (%98.80) | **YOLO11m** |
-| **Duyarlılık (Recall)** | **0.8470** (%84.70) | 1.0000 (%100.00) | **YOLO11m** |
-| **mAP@50** | **0.9466** (%94.66) | 0.2561 (%25.61) | **YOLO11m** (+%69.05) |
-| **Çıkarım Gecikmesi (GPU)** | **17.38 ms/kare** | 78.13 ms/kare | **YOLO11m** |
-| **Model Disk Boyutu** | 40.50 MB | **25.80 MB** | **TensorFlow** |
+### Neden YOLO11s? (model boyutu ablasyonu)
+Aynı veri, 640 px, aynı hiperparametreler, 50 epoch. Kaynak: `benchmark_pc/ablation_sizes.json`.
+
+| Model | Boyut | Test mAP@50 | Test mAP@50-95 | Test Recall |
+|---|---|---|---|---|
+| YOLO11m (v1, arşivde) | 40,5 MB | 70,68% | 51,38% | 56,12% |
+| YOLO11n | 5,5 MB | 73,81% | 54,04% | 64,75% |
+| **YOLO11s** | **19,2 MB** | **75,24%** | **56,93%** | **69,06%** |
+
+~725 özgün eğitim fotoğrafı için YOLO11m aşırı öğreniyor; daha küçük model daha iyi genelliyor. 960 px eğitim denemesi test mAP@50'yi %63,12'ye düşürdü (`benchmark_pc/training_v2_results.json`), bu yüzden 640 px'te kalındı.
+
+### Dağıtım formatları (YOLO11s)
+Test seti (83 görüntü), PC CPU (i7-11800H). Gecikme: `scripts/benchmark_pc.py` → `benchmark_pc/results_s_v2_cpu.json`. Yanlış alarm: doğrulama setindeki 33 balıksız görüntü, conf 0,60 (`training/eval_false_positives.py`).
+
+| Format | Boyut | Test mAP@50 | Test mAP@50-95 | CPU Gecikme | Yanlış Alarm |
+|---|---|---|---|---|---|
+| PyTorch (.pt) | 19,2 MB | 76,50% | 58,65% | 118,5 ms | 0 / 33 |
+| ONNX FP32 | 37,9 MB | 75,92% | 57,87% | 98,3 ms | 0 / 33 |
+| **ONNX INT8 (karma)** | **12,5 MB** | **75,38%** | **58,20%** | **56,9 ms** | **0 / 33** |
+
+> mAP değerleri `ultralytics val` ile CPU'da `batch=1` kullanılarak ölçüldü; ablasyon tablosundaki (GPU, batch'li) değerlerden ~1 puan farklı olabilir. Karşılaştırma için eski YOLO11m modeli aynı 33 negatifte 1 yanlış alarm verdi.
+> **Raspberry Pi 5 üzerinde cihaz-içi ölçüm henüz yapılmadı.**
 
 ## Gereksinimler
 
@@ -127,7 +130,7 @@ pip install -r requirements-dev.txt
 pip install -r requirements-train.txt
 ```
 
-> **Not:** `training/export_quantize.py` için `onnx`, `Pillow` ve kalibrasyon verisi gerekir.
+> **Not:** INT8 dışa aktarımı (`training/export_int8_v2.py`) için `onnx` ve kalibrasyon görüntüleri (`dataset/valid/images`) gerekir.
 
 ## Kullanım
 
@@ -183,3 +186,39 @@ pytest -q
 - **Veri Export:** CSV, GeoJSON, DarwinCore Archive tek tıkla indirme
 - **Webhook Yönetimi:** Slack/Discord/Teams bildirim ekleme/silme
 - **Opsiyonel API Token:** `DASHBOARD_API_TOKEN` ayarlıysa mutating endpoint'ler korunur
+
+---
+
+## 🔄 Yeni Bir Tür İçin Yeniden Eğitim ve Sürdürülebilirlik Rehberi
+
+Sistem başka bir istilacı veya yerli deniz türünün tespiti için yeniden kullanılabilir. Adımlar şunlardır:
+
+### 1. Veri Setini Hazırlama
+- `dataset/` klasör yapısını koruyun (`train/valid/test` × `images/labels`).
+- `dataset/data.yaml` içindeki `nc` (sınıf sayısı) ve `names` (tür isimleri) alanlarını güncelleyin.
+- **Kritik Kurallar:**
+  - Veri setine **hedefsiz/negatif (balıksız) sualtı görüntüleri** ekleyin (en az %10–15). Test setinde de negatif görüntü bulundurun ki yanlış alarm (false positive) oranı doğru ölçülebilsin.
+  - Veri veri seti split'lerini (`train/valid/test`) **kaynak görüntü (fotoğraf) seviyesinde** yapın. Aynı fotoğraftan türetilen augment kopyalar kesinlikle farklı setlere dağılmamalıdır (data leakage riski).
+
+### 2. Model Eğitimi
+- Küçük/orta ölçekli sualtı veri setlerinde (1000 resim altı) direkt `m` veya `l` modellerine atlamayın (`n` veya `s` kullanın — overfitting önleme).
+- Eğitimi başlatın:
+  ```bash
+  .venv_gpu/Scripts/python.exe training/train_v2_improved.py --model yolo11s.pt --imgsz 640 --batch 8 --name yeni_tur --epochs 80
+  ```
+
+### 3. ONNX ve Mixed-Precision INT8 Nicemleme
+Tek komut FP32 ONNX'i ve karma hassasiyetli INT8'i üretir (`models/<stem>.pt`, `<stem>.onnx`, `<stem>_int8.onnx`):
+```bash
+python training/export_int8_v2.py --weights runs/detect/yeni_tur/weights/best.pt --stem yeni_tur --imgsz 640
+```
+Ardından `app/core/config.py` içindeki `MODEL_PATH` değerini yeni INT8 dosyasına çevirin.
+
+- **Kritik INT8 Kuralı:** Anchor-free YOLO modellerinde tüm grafı nicemlemek tespit başını bozar ve %0 doğruluk verir. Betik, tespit başını otomatik bulup FP32'de bırakır.
+- **Çözünürlük Uyuşmazlığı:** Eğitim ve çıkarım çözünürlüğü **aynı olmalıdır** (640×640). 640'ta eğitilen modeli 1280'de çalıştırmak mAP@50'yi %71,3'ten %48,8'e düşürdü.
+
+### 4. Doğrulama
+```bash
+python training/eval_false_positives.py     # negatiflerde yanlış alarm
+python scripts/benchmark_pc.py --device cpu --out benchmark_pc/results_yeni_tur_cpu.json
+```
