@@ -10,6 +10,7 @@ __pycache__/
 
 # Virtual Environments
 .venv/
+.venv_gpu/
 .venv_pi/
 .venv_wsl/
 venv/
@@ -36,9 +37,8 @@ wandb/
 *.log
 Batch_Results_*/
 
-# App Data & Logs (large dynamic files)
-detections_log.csv
-detections/
+# Runtime data (detection log, snapshots, SQLite DB) — written by the app
+data/
 
 # Dataset (large files)
 dataset/
@@ -69,7 +69,6 @@ Thumbs.db
 *.tmp
 *.bak
 *.swp
-spatial_log.sqlite
 
 # Archived research outputs (manuscripts, benchmarks, report figures) — kept locally, out of git
 archive/
@@ -79,3 +78,7 @@ archive/
 .pytest_cache/
 htmlcov/
 scratch/
+
+# Local AI-assistant tooling (kept locally, not part of the project)
+.agent/
+.claude/
