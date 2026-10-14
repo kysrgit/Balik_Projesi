@@ -19,12 +19,14 @@ class PatchedInferenceSession(_original_session):
         # Spinning mekanizmasini devre disi birakarak gereksiz CPU %100 kullanimini ve isinmayi engelle (Throttle onleyici)
         sess_options.add_session_config_entry("session.intra_op.allow_spinning", "0")
         
-        # XNNPACKExecutionProvider'i aktif et
+        # XNNPACKExecutionProvider'i yalnizca bu onnxruntime derlemesinde varsa ekle
+        # (PyPI'daki aarch64 paketinde yok; olmayan saglayiciyi istemek EP hatasi basar)
         if providers is None:
-            providers = ['XNNPACKExecutionProvider', 'CPUExecutionProvider']
-        elif 'XNNPACKExecutionProvider' not in providers:
+            providers = ['CPUExecutionProvider']
+        if ('XNNPACKExecutionProvider' in ort.get_available_providers()
+                and 'XNNPACKExecutionProvider' not in providers):
             # En yuksek oncelikli olarak eklendi
-            providers.insert(0, 'XNNPACKExecutionProvider')
+            providers = ['XNNPACKExecutionProvider', *providers]
             
         super().__init__(path_or_bytes, sess_options=sess_options, providers=providers, provider_options=provider_options, **kwargs)
 

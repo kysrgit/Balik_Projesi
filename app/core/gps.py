@@ -51,12 +51,14 @@ gps_state = GPSState()
 
 def gps_reader_thread():
     """Asynchronous daemon thread to read GPS data without blocking YOLO."""
+    last_error = None
     while True:
         try:
             # Setup serial connection
             # Timeout is important to avoid blocking forever
             ser = serial.Serial(config.GPS_PORT, baudrate=config.GPS_BAUDRATE, timeout=1.0)
             print(f"GPS connected on {config.GPS_PORT}")
+            last_error = None
             
             while True:
                 line = ser.readline().decode('ascii', errors='replace').strip()
@@ -73,7 +75,10 @@ def gps_reader_thread():
                         pass
                 
         except serial.SerialException as e:
-            print(f"GPS Serial Error: {e}, retrying in 5 seconds...")
+            # Ayni hatayi her 5 sn'de tekrar basma (GPS takili degilse log tasar)
+            if str(e) != last_error:
+                print(f"GPS Serial Error: {e}, retrying every 5 seconds...")
+                last_error = str(e)
             time.sleep(5)
         except (pynmea2.ParseError, ValueError, UnicodeDecodeError) as e:
             print(f"GPS Data Error: {e}")
