@@ -196,6 +196,7 @@ recall ≥ %80, boş sahnede alarm ≤ %2, Pi'de en az 5 FPS, 1 saat kesintisiz 
 - Gamma düzeltmesi.
 - Küçük nesneler için **tiling (SAHI)** veya ilgi bölgesi (ROI) yakınlaştırma. Bu, gecikmeyi artırır; maliyeti ayrıca ölçülür.
 - **Zamansal doğrulama:** "M karenin N'inde görüldüyse alarm ver" kuralı ve takip (ByteTrack). Yanlış alarmları azaltmak ve aynı balığı tekrar saymamak için.
+- **NMS IoU eşiği:** Varsayılan 0,7. İnceleme arayüzünde aynı balığa iki kutu çizildiği görüldü (fotograf_504: iki kutu arasında IoU 0,695, bastırılmadı). 0,5–0,6 denenmeli; NMS'siz YOLO26 bu sorunu yapısal olarak çözebilir (Faz 2).
 
 **Deney:** Her yöntem altın test setinde ve video kliplerde ölçülür, ayrıca eklediği gecikme kaydedilir.
 **Çıktı:** ADR-005.
