@@ -129,10 +129,11 @@ def run_split():
                 preds = predict(model, frame, clahe)
                 t_total += time.perf_counter() - t0
                 items.append({"name": p.name, "src": f"/img/{split}/{p.name}",
+                              "path": f"dataset/{SPLITS[split]}/images/{p.name}",
                               "gt": read_gt(lbl_dir / f"{p.stem}.txt"), "pred": preds})
             _cache[key] = {"items": items, "ms_per_image": round(1000 * t_total / max(len(items), 1), 1),
                            "labeled": True}
-    return jsonify(_cache[key])
+    return jsonify(with_fixes(_cache[key]))
 
 
 def _data_url(frame: np.ndarray) -> str:
@@ -180,6 +181,73 @@ def upload():
 
 
 # ---------------------------------------------------------------------------
+# Etiket duzeltmeleri / hata bildirimleri (veri setindeki goruntuler).
+# Orijinal etiket dosyalarina dokunulmaz; duzeltmeler dataset_meta/label_fixes.json
+# dosyasina yazilir ve altin set olusturulurken (scripts/build_gold.py) uygulanir.
+# ---------------------------------------------------------------------------
+FIXES_JSON = ROOT / "dataset_meta" / "label_fixes.json"
+ISSUES = {"eksik_kutu", "fazla_kutu", "kayik_kutu", "yanlis_tur", "yanlis_ortam", "kopya", "kalite", "diger"}
+
+
+def _fix_path(raw: str) -> tuple[str, Path]:
+    parts = Path(str(raw)).parts
+    if len(parts) != 4 or parts[0] != "dataset" or parts[1] not in SPLITS.values() or parts[2] != "images":
+        abort(400, "gecersiz yol")
+    img = DATASET / parts[1] / "images" / parts[3]
+    if not img.exists():
+        abort(404, "goruntu yok")
+    return "/".join(parts), img
+
+
+def with_fixes(result: dict) -> dict:
+    """Kaydedilmis duzeltmeleri (kutu) yanit uzerine uygula; onbellek degismez."""
+    fixes = _read_json(FIXES_JSON)
+    if not fixes:
+        return result
+    items = []
+    for it in result["items"]:
+        fx = fixes.get(it.get("path"))
+        if fx:
+            it = {**it, "fix": fx}
+            if fx.get("boxes") is not None:
+                it["gt"] = fx["boxes"]
+        items.append(it)
+    return {**result, "items": items}
+
+
+@app.route("/api/fix", methods=["GET", "POST", "DELETE"])
+def fix():
+    import json
+    from datetime import datetime
+    if request.method == "GET":
+        key, img = _fix_path(request.args.get("path", ""))
+        lbl = img.parent.parent / "labels" / f"{img.stem}.txt"
+        return jsonify({"fix": _read_json(FIXES_JSON).get(key), "gt": read_gt(lbl)})
+    d = request.get_json(silent=True) or {}
+    key, _ = _fix_path(d.get("path", ""))
+    with _lock:
+        fixes = _read_json(FIXES_JSON)
+        if request.method == "DELETE":
+            fixes.pop(key, None)
+        else:
+            issues = [i for i in d.get("issues", []) if i in ISSUES]
+            env = d.get("env") if d.get("env") in ENVS else None
+            boxes = None
+            if d.get("boxes") is not None:
+                boxes = []
+                for b in d["boxes"]:
+                    x1, y1, x2, y2 = (min(max(float(v), 0.0), 1.0) for v in b[:4])
+                    if abs(x2 - x1) > 0.003 and abs(y2 - y1) > 0.003:
+                        boxes.append([round(min(x1, x2), 5), round(min(y1, y2), 5),
+                                      round(max(x1, x2), 5), round(max(y1, y2), 5)])
+            fixes[key] = {"issues": issues, "note": str(d.get("note", ""))[:500], "env": env, "boxes": boxes,
+                          "zaman": datetime.now().isoformat(timespec="seconds")}
+        META.mkdir(exist_ok=True)
+        FIXES_JSON.write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
+    return jsonify({"ok": True, "fix": fixes.get(key)})
+
+
+# ---------------------------------------------------------------------------
 # Veri denetimi (Faz 1): her ozgun kaynak icin ortam etiketi + bayraklar.
 # Otomatik oneri dataset_meta/audit.csv (scripts/data_audit.py), dogrulanan
 # etiketler dataset_meta/env_tags.csv dosyasina yazilir.
@@ -218,6 +286,7 @@ def audit_list():
     if not rows:
         abort(404, "once scripts/data_audit.py calistirin")
     tags = {(t["split"], t["source"]): t for t in _read_csv(TAGS_CSV)}
+    fixes = _read_json(FIXES_JSON)
     seen, items = set(), []
     for r in sorted(rows, key=lambda r: float(r["env_conf"] or 0)):  # en belirsizler once
         if r["source"] in seen:  # train'deki 3 kopyadan birini goster
@@ -225,7 +294,11 @@ def audit_list():
         seen.add(r["source"])
         t = tags.get((split, r["source"]))
         lbl = DATASET / SPLITS[split] / "labels" / f"{Path(r['file']).stem}.txt"
-        items.append({"source": r["source"], "src": f"/img/{split}/{r['file']}", "gt": read_gt(lbl),
+        path = f"dataset/{SPLITS[split]}/images/{r['file']}"
+        fx = fixes.get(path)
+        items.append({"source": r["source"], "src": f"/img/{split}/{r['file']}", "path": path,
+                      "gt": fx["boxes"] if fx and fx.get("boxes") is not None else read_gt(lbl),
+                      "fix": fx,
                       "env_auto": r["env_auto"], "env_conf": float(r["env_conf"] or 0),
                       "dups": sorted({f"{m['split']}:{m['source']}" for m in group_members.get(r["dup_group"], [])
                                       if m["source"] != r["source"]}),
@@ -332,8 +405,10 @@ def label_save():
 
 
 def main():
-    print("Inceleme arayuzu: http://localhost:5050  (veri denetimi: /denetim, etiketleme: /etiket)")
-    app.run(host="127.0.0.1", port=5050, debug=False, threaded=True)
+    import os
+    port = int(os.environ.get("REVIEW_PORT", "5050"))
+    print(f"Inceleme arayuzu: http://localhost:{port}  (veri denetimi: /denetim, etiketleme: /etiket)")
+    app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
 
 
 if __name__ == "__main__":

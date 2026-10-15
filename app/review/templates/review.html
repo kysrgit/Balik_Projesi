@@ -92,6 +92,7 @@
   <button class="nav" id="next" aria-label="Sonraki">›</button>
 </div>
 
+<script src="/static/editor.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 let data = null, view = [], filter = "all", cur = -1;
@@ -182,10 +183,20 @@ function show(i) {
   const [it, ev] = view[i], [cls, txt] = status(it, ev);
   $("vframe").innerHTML = `<img src="${it.src}" alt="">${svg(it, ev, true)}`;
   const confs = ev.preds.map(p => (p.box[4] * 100).toFixed(0) + "%").join(", ") || "—";
-  $("vinfo").innerHTML = `<span class="badge ${cls}">${txt}</span> · ${it.name}<small>${i + 1} / ${view.length} · tahmin güvenleri: ${confs} · ← → ile gez, Esc ile kapat</small>`;
+  const fixBtn = it.path ? ` · <button id="fixbtn" style="background:#58a6ff;color:#04121f;border:0;border-radius:6px;padding:4px 10px;font-weight:600;cursor:pointer">✎ Hata bildir / etiketi düzelt (H)</button>` : "";
+  const fixed = it.fix ? ` · <b style="color:var(--fn)">✎ düzeltildi${it.fix.note ? ": " + it.fix.note.slice(0, 60) : ""}</b>` : "";
+  $("vinfo").innerHTML = `<span class="badge ${cls}">${txt}</span> · ${it.name}${fixed}${fixBtn}<small>${i + 1} / ${view.length} · tahmin güvenleri: ${confs} · ← → ile gez, Esc ile kapat</small>`;
+  if (it.path) $("fixbtn").onclick = () => openFix(it);
   $("viewer").classList.add("open");
 }
 function close() { cur = -1; $("viewer").classList.remove("open"); }
+function openFix(it) {
+  openFixEditor({ path: it.path, src: it.src, gt: it.gt || [], preds: it.pred, thr: +$("conf").value,
+    onSaved: async fx => {  // etiketler degisti: metrikleri sunucudaki guncel etiketlerle yeniden hesapla
+      const keep = cur, f = filter; await call(fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...opts(), split: $("split").value }) }));
+      filter = f; render(); if (keep >= 0 && view.length) show(Math.min(keep, view.length - 1));
+    } });
+}
 
 function opts() { return { model: $("model").value, clahe: $("clahe").checked }; }
 async function call(promise) {
@@ -209,7 +220,9 @@ $("grid").onclick = e => { const c = e.target.closest(".card"); if (c) show(+c.d
 $("close").onclick = close; $("prev").onclick = () => show(cur - 1); $("next").onclick = () => show(cur + 1);
 $("viewer").onclick = e => { if (e.target.id === "viewer") close(); };
 document.onkeydown = e => {
+  if (window.fixEditorOpen && fixEditorOpen()) return;
   if (cur < 0) return;
+  if ((e.key === "h" || e.key === "H") && view[cur][0].path) { openFix(view[cur][0]); e.preventDefault(); return; }
   if (e.key === "ArrowLeft") show(cur - 1); else if (e.key === "ArrowRight") show(cur + 1); else if (e.key === "Escape") close();
 };
 </script>

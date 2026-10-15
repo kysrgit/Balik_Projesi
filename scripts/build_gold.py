@@ -31,6 +31,9 @@ VERSION = "gold_v1"
 OUT = ROOT / f"dataset_{VERSION}"
 OUT_BLUR = ROOT / f"dataset_{VERSION}_blur"
 WATER = {"su_alti", "su_ustu"}
+# Arayuzdeki hata bildirimleri (dataset_meta/label_fixes.json)
+EXCLUDE_ISSUES = {"yanlis_tur", "kopya", "kalite"}          # goruntu altin sete hic girmez
+BOX_ISSUES = {"eksik_kutu", "fazla_kutu", "kayik_kutu"}      # kutu duzeltilmediyse girmez
 
 
 def read_csv(p: Path) -> list[dict]:
@@ -83,6 +86,7 @@ def main() -> None:
     items, problems = [], []
     # 1) Mevcut test + valid
     tags = {(t["split"], t["source"]): t for t in read_csv(META / "env_tags.csv")} if (META / "env_tags.csv").exists() else {}
+    fixes = json.loads((META / "label_fixes.json").read_text(encoding="utf-8")) if (META / "label_fixes.json").exists() else {}
     for r in audit:
         if r["split"] not in ("test", "valid"):
             continue
@@ -90,14 +94,22 @@ def main() -> None:
         if t is None:
             problems.append(f"dogrulanmamis: {r['split']}:{r['source']}")
             continue
-        if t["env"] not in WATER or t["etiket_hatali"] == "1":
+        fx = fixes.get(r["path"])  # arayuzden yapilan duzeltme / hata bildirimi
+        env = (fx or {}).get("env") or t["env"]
+        if env not in WATER or r["dup_group"] in train_groups:
             continue
-        if r["dup_group"] in train_groups:
+        if fx and set(fx["issues"]) & EXCLUDE_ISSUES:
             continue
         stem = Path(r["file"]).stem
         lbl = ROOT / "dataset" / r["split"] / "labels" / f"{stem}.txt"
-        items.append({"src": ROOT / r["path"], "boxes": poly_to_boxes(lbl), "origin": f"dataset/{r['split']}",
-                      "env": t["env"], "group": f"{r['split']}:{r['source']}", "license": "Roboflow CC BY 4.0"})
+        if fx and fx.get("boxes") is not None:
+            boxes = [xyxy_to_yolo(b) for b in fx["boxes"]]  # insan tarafindan duzeltilmis kutular
+        elif t["etiket_hatali"] == "1" or (fx and set(fx["issues"]) & BOX_ISSUES):
+            continue  # kutu hatali bildirildi ama duzeltilmedi
+        else:
+            boxes = poly_to_boxes(lbl)
+        items.append({"src": ROOT / r["path"], "boxes": boxes, "origin": f"dataset/{r['split']}",
+                      "env": env, "group": f"{r['split']}:{r['source']}", "license": "Roboflow CC BY 4.0"})
 
     # 2) iNaturalist
     labels = json.loads((META / "inat_labels.json").read_text(encoding="utf-8")) if (META / "inat_labels.json").exists() else {}

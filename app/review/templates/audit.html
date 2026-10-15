@@ -54,7 +54,7 @@
     <b>2 Su üstünden</b>: balık suda, fotoğraf su yüzeyinin üstünden çekilmiş (tekne görünümü) ·
     <b>3 Su dışında</b>: kara, kum, güverte, elde, tezgâhta ·
     <b>4 Hariç</b>: bozuk/alakasız görüntü ·
-    <b>E</b>: etiket (kutu) hatalı/eksik · <b>T</b>: tür şüpheli (L. sceleratus değil gibi) ·
+    <b>E</b>: etiket (kutu) hatalı/eksik · <b>T</b>: tür şüpheli · <b>H</b> veya fotoğrafa tıkla: <b>hatayı göster / kutuyu düzelt / not yaz</b> ·
     ← → kart seç · Enter: sayfayı onayla. Öneriler CLIP'ten gelir, en belirsizler önce gösterilir.
   </div>
 </header>
@@ -66,6 +66,7 @@
 </footer>
 <div id="zoom"></div>
 
+<script src="/static/editor.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const PAGE = 24, ENV = [["su_alti","1 Su altı"],["su_ustu","2 Üstten"],["kara","3 Dışarı"],["haric","4 Hariç"]];
@@ -87,11 +88,13 @@ function render() {
       <div class="frame" data-zoom="${k}"><img loading="lazy" src="${it.src}" alt="">${boxes(it.gt)}</div>
       <div class="info"><span>${it.source}${it.dups.length ? ` · <b style="color:var(--warn)" title="Görsel olarak neredeyse aynı: ${it.dups.join(", ")}">⚠ kopya: ${it.dups.join(", ")}</b>` : ""}</span>
         <span>öneri: ${it.env_auto} ${(it.env_conf * 100).toFixed(0)}%${it.verified ? " · ✓" : ""}</span></div>
+      ${it.fix ? `<div class="info"><b style="color:var(--kara)">✎ düzeltildi: ${(it.fix.issues || []).join(", ") || "not"}${it.fix.note ? " — " + it.fix.note.slice(0, 60) : ""}</b></div>` : ""}
       <div class="envs">${ENV.map(([e, l]) => `<button data-e="${e}" class="${it.env === e ? "on" : ""}">${l}</button>`).join("")}</div>
       <div class="flags">
         <label><input type="checkbox" data-f="etiket_hatali" ${it.etiket_hatali ? "checked" : ""}><span>E Etiket hatalı</span></label>
         <label><input type="checkbox" data-f="tur_supheli" ${it.tur_supheli ? "checked" : ""}><span>T Tür şüpheli</span></label>
       </div>
+      <div style="padding:0 8px 8px"><button data-fix="${k}" style="width:100%">✎ Hata bildir / kutuyu düzelt (H)</button></div>
     </div>`).join("");
 }
 async function load() {
@@ -109,6 +112,16 @@ async function save() {
   if ((page + 1) * PAGE < items.length) { page++; sel = 0; window.scrollTo(0, 0); }
   render();
 }
+function openFix(k) {
+  const it = pageItems()[k];
+  openFixEditor({ path: it.path, src: it.src, gt: it.gt, env: it.env, onSaved: fx => {
+    it.fix = fx;
+    if (fx) { if (fx.boxes) it.gt = fx.boxes; if (fx.env) it.env = fx.env;
+              if (fx.issues.some(i => ["eksik_kutu", "fazla_kutu", "kayik_kutu"].includes(i)) && !fx.boxes) it.etiket_hatali = true;
+              if (fx.issues.includes("yanlis_tur")) it.tur_supheli = true; }
+    render();
+  } });
+}
 function setEnv(k, e) { pageItems()[k].env = e; render(); }
 function toggle(k, f) { const it = pageItems()[k]; it[f] = !it[f]; render(); }
 
@@ -117,7 +130,7 @@ $("grid").onclick = e => {
   const k = +card.dataset.k; sel = k;
   if (e.target.dataset.e) setEnv(k, e.target.dataset.e);
   else if (e.target.dataset.f) toggle(k, e.target.dataset.f);
-  else if (e.target.closest("[data-zoom]")) { const it = pageItems()[k]; $("zoom").innerHTML = `<div class="frame"><img src="${it.src}" alt="">${boxes(it.gt)}</div>`; $("zoom").classList.add("open"); }
+  else if (e.target.dataset.fix !== undefined || e.target.closest("[data-zoom]")) openFix(k);
   else render();
 };
 $("zoom").onclick = () => $("zoom").classList.remove("open");
@@ -125,7 +138,8 @@ $("save").onclick = save;
 $("prevpage").onclick = () => { if (page > 0) { page--; sel = 0; render(); } };
 $("split").onchange = load;
 document.onkeydown = e => {
-  if ($("zoom").classList.contains("open")) { if (e.key === "Escape") $("zoom").classList.remove("open"); return; }
+  if (window.fixEditorOpen && fixEditorOpen()) return;
+  if (e.key === "h" || e.key === "H") { openFix(sel); e.preventDefault(); return; }
   const n = pageItems().length;
   if (e.key >= "1" && e.key <= "4") { setEnv(sel, ENV[+e.key - 1][0]); if (sel < n - 1) { sel++; render(); } }
   else if (e.key === "e" || e.key === "E") toggle(sel, "etiket_hatali");
