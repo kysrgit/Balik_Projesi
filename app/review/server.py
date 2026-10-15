@@ -303,6 +303,8 @@ def label_list():
                       "license": r["license"], "attribution": r["attribution"], "obs_url": r["obs_url"],
                       "pre": p.get("boxes", []), "env_auto": p.get("env_auto", ""),
                       "env_conf": p.get("env_conf", 0), "label": done.get(f)})
+    # Altin set yalnizca "suda" goruntuleri kullanir: CLIP'in suda dedikleri once, su disindakiler sona
+    items.sort(key=lambda i: (i["env_auto"] == "kara", -i["env_conf"] if i["env_auto"] != "kara" else i["env_conf"]))
     return jsonify({"items": items, "prelabeled": bool(pre)})
 
 
