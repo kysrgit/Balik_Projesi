@@ -1,0 +1,842 @@
+{
+ "dataset/test/images/fotograf_116_jpg.rf.1058eee3f42c70e2cb169f5639211586.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:01:37"
+ },
+ "dataset/test/images/fotograf_12_jpg.rf.9d4244e81b18ed32b2e02451f4654135.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "kacirma_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:01:48"
+ },
+ "dataset/test/images/fotograf_138_jpg.rf.e7307f9acf3305a18aa328892c4669e5.jpg": {
+  "issues": [
+   "diger"
+  ],
+  "note": "Sadece 1 tane puffer var, o da en büyük olan [Claude: nottan uygulandi]",
+  "env": "kara",
+  "boxes": [
+   [
+    0.06875,
+    0.56406,
+    0.96875,
+    0.81719
+   ]
+  ],
+  "confirm": [],
+  "zaman": "2026-10-15T04:11:09"
+ },
+ "dataset/test/images/fotograf_151_jpg.rf.027105180cca8a261181f40169f505d1.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:02:53"
+ },
+ "dataset/test/images/fotograf_156_jpg.rf.d2d7eba83fdbfb611343bcf9b83a7b8f.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:02:54"
+ },
+ "dataset/test/images/fotograf_172_jpg.rf.31edadad622ba674a181048801442f06.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:02:56"
+ },
+ "dataset/test/images/fotograf_177_jpg.rf.92646824a56294c9d67c5348797dfd6b.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:02:58"
+ },
+ "dataset/test/images/fotograf_184_jpg.rf.93b245740a78422c9db204493d645242.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:02:59"
+ },
+ "dataset/test/images/fotograf_189_jpg.rf.421e4f595d4a94fbfce16c9b912645f0.jpg": {
+  "issues": [
+   "yanlis_ortam"
+  ],
+  "note": "hepsi puffer",
+  "env": "kara",
+  "boxes": [
+   [
+    0.38125,
+    0.53438,
+    0.55156,
+    0.75313
+   ],
+   [
+    0.28906,
+    0.4125,
+    0.47656,
+    0.69375
+   ],
+   [
+    0.4539,
+    0.37453,
+    0.78358,
+    0.56359
+   ],
+   [
+    0.38438,
+    0.56719,
+    0.71406,
+    0.89375
+   ],
+   [
+    0.33125,
+    0.3875,
+    0.64375,
+    0.58281
+   ]
+  ],
+  "confirm": [],
+  "zaman": "2026-10-15T04:03:44"
+ },
+ "dataset/test/images/fotograf_191_jpg.rf.e5a4e50f10b0abd65202e75cee01fd02.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:03:57"
+ },
+ "dataset/test/images/fotograf_213_jpeg.rf.be57b39a2e88298d7735c8aec5b2ddaf.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:03:59"
+ },
+ "dataset/test/images/fotograf_221_jpeg.rf.49d92ef5808b4c64032ad155a07f82af.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:13"
+ },
+ "dataset/test/images/fotograf_226_jpg.rf.4d329e5790d5f7719e54ecab1c70fd32.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:14"
+ },
+ "dataset/test/images/fotograf_231_jpeg.rf.7651e53286952bd9bc4e1b3a81860424.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:16"
+ },
+ "dataset/test/images/fotograf_256_jpeg.rf.360c4491b95063f9885c94fae8bebf04.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:18"
+ },
+ "dataset/test/images/fotograf_257_jpeg.rf.410846fe1d1b4b1b907050f44b162cc1.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:20"
+ },
+ "dataset/test/images/fotograf_285_jpeg.rf.27444ef877213fdf9f00d82a4929a216.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:21"
+ },
+ "dataset/test/images/fotograf_289_jpeg.rf.9f2fbb9241baab47e4efcbc5ac536c1d.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:23"
+ },
+ "dataset/test/images/fotograf_297_jpeg.rf.036523deded04f397be3d41c4abe051f.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:24"
+ },
+ "dataset/test/images/fotograf_321_jpg.rf.d05fa77c38afafc98a46966fc7e21948.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:33"
+ },
+ "dataset/test/images/fotograf_332_jpeg.rf.e97b7d4cbf6851db8fe7da4c800a077c.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:35"
+ },
+ "dataset/test/images/fotograf_335_jpeg.rf.854e94ee3a703aa7d78c956332550d50.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:04:37"
+ },
+ "dataset/test/images/fotograf_338_jpeg.rf.1e72c99eb3d1379a5279a98c9acee040.jpg": {
+  "issues": [
+   "yanlis_ortam"
+  ],
+  "note": "",
+  "env": "kara",
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-15T04:05:04"
+ },
+ "dataset/test/images/fotograf_348_jpeg.rf.16b5aa153c6cd8d8e8d0bb41ca67b420.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:07"
+ },
+ "dataset/test/images/fotograf_352_jpeg.rf.645da92dc4df6fcfd17d8f567277abe1.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:08"
+ },
+ "dataset/test/images/fotograf_381_jpeg.rf.f095aae39c75209b1757de43ce7a0525.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:09"
+ },
+ "dataset/test/images/fotograf_382_jpg.rf.5e6ab51658c4a31eb8c62822e92847dc.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:10"
+ },
+ "dataset/test/images/fotograf_404_jpg.rf.75872f55b39996bd4d5128693136e500.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:11"
+ },
+ "dataset/test/images/fotograf_416_jpeg.rf.4477966e23e7a89c86401c44d79f7c94.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:13"
+ },
+ "dataset/test/images/fotograf_421_jpg.rf.4ff5f32545577f1f0443657c32542abf.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:15"
+ },
+ "dataset/test/images/fotograf_427_jpeg.rf.4d2a1f9ac26e05d49f080b2658523e4d.jpg": {
+  "issues": [
+   "kayik_kutu"
+  ],
+  "note": " [Claude: nottan uygulandi]",
+  "env": null,
+  "boxes": [
+   [
+    0.19953,
+    0.30625,
+    0.82297,
+    0.69375
+   ]
+  ],
+  "confirm": [],
+  "zaman": "2026-10-15T04:11:11"
+ },
+ "dataset/test/images/fotograf_430_jpeg.rf.451c81da69dda561971e19d84253366b.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:46"
+ },
+ "dataset/test/images/fotograf_433_jpeg.rf.50acc622aa13cf4acf210aac8413e2dd.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:49"
+ },
+ "dataset/test/images/fotograf_439_jpg.rf.dd1da89225173e8e1f8f5237bf1c018d.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:50"
+ },
+ "dataset/test/images/fotograf_441_jpg.rf.7a583944975aa15e1b3cfe8b080ef0db.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:51"
+ },
+ "dataset/test/images/fotograf_453_jpeg.rf.50ce5bf408f896917bd5e5a6ea591f98.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:53"
+ },
+ "dataset/test/images/fotograf_461_jpeg.rf.4e5c18fec34995fccdcc2c87d9f12a8e.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:54"
+ },
+ "dataset/test/images/fotograf_464_jpeg.rf.6fd4853cd2e624c26fada29c29eb5b74.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:54"
+ },
+ "dataset/test/images/fotograf_481_jpeg.rf.faaa001231c193f661f42132c5f75357.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:56"
+ },
+ "dataset/test/images/fotograf_482_jpeg.rf.90d09a27e940f95c808652bf7e896624.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:57"
+ },
+ "dataset/test/images/fotograf_493_jpeg.rf.eb1f2e48f0ea68881523820ee046de24.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:05:57"
+ },
+ "dataset/test/images/fotograf_502_jpeg.rf.d764c0f33672875d0aadba02e31e43c6.jpg": {
+  "issues": [
+   "eksik_kutu"
+  ],
+  "note": " [Claude: nottan uygulandi]",
+  "env": null,
+  "boxes": [
+   [
+    0.18181,
+    0.27542,
+    0.75305,
+    0.5118
+   ]
+  ],
+  "confirm": [],
+  "zaman": "2026-10-15T04:11:13"
+ },
+ "dataset/test/images/fotograf_504_jpeg.rf.69c94e3f908173879843ef63130d9ada.jpg": {
+  "issues": [
+   "eksik_kutu",
+   "fazla_kutu",
+   "diger"
+  ],
+  "note": "balık var",
+  "env": "su_ustu",
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-15T04:07:00"
+ },
+ "dataset/test/images/fotograf_50_jpg.rf.94a6da35344dd67d77c10fd8bca48ce2.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:07:10"
+ },
+ "dataset/test/images/fotograf_529_jpg.rf.8be18df87b6341a34187879fc55f4d21.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:07:12"
+ },
+ "dataset/test/images/fotograf_556_jpg.rf.ea3063f01bda20724962dad7ab7e2ff7.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:07:13"
+ },
+ "dataset/test/images/fotograf_55_jpg.rf.1dd04a961b3f79aac94776180439a4ba.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:07:15"
+ },
+ "dataset/test/images/fotograf_581_jpg.rf.e2472560f0495ec2e9dea583c5fce6ab.jpg": {
+  "issues": [
+   "diger"
+  ],
+  "note": "ikisi de puffer",
+  "env": null,
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-15T04:11:15"
+ },
+ "dataset/test/images/fotograf_578_jpeg.rf.cc881f0731ea1d07ec99b7c892324e1d.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:07:43"
+ },
+ "dataset/test/images/fotograf_579_jpeg.rf.4b3ec309d70e647cd9168ba0f6782495.jpg": {
+  "issues": [],
+  "note": "hepsi puffer",
+  "env": null,
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-15T04:11:17"
+ },
+ "dataset/test/images/fotograf_592_jpeg.rf.c7ce440b99b04b42349be651c04be599.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:02"
+ },
+ "dataset/test/images/fotograf_597_jpg.rf.897b54d40d7398f0c0aef1d0d3e27e2a.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "kacirma_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:03"
+ },
+ "dataset/test/images/fotograf_599_jpg.rf.3537b82d693aa2df9e5141d9d59a8a11.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:04"
+ },
+ "dataset/test/images/fotograf_60_jpg.rf.8b2afeac7641f095ec00184ce7c459e8.jpg": {
+  "issues": [
+   "kayik_kutu"
+  ],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-15T04:11:19"
+ },
+ "dataset/test/images/fotograf_630_jpg.rf.ed59701958fcd5d974e30502b8d0b74e.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "kacirma_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:12"
+ },
+ "dataset/test/images/fotograf_636_jpg.rf.fd0ba80cb22b65ffb25135cdeb3b3928.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:13"
+ },
+ "dataset/test/images/fotograf_639_jpg.rf.747cb465b4883692e0f27d3fccff1b72.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:16"
+ },
+ "dataset/test/images/fotograf_647_jpg.rf.f8d0d44d38e2d5fd25afbd4f1c586d86.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:17"
+ },
+ "dataset/test/images/fotograf_65_png.rf.409664fedae1d7fd06b8cf1cd04ea330.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "kacirma_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:21"
+ },
+ "dataset/test/images/fotograf_662_jpg.rf.16e5ae387941bdf162a9ae2fb4f3a855.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "kacirma_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:23"
+ },
+ "dataset/test/images/fotograf_664_jpg.rf.3593e7efcc85cd88ad2c721eff7b6c9c.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:24"
+ },
+ "dataset/test/images/fotograf_672_jpg.rf.9ad6cd9fcc7c290b90b256cedc85cf22.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:25"
+ },
+ "dataset/test/images/fotograf_673_jpg.rf.2429b9e5aec00ab43d1d4a6b8c1f2eac.jpg": {
+  "issues": [],
+  "note": "hepsi puffer",
+  "env": null,
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-15T04:11:21"
+ },
+ "dataset/test/images/fotograf_67_jpg.rf.9f8f725b95dbef67cfbc3efcb7c85661.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:41"
+ },
+ "dataset/test/images/fotograf_68_jpg.rf.f8829ca66b367eae0bae474b1e2e269a.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:43"
+ },
+ "dataset/test/images/fotograf_694_jpg.rf.a22388f408d5c507657acce317faa366.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:44"
+ },
+ "dataset/test/images/fotograf_696_jpg.rf.28b370fd8e13d5c51232fd7cdd519b46.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:45"
+ },
+ "dataset/test/images/fotograf_69_jpg.rf.6ca302ccdf74852e781903776544db62.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:46"
+ },
+ "dataset/test/images/fotograf_772_jpg.rf.bdd26834a550f11f73a0d980454b981f.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:48"
+ },
+ "dataset/test/images/fotograf_75_jpg.rf.1993b5bb22cfad46210eac66c7f573f4.jpg": {
+  "issues": [
+   "kayik_kutu"
+  ],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-15T04:11:23"
+ },
+ "dataset/test/images/fotograf_741_jpg.rf.2614c4675c0cf76fb43bad21da757121.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:57"
+ },
+ "dataset/test/images/fotograf_71_jpg.rf.a16b6fee1e31551085a764368bfe9ec4.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:58"
+ },
+ "dataset/test/images/fotograf_70_jpg.rf.9d5ed24830721df968266ca28337b806.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:58"
+ },
+ "dataset/test/images/fotograf_706_jpg.rf.64a53f730fe7e374fe4934d89c46884e.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:08:59"
+ },
+ "dataset/test/images/fotograf_781_jpg.rf.d4115bd9467845a946866780a71002ca.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:09:01"
+ },
+ "dataset/test/images/fotograf_793_jpg.rf.6c1d0525accfb00df474b739d11c77f3.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:09:02"
+ },
+ "dataset/test/images/fotograf_822_jpg.rf.487aecfac80299830ab8c30713899b75.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "kacirma_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:09:03"
+ },
+ "dataset/test/images/fotograf_85_jpg.rf.39aec1573a524f79d302ddef7cf2bbc7.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:09:12"
+ },
+ "dataset/test/images/fotograf_86_jpg.rf.025d3963cffcd9813e0bb0e3d315dae0.jpg": {
+  "issues": [],
+  "note": "",
+  "env": null,
+  "boxes": null,
+  "confirm": [
+   "dogru_onaylandi"
+  ],
+  "zaman": "2026-10-15T04:09:13"
+ }
+}

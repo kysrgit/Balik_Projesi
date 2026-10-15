@@ -115,7 +115,9 @@
     const boxesChanged = changed();
     const envChanged = S.origEnv !== null && S.env !== S.origEnv;
     if (!issues.length && !note && !boxesChanged && !envChanged) { close(); return; }
-    const body = { path: S.path, issues, note, env: S.env, boxes: boxesChanged ? S.boxes : null };
+    // Ortam yalnizca kullanici sectiyse ya da zaten biliniyorsa kaydedilir (varsayilan deger kaydedilmez)
+    const env = (S.envTouched || S.origEnv) ? S.env : (S.savedEnv || null);
+    const body = { path: S.path, issues, note, env, boxes: boxesChanged ? S.boxes : null, confirm: S.confirm };
     const r = await fetch("/api/fix", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!r.ok) { alert("Kaydedilemedi: " + await r.text()); return; }
     const saved = (await r.json()).fix;
@@ -135,7 +137,8 @@
     S = { path: opt.path, preds: opt.preds || [], thr: opt.thr ?? 0.25, onSaved: opt.onSaved,
           origGt: (d.gt || opt.gt || []).map(b => b.slice(0, 4)),
           boxes: (fix && fix.boxes ? fix.boxes : (d.gt || opt.gt || [])).map(b => b.slice(0, 4)),
-          env: (fix && fix.env) || opt.env || "su_alti", sel: -1, drag: null };
+          env: (fix && fix.env) || opt.env || null, savedEnv: (fix && fix.env) || null, envTouched: false,
+          confirm: (fix && fix.confirm) || [], sel: -1, drag: null };
     S.origEnv = opt.env || null;  // bilinmiyorsa (inceleme sayfasi) ortam degisikligi hata sayilmaz
     root.innerHTML = `<div class="wrap">
       <div class="stage" id="fxstage"><img id="fximg" src="${opt.src}" alt="" draggable="false"></div>
@@ -160,7 +163,7 @@
     el("fxshowpred").onchange = draw;
     el("fxsave").onclick = save; el("fxcancel").onclick = close;
     if (fix) el("fxclear").onclick = clearFix;
-    root.querySelectorAll("[data-env]").forEach(b => b.onclick = () => { S.env = b.dataset.env; if (S.origEnv && S.env !== S.origEnv) mark("yanlis_ortam"); draw(); });
+    root.querySelectorAll("[data-env]").forEach(b => b.onclick = () => { S.env = b.dataset.env; S.envTouched = true; if (S.origEnv && S.env !== S.origEnv) mark("yanlis_ortam"); draw(); });
     draw();
   };
   window.fixEditorOpen = () => !!S;
@@ -173,7 +176,7 @@
     if (e.key === "Escape") close();
     else if ((e.key === "Delete" || e.key === "Backspace") && S.sel >= 0) { S.boxes.splice(S.sel, 1); S.sel = -1; draw(); }
     else if (e.key === "Enter" && e.ctrlKey) save();
-    else if (e.key >= "1" && e.key <= "4") { S.env = ENVS[+e.key - 1][0]; if (S.origEnv && S.env !== S.origEnv) mark("yanlis_ortam"); draw(); }
+    else if (e.key >= "1" && e.key <= "4") { S.env = ENVS[+e.key - 1][0]; S.envTouched = true; if (S.origEnv && S.env !== S.origEnv) mark("yanlis_ortam"); draw(); }
     else return;
     e.preventDefault(); e.stopImmediatePropagation();
   }, true);
