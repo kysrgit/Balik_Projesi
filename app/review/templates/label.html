@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kutu Etiketleme</title>
+<style>
+  :root { --bg:#0f1419; --panel:#182029; --line:#2a3542; --text:#e6edf3; --muted:#8b98a5; --accent:#58a6ff;
+          --box:#3fb950; --sel:#f0a030; --warn:#f85149; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { background:var(--panel); border-bottom:1px solid var(--line); padding:10px 16px; display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; }
+  h1 { font-size:16px; margin:0; } a { color:var(--accent); }
+  select, button { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); color:#04121f; border-color:var(--accent); font-weight:600; }
+  button.on { border-color:var(--accent); color:var(--accent); }
+  .layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:14px; padding:14px 16px; }
+  .stage { position:relative; line-height:0; user-select:none; cursor:crosshair; background:#000; border-radius:6px; overflow:hidden; align-self:start; }
+  .stage img { width:100%; display:block; max-height:80vh; object-fit:contain; }
+  .b { position:absolute; border:2px solid var(--box); background:rgba(63,185,80,.08); cursor:pointer; }
+  .b.sel { border-color:var(--sel); background:rgba(240,160,48,.12); }
+  .b span { position:absolute; top:-18px; left:-2px; font:600 11px/16px system-ui; background:var(--box); color:#04121f; padding:0 4px; border-radius:3px; }
+  .b.sel span { background:var(--sel); }
+  .h { position:absolute; width:12px; height:12px; background:var(--sel); border:1px solid #000; }
+  .h.tl { left:-7px; top:-7px; cursor:nwse-resize; } .h.br { right:-7px; bottom:-7px; cursor:nwse-resize; }
+  .h.tr { right:-7px; top:-7px; cursor:nesw-resize; } .h.bl { left:-7px; bottom:-7px; cursor:nesw-resize; }
+  aside { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; align-self:start; }
+  aside h2 { font-size:14px; margin:0 0 8px; }
+  .envs { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px; }
+  .actions { display:grid; gap:6px; margin:12px 0; }
+  .meta { color:var(--muted); font-size:12px; word-break:break-word; }
+  .keys { color:var(--muted); font-size:12px; margin-top:10px; line-height:1.7; }
+  kbd { background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:0 5px; font-size:11px; color:var(--text); }
+  .status { font-weight:600; } .ok { color:var(--box); } .no { color:var(--warn); }
+  @media (max-width:800px) { .layout { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🐡 Kutu Etiketleme — iNaturalist</h1>
+  <label>Rol <select id="role"><option value="pozitif">pozitif (puffer)</option><option value="negatif">negatif (başka türler)</option></select></label>
+  <label><input type="checkbox" id="onlyopen" checked> Sadece etiketlenmemişler</label>
+  <span id="progress" class="meta"></span>
+  <a href="/denetim">veri denetimi</a> · <a href="/">tespit inceleme</a>
+</header>
+<div class="layout">
+  <div class="stage" id="stage"><img id="img" alt="" draggable="false"></div>
+  <aside>
+    <h2 id="title">—</h2>
+    <div class="meta" id="meta"></div>
+    <h2 style="margin-top:12px">Ortam</h2>
+    <div class="envs" id="envs">
+      <button data-e="su_alti">1 Su altı</button><button data-e="su_ustu">2 Su üstünden</button>
+      <button data-e="kara">3 Su dışında</button><button data-e="haric">4 Hariç</button>
+    </div>
+    <div class="actions">
+      <button class="primary" id="ok">✓ Kutular doğru — kaydet (Enter)</button>
+      <button id="nofish">∅ Puffer yok — kaydet (N)</button>
+      <button id="skip">✕ Hariç tut — kaydet (X)</button>
+    </div>
+    <div class="meta">Kayıt: <span id="saved" class="status">—</span></div>
+    <div class="keys">
+      Fareyle sürükle: <b>yeni kutu</b> · kutuya tıkla: seç · köşeden sürükle: boyutlandır<br>
+      <kbd>Del</kbd> seçili kutuyu sil · <kbd>1</kbd>–<kbd>4</kbd> ortam · <kbd>←</kbd> <kbd>→</kbd> önceki/sonraki<br>
+      Yeşil kutular modelin önerisidir; yanlışsa sil, eksikse çiz. Balığın tamamını sıkıca çevrele.
+    </div>
+  </aside>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let all = [], list = [], idx = 0, boxes = [], sel = -1, env = "su_alti", drag = null;
+
+function current() { return list[idx]; }
+function filterList() {
+  list = $("onlyopen").checked ? all.filter(i => !i.label) : all.slice();
+  idx = Math.min(idx, Math.max(0, list.length - 1));
+}
+function progress() {
+  const done = all.filter(i => i.label).length;
+  $("progress").textContent = `${done} / ${all.length} etiketlendi · ${list.length ? idx + 1 : 0} / ${list.length} gösteriliyor`;
+}
+function show() {
+  progress();
+  const it = current();
+  if (!it) { $("img").removeAttribute("src"); $("title").textContent = "Bu listede görüntü kalmadı 🎉"; renderBoxes(); return; }
+  $("img").src = it.src;
+  $("title").textContent = it.taxon;
+  $("meta").innerHTML = `${it.file.split("/").pop()}<br>${it.attribution} · ${it.license}<br><a href="${it.obs_url}" target="_blank" rel="noopener">gözlem sayfası ↗</a> · CLIP önerisi: ${it.env_auto} ${(it.env_conf * 100).toFixed(0)}%`;
+  if (it.label) { boxes = it.label.boxes.map(b => b.slice()); env = it.label.env; }
+  else { boxes = it.pre.filter(b => b[4] >= 0.25).map(b => b.slice(0, 4)); env = it.env_auto || "su_alti"; }
+  sel = -1;
+  $("saved").innerHTML = it.label ? `<span class="${it.label.status === "ok" ? "ok" : "no"}">${it.label.status} · ${it.label.boxes.length} kutu</span>` : "henüz yok";
+  renderEnv(); renderBoxes();
+}
+function renderEnv() { for (const b of $("envs").children) b.classList.toggle("on", b.dataset.e === env); }
+function renderBoxes() {
+  $("stage").querySelectorAll(".b").forEach(e => e.remove());
+  boxes.forEach((b, k) => {
+    const d = document.createElement("div");
+    d.className = "b" + (k === sel ? " sel" : "");
+    Object.assign(d.style, { left: b[0] * 100 + "%", top: b[1] * 100 + "%", width: (b[2] - b[0]) * 100 + "%", height: (b[3] - b[1]) * 100 + "%" });
+    d.dataset.k = k;
+    d.innerHTML = `<span>${k + 1}</span>` + (k === sel ? ["tl", "tr", "bl", "br"].map(c => `<i class="h ${c}" data-c="${c}"></i>`).join("") : "");
+    $("stage").appendChild(d);
+  });
+}
+function pos(e) {
+  const r = $("img").getBoundingClientRect();
+  return [Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1), Math.min(Math.max((e.clientY - r.top) / r.height, 0), 1)];
+}
+$("stage").onmousedown = e => {
+  if (!current()) return;
+  const [x, y] = pos(e);
+  if (e.target.dataset.c) { drag = { mode: "resize", k: sel, c: e.target.dataset.c }; }
+  else if (e.target.closest(".b")) { sel = +e.target.closest(".b").dataset.k; drag = { mode: "move", k: sel, x, y, orig: boxes[sel].slice() }; renderBoxes(); }
+  else { boxes.push([x, y, x, y]); sel = boxes.length - 1; drag = { mode: "new", k: sel, x, y }; renderBoxes(); }
+  e.preventDefault();
+};
+window.onmousemove = e => {
+  if (!drag) return;
+  const [x, y] = pos(e), b = boxes[drag.k];
+  if (drag.mode === "new") { boxes[drag.k] = [Math.min(drag.x, x), Math.min(drag.y, y), Math.max(drag.x, x), Math.max(drag.y, y)]; }
+  else if (drag.mode === "move") {
+    const o = drag.orig, dx = Math.min(Math.max(x - drag.x, -o[0]), 1 - o[2]), dy = Math.min(Math.max(y - drag.y, -o[1]), 1 - o[3]);
+    boxes[drag.k] = [o[0] + dx, o[1] + dy, o[2] + dx, o[3] + dy];
+  } else {
+    if (drag.c.includes("l")) b[0] = x; if (drag.c.includes("r")) b[2] = x;
+    if (drag.c.includes("t")) b[1] = y; if (drag.c.includes("b")) b[3] = y;
+  }
+  renderBoxes();
+};
+window.onmouseup = () => {
+  if (!drag) return;
+  const b = boxes[drag.k];
+  if (b) { boxes[drag.k] = [Math.min(b[0], b[2]), Math.min(b[1], b[3]), Math.max(b[0], b[2]), Math.max(b[1], b[3])];
+           const n = boxes[drag.k]; if (n[2] - n[0] < 0.005 || n[3] - n[1] < 0.005) { boxes.splice(drag.k, 1); sel = -1; } }
+  drag = null; renderBoxes();
+};
+async function save(status) {
+  const it = current(); if (!it) return;
+  const r = await fetch("/api/label/save", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ file: it.file, env, status, boxes }) });
+  if (!r.ok) return alert(await r.text());
+  it.label = (await r.json()).label;
+  if ($("onlyopen").checked) { filterList(); } else if (idx < list.length - 1) idx++;
+  show();
+}
+$("ok").onclick = () => save("ok"); $("nofish").onclick = () => save("puffer_yok"); $("skip").onclick = () => save("haric");
+$("envs").onclick = e => { if (e.target.dataset.e) { env = e.target.dataset.e; renderEnv(); } };
+$("onlyopen").onchange = () => { filterList(); show(); };
+$("role").onchange = load;
+document.onkeydown = e => {
+  if (e.target.tagName === "SELECT") return;
+  if (e.key >= "1" && e.key <= "4") { env = ["su_alti", "su_ustu", "kara", "haric"][+e.key - 1]; renderEnv(); }
+  else if ((e.key === "Delete" || e.key === "Backspace") && sel >= 0) { boxes.splice(sel, 1); sel = -1; renderBoxes(); }
+  else if (e.key === "Enter") save("ok");
+  else if (e.key === "n" || e.key === "N") save("puffer_yok");
+  else if (e.key === "x" || e.key === "X") save("haric");
+  else if (e.key === "ArrowRight") { idx = Math.min(list.length - 1, idx + 1); show(); }
+  else if (e.key === "ArrowLeft") { idx = Math.max(0, idx - 1); show(); }
+  else return;
+  e.preventDefault();
+};
+async function load() {
+  const r = await fetch(`/api/label/list?role=${$("role").value}`);
+  const d = await r.json(); all = d.items; idx = 0; filterList(); show();
+  if (!d.prelabeled) $("meta").innerHTML += "<br><b style='color:var(--warn)'>Ön etiket yok: scripts/prelabel_inat.py çalıştırın.</b>";
+}
+load();
+</script>
+</body>
+</html>

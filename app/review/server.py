@@ -213,7 +213,7 @@ def audit_list():
     # Ayni pHash grubunda, veri setinde (ham klasor haric) BASKA kaynaktan gelen kopyalar
     group_members: dict[str, list[dict]] = {}
     for r in all_rows:
-        if r["split"] != "ham":
+        if r["split"] in SPLITS:
             group_members.setdefault(r["dup_group"], []).append(r)
     if not rows:
         abort(404, "once scripts/data_audit.py calistirin")
@@ -264,8 +264,73 @@ def audit_tag():
     return jsonify({"ok": True, "saved": len(data.get("items", []))})
 
 
+# ---------------------------------------------------------------------------
+# Kutu etiketleme (Faz 1): iNaturalist goruntuleri. On etiket scripts/prelabel_inat.py,
+# insan onayli etiketler dataset_meta/inat_labels.json dosyasina yazilir.
+# ---------------------------------------------------------------------------
+INAT_DIR = ROOT / "dataset_inat"
+LABELS_JSON = META / "inat_labels.json"
+STATUSES = {"ok", "puffer_yok", "haric"}
+
+
+def _read_json(path: Path) -> dict:
+    import json
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
+@app.route("/etiket")
+def label_page():
+    return render_template("label.html")
+
+
+@app.route("/inat/<path:name>")
+def inat_image(name):
+    return send_from_directory(INAT_DIR, name)
+
+
+@app.route("/api/label/list")
+def label_list():
+    role = request.args.get("role", "pozitif")
+    photos = [r for r in _read_csv(META / "inat_photos.csv") if r["role"] == role]
+    pre, done = _read_json(META / "inat_prelabels.json"), _read_json(LABELS_JSON)
+    items = []
+    for r in photos:
+        f = r["file"]
+        if not (ROOT / f).exists():
+            continue
+        p = pre.get(f, {})
+        items.append({"file": f, "src": "/inat/" + f.removeprefix("dataset_inat/"), "taxon": r["taxon"],
+                      "license": r["license"], "attribution": r["attribution"], "obs_url": r["obs_url"],
+                      "pre": p.get("boxes", []), "env_auto": p.get("env_auto", ""),
+                      "env_conf": p.get("env_conf", 0), "label": done.get(f)})
+    return jsonify({"items": items, "prelabeled": bool(pre)})
+
+
+@app.route("/api/label/save", methods=["POST"])
+def label_save():
+    import json
+    from datetime import datetime
+    d = request.get_json(silent=True) or {}
+    f, env, status = str(d.get("file", "")), d.get("env"), d.get("status")
+    if not f.startswith("dataset_inat/") or ".." in f or env not in ENVS or status not in STATUSES:
+        abort(400, "gecersiz istek")
+    boxes = []
+    for b in d.get("boxes", []) if status == "ok" else []:
+        x1, y1, x2, y2 = (min(max(float(v), 0.0), 1.0) for v in b[:4])
+        if x2 - x1 > 0.003 and y2 - y1 > 0.003:
+            boxes.append([round(min(x1, x2), 5), round(min(y1, y2), 5), round(max(x1, x2), 5), round(max(y1, y2), 5)])
+    if status == "ok" and not boxes:
+        abort(400, "kutu yok: 'puffer yok' olarak isaretleyin")
+    with _lock:
+        labels = _read_json(LABELS_JSON)
+        labels[f] = {"status": status, "env": env, "boxes": boxes, "zaman": datetime.now().isoformat(timespec="seconds")}
+        META.mkdir(exist_ok=True)
+        LABELS_JSON.write_text(json.dumps(labels, ensure_ascii=False, indent=0), encoding="utf-8")
+    return jsonify({"ok": True, "label": labels[f]})
+
+
 def main():
-    print("Inceleme arayuzu: http://localhost:5050  (veri denetimi: /denetim)")
+    print("Inceleme arayuzu: http://localhost:5050  (veri denetimi: /denetim, etiketleme: /etiket)")
     app.run(host="127.0.0.1", port=5050, debug=False, threaded=True)
 
 

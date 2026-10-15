@@ -23,6 +23,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 DATASET = ROOT / "dataset"
 RAW = ROOT / "balon_baligi_fotograflari"
+INAT = ROOT / "dataset_inat"
 OUT = ROOT / "dataset_meta"
 SPLITS = ("train", "valid", "test")
 IMG_EXT = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
@@ -71,10 +72,12 @@ def collect() -> list[dict]:
                  "source": source_name(p.name)}
             r.update(label_stats(DATASET / split / "labels" / f"{p.stem}.txt"))
             rows.append(r)
-    for p in sorted(RAW.rglob("*")) if RAW.exists() else []:
-        if p.suffix.lower() in IMG_EXT:
-            rows.append({"split": "ham", "file": p.name, "path": p.relative_to(ROOT).as_posix(),
-                         "source": p.stem, "instances": "", "min_area": "", "format": ""})
+    # Veri seti disindaki kaynaklar: yalnizca kopya/sizinti kontrolu icin
+    for split, folder in (("ham", RAW), ("inat", INAT)):
+        for p in sorted(folder.rglob("*")) if folder.exists() else []:
+            if p.suffix.lower() in IMG_EXT:
+                rows.append({"split": split, "file": p.name, "path": p.relative_to(ROOT).as_posix(),
+                             "source": p.stem, "instances": "", "min_area": "", "format": ""})
     return rows
 
 
@@ -87,7 +90,8 @@ def add_hashes(rows: list[dict]) -> None:
 
 def dup_groups(rows: list[dict], max_dist: int) -> None:
     """Union-find ile pHash mesafesi <= max_dist olan goruntuleri grupla."""
-    hashes = [imagehash.hex_to_hash(r["phash"]) for r in rows]
+    import numpy as np
+    h = np.array([int(r["phash"], 16) for r in rows], dtype=np.uint64)
     parent = list(range(len(rows)))
 
     def find(i):
@@ -96,10 +100,12 @@ def dup_groups(rows: list[dict], max_dist: int) -> None:
             i = parent[i]
         return i
 
-    for i in range(len(rows)):
-        for j in range(i + 1, len(rows)):
-            if hashes[i] - hashes[j] <= max_dist:
-                parent[find(i)] = find(j)
+    for i in range(len(rows) - 1):
+        x = np.bitwise_xor(h[i + 1:], h[i])
+        # 64 bitlik Hamming mesafesi: bayt bayt bit sayimi
+        dist = np.unpackbits(x.view(np.uint8).reshape(-1, 8), axis=1).sum(axis=1)
+        for j in np.nonzero(dist <= max_dist)[0]:
+            parent[find(i)] = find(i + 1 + int(j))
     groups = defaultdict(list)
     for i in range(len(rows)):
         groups[find(i)].append(i)
@@ -133,7 +139,7 @@ def add_env(rows: list[dict], batch: int = 64) -> None:
 
 
 def summarize(rows: list[dict]) -> dict:
-    ds = [r for r in rows if r["split"] != "ham"]
+    ds = [r for r in rows if r["split"] in SPLITS]
     s = {"images": Counter(r["split"] for r in rows)}
     s["env_auto_by_split"] = {sp: dict(Counter(r["env_auto"] for r in ds if r["split"] == sp)) for sp in SPLITS}
     s["env_auto_low_conf(<0.6)"] = sum(1 for r in ds if r["env_conf"] < 0.6)
@@ -155,6 +161,9 @@ def summarize(rows: list[dict]) -> dict:
     s["raw_not_in_dataset"] = sum(1 for r in rows if r["split"] == "ham" and r["dup_group"] not in ds_groups)
     s["raw_in_dataset"] = sum(1 for r in rows if r["split"] == "ham" and r["dup_group"] in ds_groups)
     s["dataset_groups_not_in_raw"] = len(ds_groups - raw_groups)
+    inat = [r for r in rows if r["split"] == "inat"]
+    s["inat_images"] = len(inat)
+    s["inat_already_in_dataset"] = sum(1 for r in inat if r["dup_group"] in ds_groups)
     s["label_format"] = dict(Counter(r["format"] for r in ds))
     s["negatives_by_split"] = {sp: sum(1 for r in ds if r["split"] == sp and r["instances"] == 0) for sp in SPLITS}
     return s

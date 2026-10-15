@@ -82,3 +82,7 @@ scratch/
 # Local AI-assistant tooling (kept locally, not part of the project)
 .agent/
 .claude/
+
+# Acik kaynak indirilen gorseller (meta veri dataset_meta/ altinda)
+dataset_inat/
+dataset_gold_v*/
