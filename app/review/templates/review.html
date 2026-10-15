@@ -46,6 +46,13 @@
   #vinfo small { color: var(--muted); display: block; }
   .nav { position: fixed; top: 50%; background: none; border: none; color: #fff; font-size: 40px; padding: 10px; }
   #prev { left: 6px; } #next { right: 6px; } #close { position: fixed; top: 10px; right: 14px; font-size: 26px; background: none; border: none; color: #fff; }
+  rect.hit { fill: transparent; pointer-events: all; cursor: pointer; }
+  rect.hit:hover { fill: rgba(88,166,255,.15); }
+  #vmenu { position: fixed; z-index: 40; display: none; background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; padding: 8px; width: 320px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  #vmenu .mt { color: var(--muted); font-size: 12px; margin: 0 2px 6px; }
+  #vmenu button { display: block; width: 100%; text-align: left; margin: 4px 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: inherit; cursor: pointer; }
+  #vmenu button:hover { border-color: var(--accent); }
+  #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 60; display: none; background: var(--tp); color: #04121f; font-weight: 600; padding: 8px 14px; border-radius: 8px; }
   #busy { display: none; color: var(--accent); margin-left: 6px; } #busy.on { display: inline; }
   @media (max-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } input[type=range] { width: 120px; } }
 </style>
@@ -79,11 +86,14 @@
     <span><i class="sw" style="border-color:var(--fp)"></i>Yanlış alarm</span>
     <span><i class="sw" style="border-color:var(--fn);border-style:dashed"></i>Kaçırılan balık</span>
     <span><i class="sw" style="border-color:var(--gt);border-style:dotted"></i>Etiket (gerçek konum)</span>
+    <span style="color:var(--accent)">👆 Renkli bir kutuya tıkla: doğru mu yanlış mı işaretle</span>
   </div>
 </header>
 <div class="filters" id="filters"></div>
 <main><div class="grid" id="grid"></div><div class="empty" id="empty">Bir model seçip <b>Çalıştır</b>'a bas ya da kendi dosyanı yükle.</div></main>
 
+<div id="vmenu"></div>
+<div id="toast"></div>
 <div id="viewer">
   <button id="close" aria-label="Kapat">✕</button>
   <button class="nav" id="prev" aria-label="Önceki">‹</button>
@@ -113,11 +123,12 @@ function evaluate(item, thr) {
   for (const p of preds) {
     let best = -1, bi = 0.5;
     item.gt.forEach((g, i) => { if (!used.has(i)) { const v = iou(p, g); if (v >= bi) { bi = v; best = i; } } });
-    if (best >= 0) { used.add(best); out.push({ box: p, kind: "tp" }); } else out.push({ box: p, kind: "fp" });
+    if (best >= 0) { used.add(best); out.push({ box: p, kind: "tp", gi: best }); } else out.push({ box: p, kind: "fp" });
   }
-  const miss = item.gt.filter((_, i) => !used.has(i));
+  const missGi = item.gt.map((_, i) => i).filter(i => !used.has(i));
+  const miss = missGi.map(i => item.gt[i]);
   const tp = out.filter(o => o.kind === "tp").length;
-  return { preds: out, miss, tp, fp: out.length - tp, fn: miss.length };
+  return { preds: out, miss, missGi, tp, fp: out.length - tp, fn: miss.length };
 }
 
 function status(item, ev) {
@@ -133,10 +144,13 @@ function svg(item, ev, big) {
   const sw = big ? 0.004 : 0.008, col = { tp: "var(--tp)", fp: "var(--fp)", pred: "var(--fp)" };
   const r = (b, c, dash) => `<rect x="${b[0]}" y="${b[1]}" width="${b[2]-b[0]}" height="${b[3]-b[1]}" fill="none" stroke="${c}" stroke-width="${sw}" ${dash ? `stroke-dasharray="${dash}"` : ""} vector-effect="non-scaling-stroke" style="stroke-width:${big ? 3 : 2}px"/>`;
   const t = (b, c, s) => `<text x="${b[0]+0.005}" y="${Math.max(b[1]-0.01, 0.035)}" fill="${c}" font-size="${big ? 0.028 : 0.05}" font-weight="700" style="paint-order:stroke;stroke:#000;stroke-width:0.006">${s}</text>`;
+  // Tiklanabilir alan: etiketli goruntulerde her kutu icin karar menusu acilir
+  const hit = (b, attrs) => item.path ? `<rect class="hit" x="${b[0]}" y="${b[1]}" width="${b[2]-b[0]}" height="${b[3]-b[1]}" ${attrs}><title>Tıkla: doğru mu yanlış mı?</title></rect>` : "";
   let s = "";
   if ($("showgt").checked && item.gt) for (const g of item.gt) s += r(g, "var(--gt)", "0.01 0.008");
-  for (const m of ev.miss) s += r(m, "var(--fn)", "0.02 0.012");
-  for (const p of ev.preds) s += r(p.box, col[p.kind]) + t(p.box, col[p.kind], (p.box[4] * 100).toFixed(0) + "%");
+  ev.miss.forEach((m, k) => { s += r(m, "var(--fn)", "0.02 0.012") + hit(m, `data-kind="fn" data-idx="${k}"`); });
+  ev.preds.forEach((p, k) => { s += r(p.box, col[p.kind]) + t(p.box, col[p.kind], (p.box[4] * 100).toFixed(0) + "%")
+                                    + hit(p.box, `data-kind="${p.kind}" data-idx="${k}"`); });
   return `<svg viewBox="0 0 1 1" preserveAspectRatio="none">${s}</svg>`;
 }
 
@@ -170,7 +184,7 @@ function render() {
   $("grid").innerHTML = view.map(([it, ev], i) => {
     const [cls, txt] = status(it, ev);
     return `<div class="card" data-i="${i}"><div class="frame"><img loading="lazy" src="${it.src}" alt="">${svg(it, ev, false)}</div>
-      <div class="meta"><span class="name" title="${it.name}">${it.name}</span><span class="badge ${cls}">${txt}</span></div></div>`;
+      <div class="meta"><span class="name" title="${it.name}">${it.fix ? `<b style="color:var(--fn)" title="Bu fotoğrafı incelediniz">✎ </b>` : ""}${it.name}</span><span class="badge ${cls}">${txt}</span></div></div>`;
   }).join("");
   $("empty").style.display = view.length ? "none" : "block";
   $("empty").textContent = "Bu filtrede görüntü yok.";
@@ -192,10 +206,7 @@ function show(i) {
 function close() { cur = -1; $("viewer").classList.remove("open"); }
 function openFix(it) {
   openFixEditor({ path: it.path, src: it.src, gt: it.gt || [], preds: it.pred, thr: +$("conf").value,
-    onSaved: async fx => {  // etiketler degisti: metrikleri sunucudaki guncel etiketlerle yeniden hesapla
-      const keep = cur, f = filter; await call(fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...opts(), split: $("split").value }) }));
-      filter = f; render(); if (keep >= 0 && view.length) show(Math.min(keep, view.length - 1));
-    } });
+    onSaved: refresh });  // etiketler degisti: metrikleri sunucudaki guncel etiketlerle yeniden hesapla
 }
 
 function opts() { return { model: $("model").value, clahe: $("clahe").checked }; }
@@ -216,7 +227,78 @@ $("files").onchange = () => {
 $("conf").oninput = () => { $("confv").textContent = (+$("conf").value).toFixed(2); render(); };
 $("showgt").onchange = render;
 $("filters").onclick = e => { const f = e.target.dataset.f; if (f) { filter = f; render(); } };
-$("grid").onclick = e => { const c = e.target.closest(".card"); if (c) show(+c.dataset.i); };
+$("grid").onclick = e => {
+  const c = e.target.closest(".card"); if (!c) return;
+  const h = e.target.closest("rect.hit");
+  if (h) { e.stopPropagation(); openMenu(e, view[+c.dataset.i][0], view[+c.dataset.i][1], h.dataset.kind, +h.dataset.idx); }
+  else show(+c.dataset.i);
+};
+$("vframe").onclick = e => { const h = e.target.closest("rect.hit"); if (h && cur >= 0) { e.stopPropagation(); openMenu(e, view[cur][0], view[cur][1], h.dataset.kind, +h.dataset.idx); } };
+document.addEventListener("click", e => { if (!e.target.closest("#vmenu") && !e.target.closest("rect.hit")) $("vmenu").style.display = "none"; });
+
+// ---- Kutu bazinda karar: "dogru mu yanlis mi?" ----
+const MENU = {
+  fp: ["Model bu kutuyu buldu ama etikette yok", [["yes", "✓ Doğru: burada puffer var (etiket eksik/kayık)"], ["no", "✗ Gerçekten yanlış alarm"]]],
+  fn: ["Etikette var ama model bulamadı", [["yes", "✓ Burada gerçekten puffer var (model kaçırdı)"], ["no", "✗ Puffer yok: etiket yanlış, sil"]]],
+  tp: ["Model buldu ve etikette de var", [["yes", "✓ Doğru tespit"], ["no", "✗ Aslında puffer yok: etiketi sil"]]],
+};
+// Yanlis alarm, zaten baska bir dogru kutuyla bulunmus ayni baligin uzerindeyse: cift (kopya) tespit
+function duplicateOf(ev, idx) {
+  const p = ev.preds[idx].box;
+  return ev.preds.find(q => q.kind === "tp" && iou(p, q.box) >= 0.3) || null;
+}
+function openMenu(e, it, ev, kind, idx) {
+  let [title, opts] = MENU[kind];
+  const dup = kind === "fp" ? duplicateOf(ev, idx) : null;
+  if (dup) {
+    title = `Bu balık zaten %${(dup.box[4] * 100).toFixed(0)} güvenle başka bir kutuyla doğru bulunmuş. Bu kutu aynı balığa çizilmiş ikinci (çift) kutu.`;
+    opts = [["dup", "✓ Evet, çift kutu (modelin hatası, etiket doğru)"], ["yes", "Etiket kutusu yerine bu kutuyu kullan"]];
+  }
+  const m = $("vmenu");
+  m.innerHTML = `<div class="mt">${title}</div>` + opts.map(([a, l]) => `<button data-a="${a}">${l}</button>`).join("")
+              + `<button data-a="edit">✎ Kutuyu elle düzelt / not yaz…</button>`;
+  m.style.display = "block";
+  const x = Math.min(e.clientX, innerWidth - 330), y = Math.min(e.clientY, innerHeight - 190);
+  m.style.left = x + "px"; m.style.top = y + "px";
+  m.onclick = async ev2 => {
+    const a = ev2.target.dataset.a; if (!a) return;
+    m.style.display = "none";
+    if (a === "edit") return openFix(it);
+    await verdict(it, ev, kind, idx, a);
+  };
+}
+async function verdict(it, ev, kind, idx, action) {
+  const gt = it.gt.map(b => b.slice(0, 4)), fx = it.fix || {};
+  let changed = false, issue = null, confirm = null;
+  if (kind === "fp" && action === "yes") {
+    const p = ev.preds[idx].box.slice(0, 4);
+    let gi = -1, best = 0.1;            // kayik bir etiket varsa onun yerine gecsin
+    gt.forEach((g, i) => { const v = iou(p, g); if (v > best) { best = v; gi = i; } });
+    const matched = new Set(ev.preds.filter(q => q.kind === "tp").map(q => q.gi));
+    if (gi >= 0 && matched.has(gi) && !duplicateOf(ev, idx)) gi = -1;  // baska balik: yeni etiket ekle
+    if (gi >= 0) { gt[gi] = p; issue = "kayik_kutu"; } else { gt.push(p); issue = "eksik_kutu"; }
+    changed = true;
+  } else if (kind === "fp" && action === "dup") confirm = "cift_kutu_onaylandi";
+  else if (kind === "fp") confirm = "yanlis_alarm_onaylandi";
+  else if (kind === "fn" && action === "yes") confirm = "kacirma_onaylandi";
+  else if (kind === "fn") { gt.splice(ev.missGi[idx], 1); issue = "fazla_kutu"; changed = true; }
+  else if (action === "yes") confirm = "dogru_onaylandi";
+  else { gt.splice(ev.preds[idx].gi, 1); issue = "fazla_kutu"; changed = true; }
+  const body = { path: it.path, env: fx.env || null, note: fx.note || "",
+                 issues: [...new Set([...(fx.issues || []), ...(issue ? [issue] : [])])],
+                 confirm: [...(fx.confirm || []), ...(confirm ? [confirm] : [])],
+                 boxes: changed ? gt : (fx.boxes ?? null) };
+  const r = await fetch("/api/fix", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) return alert("Kaydedilemedi: " + await r.text());
+  toast(changed ? "Etiket düzeltildi, skorlar yeniden hesaplanıyor…" : "Kararınız kaydedildi");
+  if (changed) await refresh(); else { it.fix = (await r.json()).fix; render(); }
+}
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.style.display = "block"; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = "none", 2200); }
+async function refresh() {
+  const keep = cur, f = filter;
+  await call(fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...opts(), split: $("split").value }) }));
+  filter = f; render(); if (keep >= 0 && view.length) show(Math.min(keep, view.length - 1));
+}
 $("close").onclick = close; $("prev").onclick = () => show(cur - 1); $("next").onclick = () => show(cur + 1);
 $("viewer").onclick = e => { if (e.target.id === "viewer") close(); };
 document.onkeydown = e => {

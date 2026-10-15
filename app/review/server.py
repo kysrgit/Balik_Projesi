@@ -187,6 +187,7 @@ def upload():
 # ---------------------------------------------------------------------------
 FIXES_JSON = ROOT / "dataset_meta" / "label_fixes.json"
 ISSUES = {"eksik_kutu", "fazla_kutu", "kayik_kutu", "yanlis_tur", "yanlis_ortam", "kopya", "kalite", "diger"}
+CONFIRMS = {"dogru_onaylandi", "yanlis_alarm_onaylandi", "kacirma_onaylandi", "cift_kutu_onaylandi"}  # kutu bazinda onaylar
 
 
 def _fix_path(raw: str) -> tuple[str, Path]:
@@ -240,7 +241,9 @@ def fix():
                     if abs(x2 - x1) > 0.003 and abs(y2 - y1) > 0.003:
                         boxes.append([round(min(x1, x2), 5), round(min(y1, y2), 5),
                                       round(max(x1, x2), 5), round(max(y1, y2), 5)])
+            confirm = [c for c in d.get("confirm", []) if c in CONFIRMS][-200:]
             fixes[key] = {"issues": issues, "note": str(d.get("note", ""))[:500], "env": env, "boxes": boxes,
+                          "confirm": confirm,
                           "zaman": datetime.now().isoformat(timespec="seconds")}
         META.mkdir(exist_ok=True)
         FIXES_JSON.write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
