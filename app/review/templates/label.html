@@ -77,7 +77,11 @@ function filterList() {
 }
 function progress() {
   const done = all.filter(i => i.label).length;
-  $("progress").textContent = `${done} / ${all.length} etiketlendi · ${list.length ? idx + 1 : 0} / ${list.length} gösteriliyor`;
+  // Altin set hedefi (DATA_AUDIT.md): >=150 pozitif, >=80 zor negatif; yalnizca "suda" olanlar sayilir
+  const role = $("role").value, goal = role === "pozitif" ? 150 : 80;
+  const useful = all.filter(i => i.label && ["su_alti", "su_ustu"].includes(i.label.env)
+                               && i.label.status === (role === "pozitif" ? "ok" : "puffer_yok")).length;
+  $("progress").innerHTML = `<b style="color:${useful >= goal ? "var(--box)" : "var(--accent)"}">Altın set hedefi: ${useful} / ${goal}</b>${useful >= goal ? " ✓ yeterli, isterseniz devam edin" : ""} · ${done} / ${all.length} etiketlendi · ${list.length ? idx + 1 : 0} / ${list.length} gösteriliyor`;
 }
 function show() {
   progress();

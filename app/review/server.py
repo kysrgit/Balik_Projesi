@@ -369,10 +369,15 @@ def label_list():
     role = request.args.get("role", "pozitif")
     photos = [r for r in _read_csv(META / "inat_photos.csv") if r["role"] == role]
     pre, done = _read_json(META / "inat_prelabels.json"), _read_json(LABELS_JSON)
+    # Mevcut veri setinde (train/valid/test) gorsel kopyasi olanlar gosterilmez: altin sette
+    # sizinti yaratir, egitimde de zaten var. (Kaynak: scripts/data_audit.py)
+    audit = _read_csv(META / "audit.csv")
+    ds_groups = {a["dup_group"] for a in audit if a["split"] in SPLITS}
+    in_dataset = {a["path"] for a in audit if a["split"] == "inat" and a["dup_group"] in ds_groups}
     items = []
     for r in photos:
         f = r["file"]
-        if not (ROOT / f).exists():
+        if not (ROOT / f).exists() or f in in_dataset:
             continue
         p = pre.get(f, {})
         items.append({"file": f, "src": "/inat/" + f.removeprefix("dataset_inat/"), "taxon": r["taxon"],
@@ -380,8 +385,10 @@ def label_list():
                       "pre": p.get("boxes", []), "env_auto": p.get("env_auto", ""),
                       "env_conf": p.get("env_conf", 0), "label": done.get(f)})
     # Altin set yalnizca "suda" goruntuleri kullanir: CLIP'in suda dedikleri once, su disindakiler sona
-    items.sort(key=lambda i: (i["env_auto"] == "kara", -i["env_conf"] if i["env_auto"] != "kara" else i["env_conf"]))
-    return jsonify({"items": items, "prelabeled": bool(pre)})
+    # Lagocephalus (asil hedef, az ornek) Torquigener'den once gelir
+    items.sort(key=lambda i: (i["env_auto"] == "kara", not i["taxon"].startswith("Lagocephalus"),
+                              -i["env_conf"] if i["env_auto"] != "kara" else i["env_conf"]))
+    return jsonify({"items": items, "prelabeled": bool(pre), "hidden_in_dataset": len(in_dataset)})
 
 
 @app.route("/api/label/save", methods=["POST"])
