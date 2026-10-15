@@ -12,8 +12,8 @@
 
 | Faz | Soru | Durum |
 |---|---|---|
-| 0 | Sistem tam olarak neyi, nerede, hangi hızla yapmalı? | ⏳ [ADR-000](adr/ADR-000-gereksinimler.md) önerildi, eşikler onay bekliyor |
-| 1 | Elimizdeki veri bu soruyu ölçmeye yeterli mi? Değilse ne eksik? | ⬜ |
+| 0 | Sistem tam olarak neyi, nerede, hangi hızla yapmalı? | ✅ [ADR-000](adr/ADR-000-gereksinimler.md) |
+| 1 | Elimizdeki veri bu soruyu ölçmeye yeterli mi? Değilse ne eksik? | ⏳ Veri denetimi sürüyor |
 | 2 | Hangi mimari ve hangi eğitim tarifi en iyi genelliyor? | ⬜ (kısmi kanıt var) |
 | 3 | Eğitilen model Pi'de hangi format, hassasiyet ve motorla en iyi çalışıyor? | ⬜ (kısmi kanıt var) |
 | 4 | Pi 5 CPU yeterli mi, yoksa hızlandırıcı (AI HAT+) gerekli mi? | ⏭️ Atlandı: yalnızca Pi 5 CPU (ADR-000) |

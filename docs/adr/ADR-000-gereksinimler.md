@@ -1,6 +1,6 @@
 # ADR-000: Gereksinimler ve sayısal kabul ölçütleri
 
-**Durum:** Önerildi (sayısal eşikler kullanıcı onayı bekliyor)
+**Durum:** Kabul edildi (2026-10-15, kullanıcı onayı)
 **Tarih:** 2026-10-15
 **Faz:** 0
 **Karar verenler:** Kayra (proje sahibi)
@@ -38,5 +38,5 @@ Sonraki her fazın karar kuralı bu ölçütlere dayanır. Kullanıcı yanıtlar
 - Hızlandırıcı bütçesi çıkarsa Faz 4 açılır, K5'in getirdiği model boyutu sınırı kalkar.
 
 ## Yapılacaklar
-1. [ ] Kullanıcı K1–K7 eşiklerini onaylasın veya değiştirsin.
+1. [x] Kullanıcı K1–K7 eşiklerini onayladı (2026-10-15).
 2. [ ] Faz 1: veri denetimi ve altın test setinin oluşturulması.

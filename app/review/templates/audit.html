@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veri Denetimi</title>
+<style>
+  :root { --bg:#0f1419; --panel:#182029; --line:#2a3542; --text:#e6edf3; --muted:#8b98a5; --accent:#58a6ff;
+          --alti:#2f81f7; --ustu:#3fb950; --kara:#d29922; --haric:#8b98a5; --warn:#f85149; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { position:sticky; top:0; z-index:5; background:var(--panel); border-bottom:1px solid var(--line); padding:12px 16px; }
+  h1 { font-size:17px; margin:0 0 8px; } a { color:var(--accent); }
+  .row { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; }
+  select, button { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); color:#04121f; border-color:var(--accent); font-weight:600; }
+  .help { color:var(--muted); font-size:12px; margin-top:8px; }
+  .help b { color:var(--text); }
+  .bar { height:6px; background:var(--line); border-radius:3px; width:220px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--ustu); }
+  main { padding:12px 16px 60px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; }
+  .card { background:var(--panel); border:2px solid var(--line); border-radius:8px; overflow:hidden; }
+  .card.sel { border-color:var(--accent); }
+  .card.done { opacity:.75; }
+  .frame { position:relative; line-height:0; cursor:zoom-in; }
+  .frame img { width:100%; display:block; }
+  .frame svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .info { padding:6px 8px 0; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; gap:6px; }
+  .envs { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; padding:6px 8px; }
+  .envs button { padding:5px 2px; font-size:12px; }
+  .envs button.on[data-e=su_alti] { background:var(--alti); border-color:var(--alti); color:#fff; }
+  .envs button.on[data-e=su_ustu] { background:var(--ustu); border-color:var(--ustu); color:#04121f; }
+  .envs button.on[data-e=kara] { background:var(--kara); border-color:var(--kara); color:#04121f; }
+  .envs button.on[data-e=haric] { background:var(--haric); border-color:var(--haric); color:#04121f; }
+  .flags { display:flex; gap:12px; padding:0 8px 8px; font-size:12px; }
+  .flags label { display:flex; gap:4px; align-items:center; cursor:pointer; }
+  .flags input:checked + span { color:var(--warn); font-weight:600; }
+  footer { position:fixed; bottom:0; left:0; right:0; background:var(--panel); border-top:1px solid var(--line); padding:10px 16px; display:flex; gap:12px; align-items:center; justify-content:flex-end; }
+  #zoom { position:fixed; inset:0; background:rgba(0,0,0,.9); display:none; align-items:center; justify-content:center; z-index:10; cursor:zoom-out; }
+  #zoom.open { display:flex; } #zoom .frame { max-width:min(900px,95vw); cursor:zoom-out; } #zoom img { max-height:90vh; width:auto; max-width:100%; }
+  @media (max-width:600px) { .grid { grid-template-columns:1fr 1fr; } .bar { width:120px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🐡 Veri Denetimi — Faz 1 <small style="color:var(--muted);font-weight:400">· <a href="/">tespit inceleme</a></small></h1>
+  <div class="row">
+    <label>Veri seti <select id="split"><option value="test">test</option><option value="valid">valid</option><option value="train">train</option></select></label>
+    <div class="bar"><i id="barfill" style="width:0"></i></div><span id="progress"></span>
+  </div>
+  <div class="help">
+    <b>1 Su altı</b>: kamera suyun içinde (ROV/dalış görünümü) ·
+    <b>2 Su üstünden</b>: balık suda, fotoğraf su yüzeyinin üstünden çekilmiş (tekne görünümü) ·
+    <b>3 Su dışında</b>: kara, kum, güverte, elde, tezgâhta ·
+    <b>4 Hariç</b>: bozuk/alakasız görüntü ·
+    <b>E</b>: etiket (kutu) hatalı/eksik · <b>T</b>: tür şüpheli (L. sceleratus değil gibi) ·
+    ← → kart seç · Enter: sayfayı onayla. Öneriler CLIP'ten gelir, en belirsizler önce gösterilir.
+  </div>
+</header>
+<main><div class="grid" id="grid"></div></main>
+<footer>
+  <span id="pageinfo" style="color:var(--muted)"></span>
+  <button id="prevpage">‹ Önceki sayfa</button>
+  <button class="primary" id="save">Bu sayfayı onayla ve ilerle (Enter)</button>
+</footer>
+<div id="zoom"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const PAGE = 24, ENV = [["su_alti","1 Su altı"],["su_ustu","2 Üstten"],["kara","3 Dışarı"],["haric","4 Hariç"]];
+let items = [], page = 0, sel = 0;
+
+function boxes(gt) {
+  return `<svg viewBox="0 0 1 1" preserveAspectRatio="none">${gt.map(b =>
+    `<rect x="${b[0]}" y="${b[1]}" width="${b[2]-b[0]}" height="${b[3]-b[1]}" fill="none" stroke="#fff" stroke-dasharray="0.015 0.01" style="stroke-width:2px" vector-effect="non-scaling-stroke"/>`).join("")}</svg>`;
+}
+function pageItems() { return items.slice(page * PAGE, (page + 1) * PAGE); }
+function render() {
+  const done = items.filter(i => i.verified).length;
+  $("progress").textContent = `${done} / ${items.length} özgün görüntü doğrulandı`;
+  $("barfill").style.width = (items.length ? 100 * done / items.length : 0) + "%";
+  const pages = Math.max(1, Math.ceil(items.length / PAGE));
+  $("pageinfo").textContent = `Sayfa ${page + 1} / ${pages}`;
+  $("grid").innerHTML = pageItems().map((it, k) => `
+    <div class="card ${k === sel ? "sel" : ""} ${it.verified ? "done" : ""}" data-k="${k}">
+      <div class="frame" data-zoom="${k}"><img loading="lazy" src="${it.src}" alt="">${boxes(it.gt)}</div>
+      <div class="info"><span>${it.source}${it.dups.length ? ` · <b style="color:var(--warn)" title="Görsel olarak neredeyse aynı: ${it.dups.join(", ")}">⚠ kopya: ${it.dups.join(", ")}</b>` : ""}</span>
+        <span>öneri: ${it.env_auto} ${(it.env_conf * 100).toFixed(0)}%${it.verified ? " · ✓" : ""}</span></div>
+      <div class="envs">${ENV.map(([e, l]) => `<button data-e="${e}" class="${it.env === e ? "on" : ""}">${l}</button>`).join("")}</div>
+      <div class="flags">
+        <label><input type="checkbox" data-f="etiket_hatali" ${it.etiket_hatali ? "checked" : ""}><span>E Etiket hatalı</span></label>
+        <label><input type="checkbox" data-f="tur_supheli" ${it.tur_supheli ? "checked" : ""}><span>T Tür şüpheli</span></label>
+      </div>
+    </div>`).join("");
+}
+async function load() {
+  const r = await fetch(`/api/audit?split=${$("split").value}`);
+  if (!r.ok) { $("grid").innerHTML = `<p>${await r.text()}</p>`; return; }
+  items = (await r.json()).items;
+  const firstOpen = items.findIndex(i => !i.verified);
+  page = firstOpen < 0 ? 0 : Math.floor(firstOpen / PAGE); sel = 0; render();
+}
+async function save() {
+  const batch = pageItems().map(i => ({ source: i.source, env: i.env, etiket_hatali: i.etiket_hatali, tur_supheli: i.tur_supheli }));
+  const r = await fetch("/api/audit/tag", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ split: $("split").value, items: batch }) });
+  if (!r.ok) return alert("Kaydedilemedi: " + await r.text());
+  pageItems().forEach(i => i.verified = true);
+  if ((page + 1) * PAGE < items.length) { page++; sel = 0; window.scrollTo(0, 0); }
+  render();
+}
+function setEnv(k, e) { pageItems()[k].env = e; render(); }
+function toggle(k, f) { const it = pageItems()[k]; it[f] = !it[f]; render(); }
+
+$("grid").onclick = e => {
+  const card = e.target.closest(".card"); if (!card) return;
+  const k = +card.dataset.k; sel = k;
+  if (e.target.dataset.e) setEnv(k, e.target.dataset.e);
+  else if (e.target.dataset.f) toggle(k, e.target.dataset.f);
+  else if (e.target.closest("[data-zoom]")) { const it = pageItems()[k]; $("zoom").innerHTML = `<div class="frame"><img src="${it.src}" alt="">${boxes(it.gt)}</div>`; $("zoom").classList.add("open"); }
+  else render();
+};
+$("zoom").onclick = () => $("zoom").classList.remove("open");
+$("save").onclick = save;
+$("prevpage").onclick = () => { if (page > 0) { page--; sel = 0; render(); } };
+$("split").onchange = load;
+document.onkeydown = e => {
+  if ($("zoom").classList.contains("open")) { if (e.key === "Escape") $("zoom").classList.remove("open"); return; }
+  const n = pageItems().length;
+  if (e.key >= "1" && e.key <= "4") { setEnv(sel, ENV[+e.key - 1][0]); if (sel < n - 1) { sel++; render(); } }
+  else if (e.key === "e" || e.key === "E") toggle(sel, "etiket_hatali");
+  else if (e.key === "t" || e.key === "T") toggle(sel, "tur_supheli");
+  else if (e.key === "ArrowRight") { sel = Math.min(n - 1, sel + 1); render(); }
+  else if (e.key === "ArrowLeft") { sel = Math.max(0, sel - 1); render(); }
+  else if (e.key === "Enter") save();
+  else return;
+  e.preventDefault();
+};
+load();
+</script>
+</body>
+</html>

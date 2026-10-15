@@ -179,8 +179,93 @@ def upload():
     return jsonify({"items": items, "ms_per_image": round(1000 * t_total / max(n, 1), 1), "labeled": False})
 
 
+# ---------------------------------------------------------------------------
+# Veri denetimi (Faz 1): her ozgun kaynak icin ortam etiketi + bayraklar.
+# Otomatik oneri dataset_meta/audit.csv (scripts/data_audit.py), dogrulanan
+# etiketler dataset_meta/env_tags.csv dosyasina yazilir.
+# ---------------------------------------------------------------------------
+META = ROOT / "dataset_meta"
+TAGS_CSV = META / "env_tags.csv"
+TAG_FIELDS = ["source", "split", "env", "etiket_hatali", "tur_supheli", "not", "zaman"]
+ENVS = {"su_alti", "su_ustu", "kara", "haric"}
+
+
+def _read_csv(path: Path) -> list[dict]:
+    import csv
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+@app.route("/denetim")
+def audit_page():
+    return render_template("audit.html")
+
+
+@app.route("/api/audit")
+def audit_list():
+    split = request.args.get("split", "test")
+    if split not in SPLITS:
+        abort(400, "bilinmeyen split")
+    all_rows = _read_csv(META / "audit.csv")
+    rows = [r for r in all_rows if r["split"] == split]
+    # Ayni pHash grubunda, veri setinde (ham klasor haric) BASKA kaynaktan gelen kopyalar
+    group_members: dict[str, list[dict]] = {}
+    for r in all_rows:
+        if r["split"] != "ham":
+            group_members.setdefault(r["dup_group"], []).append(r)
+    if not rows:
+        abort(404, "once scripts/data_audit.py calistirin")
+    tags = {(t["split"], t["source"]): t for t in _read_csv(TAGS_CSV)}
+    seen, items = set(), []
+    for r in sorted(rows, key=lambda r: float(r["env_conf"] or 0)):  # en belirsizler once
+        if r["source"] in seen:  # train'deki 3 kopyadan birini goster
+            continue
+        seen.add(r["source"])
+        t = tags.get((split, r["source"]))
+        lbl = DATASET / SPLITS[split] / "labels" / f"{Path(r['file']).stem}.txt"
+        items.append({"source": r["source"], "src": f"/img/{split}/{r['file']}", "gt": read_gt(lbl),
+                      "env_auto": r["env_auto"], "env_conf": float(r["env_conf"] or 0),
+                      "dups": sorted({f"{m['split']}:{m['source']}" for m in group_members.get(r["dup_group"], [])
+                                      if m["source"] != r["source"]}),
+                      "verified": t is not None,
+                      "env": t["env"] if t else r["env_auto"],
+                      "etiket_hatali": bool(t and t["etiket_hatali"] == "1"),
+                      "tur_supheli": bool(t and t["tur_supheli"] == "1"),
+                      "not": t["not"] if t else ""})
+    return jsonify({"items": items, "verified": sum(i["verified"] for i in items)})
+
+
+@app.route("/api/audit/tag", methods=["POST"])
+def audit_tag():
+    import csv
+    from datetime import datetime
+    data = request.get_json(silent=True) or {}
+    split = data.get("split")
+    if split not in SPLITS:
+        abort(400, "bilinmeyen split")
+    with _lock:
+        tags = {(t["split"], t["source"]): t for t in _read_csv(TAGS_CSV)}
+        now = datetime.now().isoformat(timespec="seconds")
+        for it in data.get("items", []):
+            if it.get("env") not in ENVS:
+                abort(400, "gecersiz ortam etiketi")
+            tags[(split, str(it["source"]))] = {
+                "source": str(it["source"]), "split": split, "env": it["env"],
+                "etiket_hatali": "1" if it.get("etiket_hatali") else "0",
+                "tur_supheli": "1" if it.get("tur_supheli") else "0",
+                "not": str(it.get("not", ""))[:200], "zaman": now}
+        META.mkdir(exist_ok=True)
+        with TAGS_CSV.open("w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=TAG_FIELDS)
+            w.writeheader()
+            w.writerows(sorted(tags.values(), key=lambda t: (t["split"], t["source"])))
+    return jsonify({"ok": True, "saved": len(data.get("items", []))})
+
+
 def main():
-    print("Inceleme arayuzu: http://localhost:5050")
+    print("Inceleme arayuzu: http://localhost:5050  (veri denetimi: /denetim)")
     app.run(host="127.0.0.1", port=5050, debug=False, threaded=True)
 
 
