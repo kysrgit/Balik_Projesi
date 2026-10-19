@@ -69,8 +69,30 @@ Eşik 0,6'da E2-3: recall %81,3, precision %94,6, alarm %3,6, bulanıkta recall 
 - **Tek tohum:** Kazanan tarif (E2-3) 3 tohumla tekrarlanmalı.
 - Küçük nesne örneği hâlâ 13; ölçüt güvenilir değil.
 
+### Dış negatif kontrolü: gold_v1_ext (2026-10-20)
+Ezber şüphesini sınamak için IMEDEA Labelled Mediterranean Fish Dataset'ten (Zenodo 7534425, CC BY 4.0, Mallorca, 25 sınıf, hiçbiri puffer değil) pHash ile kopyaları ayıklanmış **300 görüntü** seçildi ve donduruldu (`scripts/build_gold_ext.py` → `dataset_meta/gold_v1_ext.csv`). Görüntülerin 297'sinde balık var: *Diplodus*, *Coris*, *Chromis*, *Sparus*, *Serranus*, *Mullus* ve diğerleri. Hiçbiri eğitimde kullanılmadı ve gold_v1'deki türlerden farklı. Sonuçlar: `experiments/E2_gold_ext.json`.
+
+| Model | Dış alarm @0,25 | @0,4 | @0,6 |
+|---|---|---|---|
+| Yayındaki (E1-a, YOLO11s INT8) | %50,3 | %37,0 [31–42] | %22,7 |
+| E2-0 base | %53,0 | %36,7 [31–42] | %23,7 |
+| E2-1 + zor negatif | %31,3 | %15,0 [11–19] | %6,0 |
+| E2-2 + bulanıklık | %58,3 | %42,7 [37–48] | %26,3 |
+| **E2-3 tam** | **%9,3** | **%6,0** [3–9] | **%1,7** |
+
+**Sonuç:** Zor negatif etkisi tür ezberi değil; eğitimde hiç görülmemiş Akdeniz türlerine de genelleniyor. E2-3, E2-1'den de açıkça iyi (güven aralıkları ayrışıyor). Muhtemel sebep, sentetik negatiflerin çıkarılması ve bulanıklık artırmasının birlikte etkisi; bu tek tohumla ayrıştırılamaz.
+
+### Çalışma eşiği (E2-3, tek tohum)
+| Eşik | Recall | Precision | gold_v1 alarm | Dış alarm | Bulanıkta recall |
+|---|---|---|---|---|---|
+| 0,4 | %85,5 | %89,7 | %5,4 | %6,0 | %80,4 |
+| **0,5** | **%82,1** ✅ | **%92,8** ✅ | **%4,5** ✅ | **%2,7** ✅ | **%78,3** (kayıp 3,8) ✅ |
+| 0,6 | %81,3 | %94,6 | %3,6 | %1,7 | %75,7 |
+
+Eşik 0,5'te ölçülebilen bütün ADR-000 ölçütleri (K1, K3, K4, K7) karşılanıyor. K2 (küçük nesne) n=13 ile hâlâ ölçülemiyor. Eşik kararı kesinleşmeden önce 3 tohumla doğrulanmalı.
+
 ### Sonraki adımlar
-1. Dış negatif seti (IMEDEA) ile "gold_v1-dış" kontrolü.
+1. ~~Dış negatif seti (IMEDEA) ile "gold_v1-dış" kontrolü.~~ ✅ Yapıldı.
 2. E2-3'ün 3 tohumla tekrarı.
 3. Aynı veriyle mimari karşılaştırması: YOLO11n ve YOLO26n (Pi'de ≥ 10 FPS için nano ölçek).
 4. Farklı bir bulanıklık üretecinin ve gerçek bulanık görüntülerin denenmesi.

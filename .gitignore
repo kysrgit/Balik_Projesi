@@ -89,3 +89,4 @@ dataset_gold_v*/
 models/candidates/
 models/**/*_ncnn_model/
 dataset_v2/
+dataset_ext/

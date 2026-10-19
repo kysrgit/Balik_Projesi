@@ -114,16 +114,20 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--models", nargs="+", required=True)
     ap.add_argument("--out", default="experiments/E1a_gold_baseline.json")
+    ap.add_argument("--sets", nargs="+", default=["gold", "gold_blur"],
+                    help="olculecek kumeler: gold, gold_blur, gold_ext (dis negatif kontrol, ADR-002)")
     args = ap.parse_args()
     import ultralytics, onnxruntime
     rng = np.random.default_rng(2026)
-    report = {"meta": {"gold": "gold_v1", "images": len(list((GOLD / "images").glob("*.jpg"))),
+    sets = {"gold": GOLD, "gold_blur": GOLD_BLUR, "gold_ext": ROOT / "dataset_gold_v1_ext"}
+    report = {"meta": {"gold": "gold_v1", "sets": args.sets, "images": len(list((GOLD / "images").glob("*.jpg"))),
                        "ultralytics": ultralytics.__version__, "onnxruntime": onnxruntime.__version__,
                        "platform": platform.platform(), "iou": 0.5, "bootstrap": 2000}, "models": {}}
     for mp in map(Path, args.models):
-        print(f"== {mp.name}")
+        key = f"{mp.parent.parent.name}/{mp.name}" if mp.name in ("best.pt", "last.pt") else mp.name  # runs/<deney>/weights/best.pt
+        print(f"== {key}")
         res = {"file_mb": round(mp.stat().st_size / 1e6, 2) if mp.is_file() else None}
-        for name, root in (("gold", GOLD), ("gold_blur", GOLD_BLUR)):
+        for name, root in ((n, sets[n]) for n in args.sets):
             items = predict_all(mp, root)
             res[name] = {f"conf_{t}": metrics(items, t, rng) for t in THRESHOLDS}
             res[name].update(map_scores(mp, root))
@@ -131,7 +135,7 @@ def main() -> None:
             print(f"   {name:9s} @0.6 R={m6['recall']['value']:.3f} {m6['recall']['ci95']} P={m6['precision']['value']:.3f} "
                   f"F1={m6['f1']['value']:.3f} kucukR={m6['small_recall']['value']:.3f} negAlarm={m6['neg_alarm_rate']['value']:.3f} "
                   f"mAP50={res[name]['mAP50']}")
-        report["models"][mp.name] = res
+        report["models"][key] = res
     out = ROOT / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")

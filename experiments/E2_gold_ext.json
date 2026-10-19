@@ -1,0 +1,951 @@
+{
+  "meta": {
+    "gold": "gold_v1",
+    "sets": [
+      "gold_ext"
+    ],
+    "images": 327,
+    "ultralytics": "8.4.90",
+    "onnxruntime": "1.27.0",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "iou": 0.5,
+    "bootstrap": 2000
+  },
+  "models": {
+    "pufferfish_s_v2_int8.onnx": {
+      "file_mb": 12.53,
+      "gold_ext": {
+        "conf_0.25": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.5033,
+            "ci95": [
+              0.4467,
+              0.5633
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 332,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 151
+          }
+        },
+        "conf_0.4": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.37,
+            "ci95": [
+              0.3133,
+              0.4233
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 197,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 111
+          }
+        },
+        "conf_0.5": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.2967,
+            "ci95": [
+              0.2467,
+              0.35
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 142,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 89
+          }
+        },
+        "conf_0.6": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.2267,
+            "ci95": [
+              0.18,
+              0.2767
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 104,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 68
+          }
+        },
+        "mAP50": 0.0,
+        "mAP50_95": 0.0
+      }
+    },
+    "E2-0_base_s0/best.pt": {
+      "file_mb": 19.17,
+      "gold_ext": {
+        "conf_0.25": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.53,
+            "ci95": [
+              0.4733,
+              0.59
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 326,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 159
+          }
+        },
+        "conf_0.4": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.3667,
+            "ci95": [
+              0.31,
+              0.42
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 200,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 110
+          }
+        },
+        "conf_0.5": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.32,
+            "ci95": [
+              0.2667,
+              0.37
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 160,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 96
+          }
+        },
+        "conf_0.6": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.2367,
+            "ci95": [
+              0.1899,
+              0.2833
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 110,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 71
+          }
+        },
+        "mAP50": 0.0,
+        "mAP50_95": 0.0
+      }
+    },
+    "E2-1_hardneg_s0/best.pt": {
+      "file_mb": 19.17,
+      "gold_ext": {
+        "conf_0.25": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.3133,
+            "ci95": [
+              0.26,
+              0.3667
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 152,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 94
+          }
+        },
+        "conf_0.4": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.15,
+            "ci95": [
+              0.11,
+              0.19
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 61,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 45
+          }
+        },
+        "conf_0.5": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.1033,
+            "ci95": [
+              0.07,
+              0.1367
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 42,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 31
+          }
+        },
+        "conf_0.6": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.06,
+            "ci95": [
+              0.0333,
+              0.09
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 22,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 18
+          }
+        },
+        "mAP50": 0.0,
+        "mAP50_95": 0.0
+      }
+    },
+    "E2-2_blur_s0/best.pt": {
+      "file_mb": 19.17,
+      "gold_ext": {
+        "conf_0.25": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.5833,
+            "ci95": [
+              0.5267,
+              0.6367
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 425,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 175
+          }
+        },
+        "conf_0.4": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.4267,
+            "ci95": [
+              0.37,
+              0.4833
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 237,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 128
+          }
+        },
+        "conf_0.5": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.35,
+            "ci95": [
+              0.2967,
+              0.4033
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 174,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 105
+          }
+        },
+        "conf_0.6": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.2633,
+            "ci95": [
+              0.2133,
+              0.3133
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 124,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 79
+          }
+        },
+        "mAP50": 0.0,
+        "mAP50_95": 0.0
+      }
+    },
+    "E2-3_full_s0/best.pt": {
+      "file_mb": 19.17,
+      "gold_ext": {
+        "conf_0.25": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0933,
+            "ci95": [
+              0.0633,
+              0.1267
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 40,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 28
+          }
+        },
+        "conf_0.4": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.06,
+            "ci95": [
+              0.0333,
+              0.09
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 20,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 18
+          }
+        },
+        "conf_0.5": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0267,
+            "ci95": [
+              0.01,
+              0.0467
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 9,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 8
+          }
+        },
+        "conf_0.6": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0167,
+            "ci95": [
+              0.0033,
+              0.0333
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 6,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 5
+          }
+        },
+        "mAP50": 0.0,
+        "mAP50_95": 0.0
+      }
+    }
+  }
+}
