@@ -98,7 +98,7 @@ def main() -> None:
         env = (fx or {}).get("env") or t["env"]
         if env not in WATER or r["dup_group"] in train_groups:
             continue
-        if fx and set(fx["issues"]) & EXCLUDE_ISSUES:
+        if (fx and set(fx["issues"]) & EXCLUDE_ISSUES) or t.get("tur_supheli") == "1":
             continue
         stem = Path(r["file"]).stem
         lbl = ROOT / "dataset" / r["split"] / "labels" / f"{stem}.txt"
@@ -114,6 +114,12 @@ def main() -> None:
     # 2) iNaturalist
     labels = json.loads((META / "inat_labels.json").read_text(encoding="utf-8")) if (META / "inat_labels.json").exists() else {}
     photos = {p["file"]: p for p in read_csv(META / "inat_photos.csv")} if (META / "inat_photos.csv").exists() else {}
+    # Yalnizca altin set icin secilen adaylar (scripts/propose_boxes.py); geri kalan iNat
+    # goruntuleri egitim havuzudur ve burada etiket beklenmez.
+    cand_path = META / "gold_candidates.json"
+    if cand_path.exists():
+        cands = json.loads(cand_path.read_text(encoding="utf-8"))
+        photos = {f: p for f, p in photos.items() if f in cands}
     for f, p in photos.items():
         lab = labels.get(f)
         if lab is None:

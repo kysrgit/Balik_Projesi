@@ -838,5 +838,36 @@
    "dogru_onaylandi"
   ],
   "zaman": "2026-10-15T04:09:13"
+ },
+ "dataset/valid/images/fotograf_193_jpg.rf.a43e65df5fc50e8551e0b06526c39f17.jpg": {
+  "issues": [
+   "eksik_kutu",
+   "yanlis_tur"
+  ],
+  "note": "claude: suruden sadece 3 balik etiketli, turler belirsiz",
+  "env": null,
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-19T21:25:33"
+ },
+ "dataset/valid/images/fotograf_248_jpeg.rf.6b6f7025f0a985fe59e7c3e3ab2137d3.jpg": {
+  "issues": [
+   "kalite"
+  ],
+  "note": "claude: karanlikta olu balik kafasi, ortam belirsiz",
+  "env": null,
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-19T21:25:35"
+ },
+ "dataset/valid/images/fotograf_563_png.rf.8a6f53e715de117deddec24afad5376f.jpg": {
+  "issues": [
+   "yanlis_tur"
+  ],
+  "note": "claude: Canthigaster benzeri, hedef tur listesinde yok",
+  "env": null,
+  "boxes": null,
+  "confirm": [],
+  "zaman": "2026-10-19T21:25:37"
  }
 }

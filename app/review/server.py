@@ -408,7 +408,10 @@ def label_save():
         abort(400, "kutu yok: 'puffer yok' olarak isaretleyin")
     with _lock:
         labels = _read_json(LABELS_JSON)
-        labels[f] = {"status": status, "env": env, "boxes": boxes, "zaman": datetime.now().isoformat(timespec="seconds")}
+        # "by": etiketi kimin verdigi (arayuzden kullanici; otomatik/yardimci gecisler kendini belirtir)
+        by = str(d.get("by", "kullanici"))[:20]
+        labels[f] = {"status": status, "env": env, "boxes": boxes, "by": by,
+                     "zaman": datetime.now().isoformat(timespec="seconds")}
         META.mkdir(exist_ok=True)
         LABELS_JSON.write_text(json.dumps(labels, ensure_ascii=False, indent=0), encoding="utf-8")
     return jsonify({"ok": True, "label": labels[f]})

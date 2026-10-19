@@ -7,3 +7,4 @@ python-dotenv>=1.0.0
 roboflow>=1.1.0
 imagehash>=4.3
 open_clip_torch>=2.24
+transformers>=4.45

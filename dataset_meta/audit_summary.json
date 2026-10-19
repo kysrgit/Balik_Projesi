@@ -3,7 +3,8 @@
     "train": 1879,
     "valid": 197,
     "test": 83,
-    "ham": 827
+    "ham": 827,
+    "inat": 1744
   },
   "env_auto_by_split": {
     "train": {
@@ -30,6 +31,8 @@
   "raw_not_in_dataset": 0,
   "raw_in_dataset": 827,
   "dataset_groups_not_in_raw": 181,
+  "inat_images": 1744,
+  "inat_already_in_dataset": 452,
   "label_format": {
     "poligon": 1974,
     "bos": 185
