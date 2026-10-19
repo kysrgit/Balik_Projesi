@@ -31,11 +31,18 @@ def main() -> None:
     ap.add_argument("--variants", nargs="+", required=True)
     ap.add_argument("--model", default="yolo11s.pt")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--skip-existing", action="store_true", help="best.pt varsa egitimi atla")
     args = ap.parse_args()
     from ultralytics import YOLO
 
     for v in args.variants:
-        name = f"{v}_s{args.seed}"
+        # yolo11s icin eski adlandirma korunur (E2 sonuclariyla uyumlu); diger modellerde model adi eklenir
+        stem = Path(args.model).stem
+        name = f"{v}_s{args.seed}" if stem == "yolo11s" else f"{v}_{stem}_s{args.seed}"
+        best = ROOT / "runs" / "e2" / name / "weights" / "best.pt"
+        if args.skip_existing and best.exists():
+            print(f"===== SKIP {name} (zaten var) =====", flush=True)
+            continue
         print(f"===== TRAIN {name} ({args.model}) =====", flush=True)
         t0 = time.perf_counter()
         YOLO(args.model).train(data=str(DATA_DIR / f"{v}.yaml"), seed=args.seed,
@@ -45,7 +52,7 @@ def main() -> None:
         # altin sette olcum (ayri surecte: GPU bellegi bosalsin)
         out = f"experiments/E2_gold_{name}.json"
         subprocess.run([sys.executable, str(ROOT / "scripts" / "eval_gold.py"), "--models", str(best),
-                        "--out", out], check=True, cwd=ROOT)
+                        "--sets", "gold", "gold_blur", "gold_ext", "--out", out], check=True, cwd=ROOT)
         res = json.loads(RESULTS.read_text(encoding="utf-8")) if RESULTS.exists() else {}
         res[name] = {"variant": v, "model": args.model, "seed": args.seed, "train_minutes": round(minutes, 1),
                      "weights": best.relative_to(ROOT).as_posix(), "gold_eval": out, "recipe": RECIPE}
