@@ -43,5 +43,34 @@ Sonuçlar: `experiments/E2_training.json`, `experiments/E2_gold_<deney>.json`.
 3. Kazanan veri tarifi **3 tohumla** tekrarlanır (ortalama ± standart sapma).
 4. Ardından aynı veriyle mimari karşılaştırması yapılır: YOLO11n/s ve YOLO26n/s. Seçim, ADR-000 K5'i (Pi'de ≥ 10 FPS) karşılayanlar arasından yapılır.
 
-## Sonuçlar
-*(E2 deneyleri bitince doldurulacak)*
+## Sonuçlar (E2, tek tohum, 2026-10-20)
+gold_v1 üzerinde; IoU 0,5; köşeli parantezler bootstrap %95 güven aralığı. Kaynak: `experiments/E2_gold_*.json`. Eğitim süreleri sırasıyla 28 / 33 / 43 / 47 dakika (RTX 3060).
+
+**Eşik 0,4** (ADR-000: recall önceliği; K1'i sağlayan en yüksek eşik aranıyor):
+
+| Deney | Recall (K1 ≥ %80) | Precision (K3 ≥ %70) | Zor negatifte alarm (K4 ≤ %5) | Bulanıkta recall | Bulanıklık kaybı (K7 ≤ 10) | Küçük nesne (n=13) | mAP@50 |
+|---|---|---|---|---|---|---|---|
+| E2-0 base | %90,6 [84–96] | %64,0 ❌ | %58,9 ❌ | %49,8 | 40,8 puan ❌ | %46 | 0,858 |
+| E2-1 + zor negatif | %83,4 [77–89] | %92,9 | %5,4 | %51,9 | 31,5 puan ❌ | %38 | **0,915** |
+| E2-2 + bulanıklık | %90,2 [84–95] | %63,1 ❌ | %56,2 ❌ | **%83,0** | **7,2 puan** ✅ | %54 | 0,848 |
+| **E2-3 tam** | **%85,5** [79–91] ✅ | **%89,7** ✅ | **%5,4** (sınırda) | **%80,4** | **5,1 puan** ✅ | %54 | 0,909 |
+
+Eşik 0,6'da E2-3: recall %81,3, precision %94,6, alarm %3,6, bulanıkta recall %75,7.
+
+### Yorum
+1. **Zor negatif (E2-1), K4'ü %59'dan %5'e indirdi** ve mAP@50'yi 0,858'den 0,915'e çıkardı. Bedeli, aynı eşikte yaklaşık 5–8 puanlık recall kaybı. Eşik düşürülerek telafi edilebiliyor.
+2. **Bulanıklık artırması (E2-2), K7'yi 41 puandan 7 puana indirdi.** Temiz görüntüde recall'ü düşürmedi.
+3. **İki etki birbirine karışmıyor ve toplanıyor (E2-3).** Eşik 0,4'te K1, K3 ve K7 karşılanıyor; K4 sınırda (%5,4; 112 negatiften 6'sı).
+4. Mimari değil veri değişti; farklar güven aralıklarının **dışında**. Bu, ADR-001'deki "sorun veride" bulgusunu doğruluyor.
+
+### Bu sonuçların henüz kanıtlamadıkları (açık riskler)
+- **Negatif ezberi:** Eğitimdeki zor negatifler ile gold_v1'deki negatifler aynı türlerden ve aynı kaynaktan (iNat *Siganus*/*Sparisoma*) geliyor; gözlemler ise farklı. Alarm düşüşünün bir kısmı tür ezberi olabilir. Sınamak için farklı türlerden oluşan dış bir negatif seti gerekiyor: IMEDEA Mallorca (Zenodo 7534425, CC BY 4.0, 638 MB).
+- **Bulanıklık ezberi:** Eğitim bulanıklığı (çekirdek 5–21) ile test bulanıklığı (9–17) aynı üreteç ailesinden. Gerçek kamera bulanıklığına genellenmesi ayrıca doğrulanmalı.
+- **Tek tohum:** Kazanan tarif (E2-3) 3 tohumla tekrarlanmalı.
+- Küçük nesne örneği hâlâ 13; ölçüt güvenilir değil.
+
+### Sonraki adımlar
+1. Dış negatif seti (IMEDEA) ile "gold_v1-dış" kontrolü.
+2. E2-3'ün 3 tohumla tekrarı.
+3. Aynı veriyle mimari karşılaştırması: YOLO11n ve YOLO26n (Pi'de ≥ 10 FPS için nano ölçek).
+4. Farklı bir bulanıklık üretecinin ve gerçek bulanık görüntülerin denenmesi.
