@@ -1,0 +1,573 @@
+{
+  "meta": {
+    "gold": "gold_v1",
+    "sets": [
+      "gold",
+      "gold_blur",
+      "gold_ext"
+    ],
+    "images": 327,
+    "ultralytics": "8.4.90",
+    "onnxruntime": "1.27.0",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "iou": 0.5,
+    "bootstrap": 2000
+  },
+  "models": {
+    "E2-3_full_yolo11n_s0/best.pt": {
+      "file_mb": 5.46,
+      "gold": {
+        "conf_0.25": {
+          "recall": {
+            "value": 0.8638,
+            "ci95": [
+              0.7992,
+              0.9203
+            ]
+          },
+          "precision": {
+            "value": 0.8219,
+            "ci95": [
+              0.772,
+              0.8724
+            ]
+          },
+          "f1": {
+            "value": 0.8423,
+            "ci95": [
+              0.7993,
+              0.8808
+            ]
+          },
+          "small_recall": {
+            "value": 0.6923,
+            "ci95": [
+              0.4286,
+              1.0
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0714,
+            "ci95": [
+              0.0278,
+              0.1238
+            ]
+          },
+          "counts": {
+            "tp": 203,
+            "fp": 44,
+            "fn": 32,
+            "small_gt": 13,
+            "neg_images": 112,
+            "neg_alarms": 8
+          }
+        },
+        "conf_0.4": {
+          "recall": {
+            "value": 0.8298,
+            "ci95": [
+              0.7642,
+              0.8884
+            ]
+          },
+          "precision": {
+            "value": 0.8945,
+            "ci95": [
+              0.8527,
+              0.9352
+            ]
+          },
+          "f1": {
+            "value": 0.8609,
+            "ci95": [
+              0.8197,
+              0.9012
+            ]
+          },
+          "small_recall": {
+            "value": 0.4615,
+            "ci95": [
+              0.1667,
+              0.8182
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0536,
+            "ci95": [
+              0.0172,
+              0.1
+            ]
+          },
+          "counts": {
+            "tp": 195,
+            "fp": 23,
+            "fn": 40,
+            "small_gt": 13,
+            "neg_images": 112,
+            "neg_alarms": 6
+          }
+        },
+        "conf_0.5": {
+          "recall": {
+            "value": 0.8085,
+            "ci95": [
+              0.7409,
+              0.8716
+            ]
+          },
+          "precision": {
+            "value": 0.9314,
+            "ci95": [
+              0.8925,
+              0.966
+            ]
+          },
+          "f1": {
+            "value": 0.8656,
+            "ci95": [
+              0.8205,
+              0.9058
+            ]
+          },
+          "small_recall": {
+            "value": 0.3846,
+            "ci95": [
+              0.1111,
+              0.7273
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0446,
+            "ci95": [
+              0.0093,
+              0.0893
+            ]
+          },
+          "counts": {
+            "tp": 190,
+            "fp": 14,
+            "fn": 45,
+            "small_gt": 13,
+            "neg_images": 112,
+            "neg_alarms": 5
+          }
+        },
+        "conf_0.6": {
+          "recall": {
+            "value": 0.7872,
+            "ci95": [
+              0.7177,
+              0.8515
+            ]
+          },
+          "precision": {
+            "value": 0.9536,
+            "ci95": [
+              0.9202,
+              0.9836
+            ]
+          },
+          "f1": {
+            "value": 0.8625,
+            "ci95": [
+              0.8173,
+              0.9038
+            ]
+          },
+          "small_recall": {
+            "value": 0.3846,
+            "ci95": [
+              0.1111,
+              0.75
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0268,
+            "ci95": [
+              0.0,
+              0.0609
+            ]
+          },
+          "counts": {
+            "tp": 185,
+            "fp": 9,
+            "fn": 50,
+            "small_gt": 13,
+            "neg_images": 112,
+            "neg_alarms": 3
+          }
+        },
+        "mAP50": 0.8977,
+        "mAP50_95": 0.6411
+      },
+      "gold_blur": {
+        "conf_0.25": {
+          "recall": {
+            "value": 0.834,
+            "ci95": [
+              0.767,
+              0.8924
+            ]
+          },
+          "precision": {
+            "value": 0.7101,
+            "ci95": [
+              0.6548,
+              0.7638
+            ]
+          },
+          "f1": {
+            "value": 0.7671,
+            "ci95": [
+              0.7206,
+              0.8099
+            ]
+          },
+          "small_recall": {
+            "value": 0.4615,
+            "ci95": [
+              0.1875,
+              0.7692
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.2589,
+            "ci95": [
+              0.1774,
+              0.3455
+            ]
+          },
+          "counts": {
+            "tp": 196,
+            "fp": 80,
+            "fn": 39,
+            "small_gt": 13,
+            "neg_images": 112,
+            "neg_alarms": 29
+          }
+        },
+        "conf_0.4": {
+          "recall": {
+            "value": 0.7872,
+            "ci95": [
+              0.717,
+              0.8507
+            ]
+          },
+          "precision": {
+            "value": 0.8259,
+            "ci95": [
+              0.7737,
+              0.8732
+            ]
+          },
+          "f1": {
+            "value": 0.8061,
+            "ci95": [
+              0.7576,
+              0.8511
+            ]
+          },
+          "small_recall": {
+            "value": 0.4615,
+            "ci95": [
+              0.2,
+              0.7778
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.1607,
+            "ci95": [
+              0.0961,
+              0.2323
+            ]
+          },
+          "counts": {
+            "tp": 185,
+            "fp": 39,
+            "fn": 50,
+            "small_gt": 13,
+            "neg_images": 112,
+            "neg_alarms": 18
+          }
+        },
+        "conf_0.5": {
+          "recall": {
+            "value": 0.766,
+            "ci95": [
+              0.6955,
+              0.8291
+            ]
+          },
+          "precision": {
+            "value": 0.8824,
+            "ci95": [
+              0.8366,
+              0.9275
+            ]
+          },
+          "f1": {
+            "value": 0.82,
+            "ci95": [
+              0.77,
+              0.8632
+            ]
+          },
+          "small_recall": {
+            "value": 0.3846,
+            "ci95": [
+              0.1111,
+              0.6667
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.1161,
+            "ci95": [
+              0.0583,
+              0.1786
+            ]
+          },
+          "counts": {
+            "tp": 180,
+            "fp": 24,
+            "fn": 55,
+            "small_gt": 13,
+            "neg_images": 112,
+            "neg_alarms": 13
+          }
+        },
+        "conf_0.6": {
+          "recall": {
+            "value": 0.7191,
+            "ci95": [
+              0.6488,
+              0.7876
+            ]
+          },
+          "precision": {
+            "value": 0.9135,
+            "ci95": [
+              0.8718,
+              0.9539
+            ]
+          },
+          "f1": {
+            "value": 0.8048,
+            "ci95": [
+              0.7539,
+              0.8502
+            ]
+          },
+          "small_recall": {
+            "value": 0.1538,
+            "ci95": [
+              0.0,
+              0.3571
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0625,
+            "ci95": [
+              0.025,
+              0.1084
+            ]
+          },
+          "counts": {
+            "tp": 169,
+            "fp": 16,
+            "fn": 66,
+            "small_gt": 13,
+            "neg_images": 112,
+            "neg_alarms": 7
+          }
+        },
+        "mAP50": 0.8521,
+        "mAP50_95": 0.5651
+      },
+      "gold_ext": {
+        "conf_0.25": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.13,
+            "ci95": [
+              0.0933,
+              0.17
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 53,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 39
+          }
+        },
+        "conf_0.4": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0567,
+            "ci95": [
+              0.03,
+              0.0833
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 21,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 17
+          }
+        },
+        "conf_0.5": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.0433,
+            "ci95": [
+              0.0233,
+              0.0667
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 15,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 13
+          }
+        },
+        "conf_0.6": {
+          "recall": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "precision": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "f1": {
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "small_recall": {
+            "value": NaN,
+            "ci95": [
+              NaN,
+              NaN
+            ]
+          },
+          "neg_alarm_rate": {
+            "value": 0.03,
+            "ci95": [
+              0.0133,
+              0.05
+            ]
+          },
+          "counts": {
+            "tp": 0,
+            "fp": 11,
+            "fn": 0,
+            "small_gt": 0,
+            "neg_images": 300,
+            "neg_alarms": 9
+          }
+        },
+        "mAP50": 0.0,
+        "mAP50_95": 0.0
+      }
+    }
+  }
+}
