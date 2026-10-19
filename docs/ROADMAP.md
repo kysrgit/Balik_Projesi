@@ -8,6 +8,8 @@
 > Hazırlanış: 2026-10-15. Kullanılan çerçeveler: *system-design* (gereksinim → tasarım → ödünleşim),
 > *architecture* (ADR), *testing-strategy* (test piramidi).
 
+> **Derin araştırma (2026-10-19):** [reports/Pi 5 su altı balık tespiti.md](../reports/Pi%205%20su%20alt%C4%B1%20bal%C4%B1k%20tespiti.md). Her faz için kanıta dayalı öneriler ve 10 maddelik öncelik listesi içeriyor. Kaynak notları: `research_notes/Pi 5 su altı balık tespiti/`.
+
 ## Durum özeti
 
 | Faz | Soru | Durum |
