@@ -14,7 +14,7 @@
 |---|---|---|
 | 0 | Sistem tam olarak neyi, nerede, hangi hızla yapmalı? | ✅ [ADR-000](adr/ADR-000-gereksinimler.md) |
 | 1 | Elimizdeki veri bu soruyu ölçmeye yeterli mi? Değilse ne eksik? | ✅ [ADR-001](adr/ADR-001-veri.md): gold_v1 (327) donduruldu; E1-a: recall %88 ✅, zor negatifte alarm %49 ❌, bulanıkta recall %46 ❌ |
-| 2 | Hangi mimari ve hangi eğitim tarifi en iyi genelliyor? | ⬜ Sıradaki: önce veri/tarif (zor negatif, bulanıklık), sonra mimari |
+| 2 | Hangi mimari ve hangi eğitim tarifi en iyi genelliyor? | ⏳ [ADR-002](adr/ADR-002-egitim.md): E2 veri deneyleri eğitimde |
 | 3 | Eğitilen model Pi'de hangi format, hassasiyet ve motorla en iyi çalışıyor? | ⬜ (kısmi kanıt var) |
 | 4 | Pi 5 CPU yeterli mi, yoksa hızlandırıcı (AI HAT+) gerekli mi? | ⏭️ Atlandı: yalnızca Pi 5 CPU (ADR-000) |
 | 5 | Hangi ön işleme su altında gerçekten fayda sağlıyor? | ⬜ (CLAHE ölçüldü) |
