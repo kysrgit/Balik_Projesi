@@ -1,5 +1,6 @@
 # GitHub Pages Dağıtım İş Akışı
-# Bu iş akışı, website/ altındaki statik tanıtım sitesini GitHub Pages üzerine otomatik olarak dağıtır.
+# Bu iş akışı, website/ altındaki statik tanıtım sitesini dağıtımdan önce doğrular
+# ve sabitlenmiş GitHub Actions sürümleriyle GitHub Pages üzerine otomatik dağıtır.
 
 name: GitHub Pages Dağıtımı
 
@@ -31,21 +32,135 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      # Depo kaynak kodunu çalışma alanına çeker
+      # Depo kaynak kodunu tam commit SHA ile sabitlenmiş sürüm üzerinden çeker
       - name: Depoyu Çek (Checkout)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # Dağıtım öncesi zorunlu dosyaları, boyut bütçesini, varlık yollarını ve HTML geçerliliğini denetler
+      - name: Site Doğrulama ve Boyut Bütçesi
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import re
+          import sys
+          from html.parser import HTMLParser
+          from pathlib import Path
+
+          SITE_DIR = Path("website")
+          MAX_BYTES = int(3.5 * 1024 * 1024)  # 3.5 MB toplam boyut bütçesi
+          REQUIRED_FILES = (
+              "index.html",
+              "styles.css",
+              "app.js",
+              "theme-init.js",
+              "favicon.svg",
+          )
+
+          errors: list[str] = []
+
+          # 1. Zorunlu site dosyalarının varlığını ve boş olmadığını doğrula
+          for rel_path in REQUIRED_FILES:
+              target = SITE_DIR / rel_path
+              if not target.is_file() or target.stat().st_size == 0:
+                  errors.append(f"Eksik veya boş zorunlu dosya: {target.as_posix()}")
+
+          # 2. website/ toplam boyutunun 3.5 MB altında olduğunu doğrula
+          total_bytes = sum(p.stat().st_size for p in SITE_DIR.rglob("*") if p.is_file())
+          total_mb = total_bytes / (1024 * 1024)
+          if total_bytes >= MAX_BYTES:
+              errors.append(
+                  f"website/ boyut bütçesi aşıldı: {total_mb:.2f} MB ({total_bytes} B) >= 3.50 MB ({MAX_BYTES} B)"
+              )
+
+          # 3-5. website/index.html içindeki varlık yollarını, .git bağlantılarını ve galeri yapısını denetle
+          index_path = SITE_DIR / "index.html"
+          asset_refs: set[str] = set()
+          git_links: list[tuple[int, str]] = []
+          gallery_divs: list[int] = []
+
+          if index_path.is_file():
+              html_text = index_path.read_text(encoding="utf-8")
+              asset_pattern = re.compile(r"\./assets/[^\s,\"'<>()]+")
+              git_link_pattern = re.compile(r"github\.com/[^\s\"'<>]+?\.git(?:/|[?#]|$)", re.IGNORECASE)
+
+              class SiteValidator(HTMLParser):
+                  def __init__(self) -> None:
+                      super().__init__()
+                      self._button_stack: list[bool] = []
+
+                  def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+                      tag_lower = tag.lower()
+                      attr_map = {k.lower(): (v or "") for k, v in attrs}
+                      line, _ = self.getpos()
+
+                      for attr_name, attr_val in attr_map.items():
+                          if not attr_val:
+                              continue
+                          for match in asset_pattern.findall(attr_val):
+                              clean_ref = match.split("?", 1)[0].split("#", 1)[0]
+                              asset_refs.add(clean_ref)
+                          if attr_name in ("href", "content", "src") and git_link_pattern.search(attr_val):
+                              git_links.append((line, attr_val))
+
+                      if tag_lower == "button":
+                          classes = attr_map.get("class", "").split()
+                          self._button_stack.append("gallery-item" in classes)
+                      elif tag_lower == "div" and any(self._button_stack):
+                          gallery_divs.append(line)
+
+                  def handle_endtag(self, tag: str) -> None:
+                      if tag.lower() == "button" and self._button_stack:
+                          self._button_stack.pop()
+
+              validator = SiteValidator()
+              validator.feed(html_text)
+              validator.close()
+
+              # 3. Göreli ./assets/... referanslarının mevcut dosyalara çözümlendiğini doğrula
+              site_root = SITE_DIR.resolve()
+              for ref in sorted(asset_refs):
+                  resolved = (SITE_DIR / ref).resolve()
+                  try:
+                      resolved.relative_to(site_root)
+                  except ValueError:
+                      errors.append(f"website/ dışına çıkan varlık yolu: {ref}")
+                      continue
+                  if not resolved.is_file():
+                      errors.append(f"Kırık varlık referansı (index.html): {ref}")
+
+              # 4. github.com/.../*.git bağlantısı kalmadığını doğrula
+              for line, url in git_links:
+                  errors.append(f"index.html:{line} satırında .git uzantılı GitHub bağlantısı: {url}")
+
+              # 5. <button class="gallery-item"> içinde <div> bulunmadığını doğrula
+              for line in gallery_divs:
+                  errors.append(f'index.html:{line} satırında <button class="gallery-item"> içinde geçersiz <div>')
+
+          if errors:
+              print("Site doğrulama başarısız:", file=sys.stderr)
+              for err in errors:
+                  print(f"  - {err}", file=sys.stderr)
+              sys.exit(1)
+
+          print(
+              f"Site doğrulama başarılı: {len(REQUIRED_FILES)} zorunlu dosya, "
+              f"{len(asset_refs)} varlık referansı doğrulandı, toplam boyut {total_mb:.2f} MB / 3.50 MB."
+          )
+          PY
 
       # GitHub Pages ortamını ve temel URL yapılandırmasını hazırlar
       - name: GitHub Pages Yapılandır
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       # website/ dizinini statik Pages çıktısı (artifact) olarak paketler
       - name: Pages Çıktısını Yükle
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: website
 
       # Hazırlanan çıktıyı github-pages ortamına dağıtır
       - name: GitHub Pages'e Dağıt
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

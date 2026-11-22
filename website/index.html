@@ -1,58 +1,131 @@
 <!--
-  Balon Balığı (Lagocephalus sceleratus) Yapay Zeka Tespit ve Coğrafi İzleme Sistemi
-  Tanıtım Web Sitesi — Ana HTML Belgesi (website/index.html)
-  Açıklama: TÜBİTAK 2209-B kapsamında geliştirilen gerçek zamanlı sualtı tespit,
-            Raspberry Pi 5 uç çıkarım ve CBS izleme sisteminin doğrulanmış teknik vitrini.
+  Balon Balığı AI — Çevrimdışı Sualtı Yapay Zeka & Biyoçeşitlilik İzleme Platformu
+  Ana HTML Belgesi (website/index.html — v2, Tek Doğruluk Kaynağı / SSOT)
+  Açıklama: TÜBİTAK 2209-B (Proje No: 1139B412401065) kapsamında geliştirilen,
+            ilk dikey olarak Akdeniz istilacı balon balıklarına odaklanan,
+            AI HAT+ olmadan yalnızca Raspberry Pi 5 CPU üzerinde gerçek zamanlı çalışan
+            sualtı tespit, GPS/SpatiaLite kayıt ve GBIF/OBIS DarwinCore izleme platformu.
+  Yazarlar: Kayra Semercioğlu, Umut Çalışkan, Murat Aydın
 -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Balon Balığı Tespit Sistemi — Sualtı Yapay Zeka &amp; Coğrafi İzleme</title>
-  <meta name="description" content="TÜBİTAK 2209-B kapsamında geliştirilen, Raspberry Pi 5 üzerinde gerçek zamanlı çalışan istilacı balon balığı sualtı tespit, GPS kayıt ve CBS izleme sistemi.">
+  <title>Balon Balığı AI — Çevrimdışı Sualtı Yapay Zeka &amp; Biyoçeşitlilik İzleme Platformu</title>
+  <meta name="description" content="Akdeniz için çevrimdışı, düşük maliyetli sualtı yapay zeka ve biyoçeşitlilik izleme platformu. İlk dikey: TÜBİTAK 2209-B (1139B412401065) destekli istilacı balon balığı tespiti, Raspberry Pi 5 uç çıkarım ve GIS/DarwinCore kaydı.">
   <meta name="theme-color" content="#030912">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+
+  <!-- Kanonik URL ve Favicon -->
+  <link rel="canonical" href="https://kysrgit.github.io/Balik_Projesi/">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+
+  <!-- Open Graph Paylaşım Meta Etiketleri -->
+  <meta property="og:title" content="Balon Balığı AI — Çevrimdışı Sualtı Yapay Zeka &amp; Biyoçeşitlilik İzleme Platformu">
+  <meta property="og:description" content="Hızlandırıcı (AI HAT+) ve bulut bağlantısı olmadan Raspberry Pi 5 CPU üzerinde çalışan sualtı tespit, NMEA GPS/SpatiaLite kayıt ve DarwinCore/GeoJSON ihracı. TÜBİTAK 2209-B · 1139B412401065.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kysrgit.github.io/Balik_Projesi/">
+  <meta property="og:image" content="https://kysrgit.github.io/Balik_Projesi/assets/og-cover.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Sualtı ortamında tespit edilmiş istilacı balon balığı ve güven skoru kutusu">
+  <meta property="og:locale" content="tr_TR">
+  <meta property="og:site_name" content="Balon Balığı AI">
+
+  <!-- Twitter Card Paylaşım Meta Etiketleri -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Balon Balığı AI — Çevrimdışı Sualtı Yapay Zeka Platformu">
+  <meta name="twitter:description" content="Akdeniz için çevrimdışı, Raspberry Pi 5 CPU tabanlı istilacı balon balığı tespiti ve GBIF/QGIS uyumlu biyoçeşitlilik izleme sistemi.">
+  <meta name="twitter:image" content="https://kysrgit.github.io/Balik_Projesi/assets/og-cover.jpg">
+
+  <!-- Yapılandırılmış Veri (JSON-LD: SoftwareApplication + ResearchProject) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Balon Balığı AI — Sualtı Yapay Zeka & Biyoçeşitlilik İzleme Platformu",
+        "applicationCategory": "ScientificApplication",
+        "operatingSystem": "Linux (Raspberry Pi OS / Debian 13), Windows",
+        "url": "https://kysrgit.github.io/Balik_Projesi/",
+        "downloadUrl": "https://github.com/kysrgit/Balik_Projesi",
+        "softwareVersion": "2.0",
+        "inLanguage": "tr",
+        "description": "Akdeniz kıyılarında istilacı balon balıklarını (Lagocephalus sceleratus ve akrabaları) hızlandırıcı olmadan Raspberry Pi 5 CPU üzerinde gerçek zamanlı tespit eden, NMEA GPS, SpatiaLite, Leaflet ısı haritası ve DarwinCore ihracı sunan çevrimdışı sualtı izleme yazılımı.",
+        "author": [
+          { "@type": "Person", "name": "Kayra Semercioğlu" },
+          { "@type": "Person", "name": "Umut Çalışkan" },
+          { "@type": "Person", "name": "Murat Aydın" }
+        ]
+      },
+      {
+        "@type": "ResearchProject",
+        "name": "TÜBİTAK 2209-B İstilacı Balon Balığı Gerçek Zamanlı Sualtı Tespit ve Coğrafi İzleme Sistemi",
+        "identifier": "1139B412401065",
+        "url": "https://kysrgit.github.io/Balik_Projesi/",
+        "funder": {
+          "@type": "Organization",
+          "name": "TÜBİTAK 2209-B Sanayiye Yönelik Lisans Araştırma Projeleri Destekleme Programı"
+        },
+        "member": [
+          { "@type": "Person", "name": "Kayra Semercioğlu" },
+          { "@type": "Person", "name": "Umut Çalışkan" },
+          { "@type": "Person", "name": "Murat Aydın" }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- FOUC önleyici senkron tema önyükleyicisi (CSP script-src 'self' uyumlu) -->
+  <script src="./theme-init.js"></script>
 
   <!-- Tipografi: Space Grotesk, Plus Jakarta Sans ve JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
 
-  <!-- Tasarım sistemi stil sayfası ve etkileşim betikleri -->
+  <!-- Tasarım sistemi stil sayfası -->
   <link rel="stylesheet" href="./styles.css">
-  <script src="./data.js" defer></script>
-  <script src="./app.js" defer></script>
 </head>
 <body>
-  <!-- Erişilebilirlik: İçeriğe doğrudan geçiş -->
+  <!-- Erişilebilirlik: Ana içeriğe doğrudan geçiş -->
   <a class="skip-link" href="#main-content">Ana içeriğe atla</a>
 
-  <!-- Üst kaydırma ilerleme çubuğu -->
-  <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
+  <!-- Üst kaydırma ilerleme çubuğu (GPU scaleX ile güncellenir) -->
+  <div
+    id="scroll-progress"
+    class="scroll-progress"
+    role="progressbar"
+    aria-label="Sayfa okuma ilerlemesi"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+  ></div>
 
   <!-- ======================================================================
-       1. Üst Gezinti Çubuğu ve Mobil Çekmece
+       1. Üst Gezinti Çubuğu (6 Bağlantı — 1180px Kırılımı) ve Mobil Çekmece
        ====================================================================== -->
   <header id="site-header" class="site-header">
     <div class="container nav-container">
-      <a class="brand" href="#hero" aria-label="Balon Balığı Tespit Sistemi Ana Sayfa">
+      <a class="brand" href="#hero" aria-label="Balon Balığı AI Ana Sayfa">
         <span class="brand-mark" aria-hidden="true">BB</span>
         <span>
           Balon Balığı AI
-          <span class="brand-sub">TÜBİTAK 2209-B · PI 5 &amp; CBS</span>
+          <span class="brand-sub">SUALTI YAPAY ZEKA PLATFORMU</span>
         </span>
       </a>
 
       <nav aria-label="Ana gezinme">
         <ul class="nav-links">
-          <li><a class="nav-link is-active" href="#hero">Genel Bakış</a></li>
-          <li><a class="nav-link" href="#problem">Problem</a></li>
-          <li><a class="nav-link" href="#species">Türler &amp; Veri</a></li>
-          <li><a class="nav-link" href="#benchmarks">Benchmark</a></li>
-          <li><a class="nav-link" href="#architecture">Mimari</a></li>
-          <li><a class="nav-link" href="#application">Panel</a></li>
-          <li><a class="nav-link" href="#gallery">Galeri</a></li>
-          <li><a class="nav-link" href="#docs">SSS &amp; CLI</a></li>
+          <li><a class="nav-link" href="#problem">Etki &amp; Pazar</a></li>
+          <li><a class="nav-link" href="#species">Veri &amp; Türler</a></li>
+          <li><a class="nav-link" href="#benchmarks">Performans</a></li>
+          <li><a class="nav-link" href="#application">Ürün &amp; Mimari</a></li>
+          <li><a class="nav-link" href="#roadmap">Yol Haritası</a></li>
+          <li><a class="nav-link" href="#docs">SSS &amp; Kurulum</a></li>
         </ul>
       </nav>
 
@@ -65,14 +138,20 @@
           aria-pressed="false"
           title="Tema değiştir"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg class="icon-svg icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="4"></circle>
             <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
           </svg>
+          <svg class="icon-svg icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
         </button>
 
-        <a class="btn btn-primary btn-sm" href="https://github.com/kysrgit/Balik_Projesi.git" target="_blank" rel="noopener noreferrer">
-          GitHub Deposu
+        <a class="btn btn-primary btn-sm" href="https://github.com/kysrgit/Balik_Projesi" target="_blank" rel="noopener noreferrer">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+          </svg>
+          GitHub
         </a>
 
         <button
@@ -83,7 +162,7 @@
           aria-expanded="false"
           aria-controls="mobile-drawer"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -95,14 +174,21 @@
 
   <!-- Mobil gezinti çekmecesi ve arka plan perdesi -->
   <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
-  <aside id="mobile-drawer" class="mobile-drawer" aria-label="Mobil gezinme menüsü" aria-hidden="true">
+  <aside
+    id="mobile-drawer"
+    class="mobile-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Mobil gezinme menüsü"
+    aria-hidden="true"
+  >
     <div class="drawer-header">
       <span class="brand">
         <span class="brand-mark" aria-hidden="true">BB</span>
         <span>Balon Balığı AI</span>
       </span>
       <button id="drawer-close" class="drawer-close" type="button" aria-label="Menüyü kapat">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -110,95 +196,98 @@
     </div>
 
     <ul class="drawer-links">
-      <li><a class="drawer-link is-active" href="#hero">Genel Bakış</a></li>
-      <li><a class="drawer-link" href="#problem">Problem &amp; Etki</a></li>
-      <li><a class="drawer-link" href="#species">Türler &amp; Veri Setleri</a></li>
-      <li><a class="drawer-link" href="#benchmarks">PC vs Pi 5 Benchmark</a></li>
-      <li><a class="drawer-link" href="#architecture">Sistem Mimarisi</a></li>
-      <li><a class="drawer-link" href="#application">Canlı Dashboard</a></li>
-      <li><a class="drawer-link" href="#gallery">Görsel Galeri</a></li>
-      <li><a class="drawer-link" href="#docs">SSS &amp; Komutlar</a></li>
+      <li><a class="drawer-link" href="#problem">Etki &amp; Pazar</a></li>
+      <li><a class="drawer-link" href="#species">Veri &amp; Türler</a></li>
+      <li><a class="drawer-link" href="#benchmarks">Performans</a></li>
+      <li><a class="drawer-link" href="#application">Ürün &amp; Mimari</a></li>
+      <li><a class="drawer-link" href="#gallery">Görsel Kanıtlar</a></li>
+      <li><a class="drawer-link" href="#roadmap">Yol Haritası &amp; Ekip</a></li>
+      <li><a class="drawer-link" href="#docs">SSS &amp; Kurulum</a></li>
     </ul>
 
-    <a class="btn btn-primary" href="https://github.com/kysrgit/Balik_Projesi.git" target="_blank" rel="noopener noreferrer">
-      GitHub Deposu
+    <a class="btn btn-primary" href="https://github.com/kysrgit/Balik_Projesi" target="_blank" rel="noopener noreferrer">
+      GitHub Deposunu İncele
     </a>
   </aside>
 
   <main id="main-content">
     <!-- ====================================================================
-         2. Kahraman (Hero) Bölümü ve Telemetri HUD Kartı
+         2. Kahraman (Hero) Bölümü — Ürün & Platform Konumlandırması
          ==================================================================== -->
     <section id="hero" class="hero">
       <div class="hero-backdrop" aria-hidden="true"></div>
       <div class="container hero-grid">
         <div class="hero-content">
-          <span class="hero-badge">TÜBİTAK 2209-B · Yalnızca Raspberry Pi 5 CPU · Tek Sınıf: pufferfish</span>
+          <span class="hero-badge">TÜBİTAK 2209-B · 1139B412401065 · İlk Dikey: İstilacı Balon Balığı</span>
           <h1 class="hero-title">
-            İstilacı Balon Balıkları İçin
-            <span class="hero-title-accent">Gerçek Zamanlı Sualtı Yapay Zeka</span>
+            Akdeniz İçin Çevrimdışı, Düşük Maliyetli
+            <span class="hero-title-accent">Sualtı Yapay Zeka &amp; Biyoçeşitlilik İzleme Platformu</span>
           </h1>
           <p class="hero-subtitle">
-            Doğu Akdeniz ve Türkiye kıyılarında yayılan istilacı Lesepsiyen balon balıklarını
-            ROV ve tekne kameralarından hızlandırıcı olmadan Raspberry Pi 5 üzerinde tespit eden,
-            NMEA GPS ile coğrafi etiketleyip SpatiaLite ve canlı harita paneline aktaran uçtan uca izleme sistemi.
+            Bulut bağlantısı ve harici AI hızlandırıcı (AI HAT+) gerektirmeden yalnızca Raspberry Pi 5 CPU
+            üzerinde çalışan sualtı görsel tespit, NMEA GPS konumlandırma ve GBIF/QGIS uyumlu kayıt sistemi.
+            İlk saha dikeyinde Doğu Akdeniz’deki dört istilacı Lesepsiyen balon balığı türünü hedefler.
           </p>
 
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#benchmarks">Benchmark Sonuçlarını İncele</a>
-            <a class="btn btn-secondary" href="#gallery">Görsel Kanıt Galerisi</a>
-            <a class="btn btn-ghost" href="#docs">Kurulum &amp; CLI</a>
+            <a class="btn btn-primary" href="#roadmap">Pilot &amp; İş Birliği</a>
+            <a class="btn btn-secondary" href="#benchmarks">Performans Ölçümleri</a>
+            <a class="btn btn-ghost" href="#application">Canlı Ürün Vitrini</a>
           </div>
 
           <ul class="hero-kpi-list" aria-label="Doğrulanmış temel performans göstergeleri">
             <li class="kpi-pill">
-              <strong class="kpi-value">0.9088</strong>
-              <span class="kpi-label">E2-3 Gold mAP@50 (YOLO11s)</span>
+              <strong class="kpi-value">%90,9</strong>
+              <span class="kpi-label">E2-3 Gold mAP@50 (YOLO11s · YOLO26n %92,2)</span>
             </li>
             <li class="kpi-pill">
-              <strong class="kpi-value">%92,2</strong>
-              <span class="kpi-label">YOLO26n Gold mAP@50 (n=3)</span>
+              <strong class="kpi-value">%4,5</strong>
+              <span class="kpi-label">Gold Negatif Alarm (%49,1 → %4,5 · Dış %2,7)</span>
             </li>
             <li class="kpi-pill">
-              <strong class="kpi-value">~14 FPS</strong>
-              <span class="kpi-label">Pi 5 NCNN 70 ms (ONNX 5.85 FPS)</span>
+              <strong class="kpi-value">5,85 / ~14 FPS</strong>
+              <span class="kpi-label">Yayında ONNX INT8 / Faz 3 NCNN (70 ms)</span>
             </li>
             <li class="kpi-pill">
-              <strong class="kpi-value">%2,7</strong>
-              <span class="kpi-label">E2-3 Dış Negatif Alarm (@0.5)</span>
+              <strong class="kpi-value">~10–13 W</strong>
+              <span class="kpi-label">Pi 5 Tam Sistem (AI HAT+ Olmadan)</span>
             </li>
           </ul>
         </div>
 
         <div class="hero-visual">
-          <div class="hero-hud-card" aria-label="Örnek sualtı tespit telemetri kartı">
+          <div class="hero-hud-card" aria-label="Gerçek veri seti çıkarım örneği ve platform özeti">
             <div class="hud-header">
-              <span>model: pufferfish_s_v2_int8 · 640×640</span>
+              <span>pufferfish_s_v2_int8 · 640×640</span>
               <span class="hud-status">
                 <span class="hud-status-dot" aria-hidden="true"></span>
-                CANLI ÇIKARIM DOĞRULANDI
+                GERÇEK VERİ SETİ ÇIKARIMI · conf ≥ 0,60
               </span>
             </div>
 
             <div class="hud-frame">
               <img
-                src="./assets/cozum_tespit.jpg"
-                alt="Sualtı ortamında tespit edilmiş benekli balon balığı ve 0.81 güven skoru kutusu"
+                src="./assets/cozum_tespit.webp"
+                alt="Doğal sualtı zemininde 0,81 güven skoruyla tespit edilmiş istilacı balon balığı"
+                width="1024"
+                height="768"
+                fetchpriority="high"
+                decoding="async"
               >
             </div>
 
             <div class="hud-metrics">
               <div class="hud-metric-box">
-                <span>Pi 5 ONNX INT8</span>
-                <strong>5.85 FPS · 171 ms</strong>
+                <span>Yayında (ONNX INT8)</span>
+                <strong>5,85 FPS · 171,1 ms</strong>
               </div>
               <div class="hud-metric-box">
-                <span>Pi 5 NCNN FP16</span>
-                <strong>70 ms · ~14 FPS</strong>
+                <span>Faz 3 (NCNN FP16)</span>
+                <strong>~14 FPS · 70 ms</strong>
               </div>
               <div class="hud-metric-box">
-                <span>Gold / YOLO26n</span>
-                <strong>0.9088 / %92,2</strong>
+                <span>Dış Set Alarm (@0,5)</span>
+                <strong>%2,7 · 300 kare</strong>
               </div>
             </div>
           </div>
@@ -207,108 +296,197 @@
     </section>
 
     <!-- ====================================================================
-         3. Problem Tanımı, Ekolojik Etki ve Saha Gereksinimleri
+         3. Problem, Ekonomik Etki, Rekabet Matrisi ve Hedef Alıcılar
          ==================================================================== -->
     <section id="problem" class="section section-alt">
       <div class="container">
         <div class="section-header reveal">
-          <span class="eyebrow">Problem &amp; Ekolojik Bağlam</span>
-          <h2 class="section-title">Sualtında Görüntü Tanımayı Zorlaştıran 6 Kritik Mühendislik Engeli</h2>
+          <span class="eyebrow">Etki, Rekabet &amp; Kullanım Senaryoları</span>
+          <h2 class="section-title">Neden Çevrimdışı, Cihaz-İçi Sualtı Yapay Zeka?</h2>
           <p class="section-lead">
-            Mevcut Pi tabanlı sualtı kameraları (FishCam, PlasPi, SuMOS) yalnızca video kaydederken,
-            bilinen tek <em>L. sceleratus</em> makine öğrenmesi çalışması çevresel DNA kullanmaktadır.
-            Gerçek zamanlı görsel izleme için veri sızıntısı, bulanıklık ve donanım kısıtları birlikte çözüldü.
+            Mevcut Raspberry Pi tabanlı sualtı kameraları yalnızca sonradan izlenmek üzere video kaydeder;
+            bulut AI su altında bağlantı kaybettiği için çalışmaz, eDNA ise laboratuvar süreci gerektirir.
+            Bu platform, tespit ve coğrafi kaydı doğrudan düşük güç bütçeli uç donanıma taşır.
           </p>
         </div>
 
+        <!-- 3 Yüksek Etkili Problem & Çözüm Kartı (Crisp Inline SVG İkonlar) -->
         <div class="impact-grid">
           <article class="impact-card reveal">
-            <div class="impact-icon impact-icon-coral" aria-hidden="true">!</div>
-            <div class="impact-stat">4 İstilacı Tür</div>
-            <h3 class="impact-title">Doğu Akdeniz'de Lesepsiyen Yayılım</h3>
+            <div class="impact-icon impact-icon-coral" aria-hidden="true">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <div class="impact-stat">Ekolojik &amp; Sağlık Riski</div>
+            <h3 class="impact-title">Balıkçılık Zararı ve Tetrodotoksin (TTX)</h3>
             <p class="impact-desc">
-              <em>Lagocephalus sceleratus</em>, <em>L. suezensis</em>, <em>L. guentheri</em> ve
-              <em>Torquigener flavimaculosus</em> türleri Türkiye kıyılarında hızla yayılmaktadır.
-              Tek sınıf (<code>pufferfish</code>) yapısı saha taramasında tüm hedef türleri kapsar.
+              Doğu Akdeniz ve Ege’de <em>Lagocephalus sceleratus</em> yerli türler üzerinde yoğun avcılık baskısı
+              yaratır, balıkçı ağ ve paraketelerine zarar verir (Ulman vd. 2021, <em>NeoBiota</em>; Coro vd. 2018).
+              Gonad ve karaciğerde biriken TTX ciddi halk sağlığı riski taşır (Kosker vd. 2023, <em>Marine Drugs</em>).
+              Antalya parça başı alım programı gibi saha takibi girişimleri bağımsız görsel bolluk verisine ihtiyaç duyar.
             </p>
           </article>
 
           <article class="impact-card reveal">
-            <div class="impact-icon impact-icon-coral" aria-hidden="true">%</div>
-            <div class="impact-stat">%49,1 → %4,5</div>
-            <h3 class="impact-title">Zor Negatif Türlerde Yanlış Alarm</h3>
+            <div class="impact-icon" aria-hidden="true">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle>
+                <circle cx="12" cy="12" r="4"></circle>
+                <line x1="12" y1="2" x2="12" y2="5"></line>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
+                <line x1="2" y1="12" x2="5" y2="12"></line>
+                <line x1="19" y1="12" x2="22" y2="12"></line>
+              </svg>
+            </div>
+            <div class="impact-stat">%49,1 → %4,5 Alarm</div>
+            <h3 class="impact-title">Sualtı Bulanıklığı &amp; Yanlış Alarm Çözümü</h3>
             <p class="impact-desc">
-              E1-a başlangıç modelinde iNaturalist zor negatif türlerinde (<em>Siganus</em>, <em>Sparisoma</em>)
-              %49,11 (55/100) alarm oluştu. Faz 2 <code>E2-3_full</code> tarifiyle bu oran @0.5 eşiğinde %4,5'e indirildi.
+              ROV ve tekne hareketinden doğan bulanıklık E1-a modelinde recall’ı 42 puan düşürüyordu; zor negatif
+              balıklarda ise alarm %49,11’di. Faz 2 <code>E2-3_full</code> tarifiyle altın set alarmı %4,5’e,
+              IMEDEA dış set alarmı %2,7’ye ve bulanıklık recall kaybı yalnızca 3,8 puana indirildi.
             </p>
           </article>
 
           <article class="impact-card reveal">
-            <div class="impact-icon" aria-hidden="true">~</div>
-            <div class="impact-stat">%87,7 → %46,0</div>
-            <h3 class="impact-title">ROV ve Tekne Hareket Bulanıklığı</h3>
+            <div class="impact-icon" aria-hidden="true">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div class="impact-stat">0,96 HITL Korelasyonu</div>
+            <h3 class="impact-title">“Model Önerir, Uzman Onaylar” İş Akışı</h3>
             <p class="impact-desc">
-              Hareketli platformlarda bulanıklık recall'ı E1-a'da 42 puan düşürüyordu.
-              Çekirdeği <code>k=5–21</code> olan 809 bulanık kopya eklenince <code>gold_blur</code> recall %78,3'e çıktı (kayıp yalnızca 3,8 puan).
-            </p>
-          </article>
-
-          <article class="impact-card reveal">
-            <div class="impact-icon" aria-hidden="true">S</div>
-            <div class="impact-stat">5–11 cm · n=13</div>
-            <h3 class="impact-title">Küçük ve Kalabalık Örnekler</h3>
-            <p class="impact-desc">
-              <em>Torquigener flavimaculosus</em> 5–11 cm boyundadır ve <code>gold_v1</code> setinde
-              alanı %1'in altında yalnızca 13 küçük nesne bulunur. YOLO26n küçük nesne recall değerini %51,3'e taşıdı.
-            </p>
-          </article>
-
-          <article class="impact-card reveal">
-            <div class="impact-icon" aria-hidden="true">CPU</div>
-            <div class="impact-stat">≥ 10 FPS Hedefi</div>
-            <h3 class="impact-title">AI HAT+ Olmadan Pi 5 Çıkarımı</h3>
-            <p class="impact-desc">
-              <code>ADR-000</code> K5 ölçütü hızlandırıcı olmadan Raspberry Pi 5 CPU üzerinde p95 ≤ 100 ms gerektirir.
-              YOLO11s ONNX INT8 5.85 FPS verirken, YOLO11n NCNN FP16 70 ms (~14 FPS) ile hedefi karşılar.
-            </p>
-          </article>
-
-          <article class="impact-card reveal">
-            <div class="impact-icon" aria-hidden="true">GIS</div>
-            <div class="impact-stat">5–10 m Sığ Su</div>
-            <h3 class="impact-title">Deniz Biyologları İçin Uzman Akışı</h3>
-            <p class="impact-desc">
-              Güneybatı Türkiye koylarında Haziran üreme kümelenmeleri dahil saha gözlemleri için
-              “model önerir, uzman onaylar” yaklaşımıyla CSV, GeoJSON ve GBIF/OBIS uyumlu DarwinCore üretilir.
+              <em>L. sceleratus</em> Haziran üreme döneminde 5–10 m koylarda kümelenir; <em>T. flavimaculosus</em>
+              5–9 cm (maks. 11 cm) boyundadır. Akdeniz derin su balıklarında yarı otomatik uzman doğrulamalı sayım
+              manuel sayımla <strong>0,96</strong> korelasyon sunar (tam otomatik 0,72–0,90; Frontiers 2025).
             </p>
           </article>
         </div>
 
-        <div class="callout-banner reveal">
-          <div class="callout-content">
-            <h3>Bilimsel Doğrulama İlkesi: “Model Önerir, Uzman Onaylar”</h3>
-            <p>
-              Sistem ham tahminleri doğrudan kesin veri olarak kabul etmek yerine pHash kopya temizliği,
-              kaynak düzeyinde ayrılmış eğitim/doğrulama kümeleri ve dondurulmuş <code>dataset_gold_v1</code> (327 kare)
-              + <code>dataset_gold_v1_ext</code> (300 kare) kıyaslamalarıyla izlenir.
+        <!-- Rekabet ve Alternatif Çözümler Matrisi -->
+        <p class="table-scroll-hint" aria-hidden="true">← Tabloyu yatay kaydırın →</p>
+        <div class="table-wrapper reveal">
+          <table class="data-table compare-matrix">
+            <caption>Sualtı balık izleme yaklaşımlarının teknik ve operasyonel karşılaştırması</caption>
+            <thead>
+              <tr>
+                <th scope="col">Yaklaşım / Sistem</th>
+                <th scope="col">Gerçek Zamanlı Tespit</th>
+                <th scope="col">Çevrimdışı Sualtı</th>
+                <th scope="col">Hızlandırıcı Gereksinimi</th>
+                <th scope="col">Coğrafi Kayıt &amp; GBIF</th>
+                <th scope="col">Açık Kaynak &amp; Maliyet Avantajı</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>FishCam / PlasPi / SuMOS</strong><br><small>Mouy vd. 2020 (PMC9041213)</small></td>
+                <td><span class="cell-no">Hayır (Yalnızca Kayıt)</span></td>
+                <td><span class="cell-yes">Evet</span></td>
+                <td><span class="cell-yes">Yok (Pi tabanlı)</span></td>
+                <td><span class="cell-no">Sonradan Manuel</span></td>
+                <td><span class="cell-warn">Düşük Donanım · Yüksek Manuel İzleme</span></td>
+              </tr>
+              <tr>
+                <td><strong>eDNA Makine Öğrenmesi</strong><br><small>Demertzis &amp; Iliadis 2017</small></td>
+                <td><span class="cell-no">Hayır (Laboratuvar)</span></td>
+                <td><span class="cell-no">Su Örneklemesi</span></td>
+                <td><span class="cell-warn">Lab Altyapısı</span></td>
+                <td><span class="cell-warn">Örnekleme Noktası</span></td>
+                <td><span class="cell-no">Sarf Maliyeti &amp; Gecikmeli Sonuç</span></td>
+              </tr>
+              <tr>
+                <td><strong>Bulut Tabanlı Görsel AI</strong><br><small>Yüzey / Sunucu Çıkarımı</small></td>
+                <td><span class="cell-warn">Yalnızca Bağlantıda</span></td>
+                <td><span class="cell-no">Hayır (RF/LTE Yok)</span></td>
+                <td><span class="cell-no">Bulut GPU &amp; Bant</span></td>
+                <td><span class="cell-warn">Özel Entegrasyon</span></td>
+                <td><span class="cell-no">Sürekli API &amp; İletişim Maliyeti</span></td>
+              </tr>
+              <tr class="is-recommended">
+                <td class="is-highlight"><strong>Bu Sistem (Balon Balığı AI)</strong><br><small>TÜBİTAK 2209-B · Pi 5 CPU</small></td>
+                <td><span class="cell-yes">Evet (ONNX / NCNN)</span></td>
+                <td><span class="cell-yes">Tam Çevrimdışı</span></td>
+                <td><span class="cell-yes">Yok (AI HAT+ $70–110 Atlandı)</span></td>
+                <td><span class="cell-yes">NMEA GPS + SpatiaLite + DarwinCore</span></td>
+                <td><span class="cell-yes">Açık Kaynak · ~10–13 W Tam Sistem</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hero-subtitle" style="max-width: none; margin-top: -0.75rem; margin-bottom: 1.5rem; font-size: 0.84rem;">
+          Literatür notu: Yaptığımız taramada <em>L. sceleratus</em> ve akrabaları için başka görüntü tabanlı gerçek zamanlı
+          tespit çalışması bulunamadı; en yakın görsel benzer çalışma aslan balığı ROV tespiti üzerinedir (Naddaf-Sh vd. 2018).
+        </p>
+
+        <!-- 3 Hedef Alıcı ve Saha Kurulum Segmenti -->
+        <div class="buyer-grid">
+          <article class="buyer-card reveal">
+            <div class="buyer-card-header">
+              <h3 class="buyer-title">Kamu &amp; Kıyı İzleme</h3>
+              <span class="buyer-metric">5–10 m · Haziran</span>
+            </div>
+            <p class="buyer-desc">
+              Bakanlık birimleri ve kıyı belediyeleri için sığ koy üreme dönemlerinde tekrarlanabilir,
+              konum etiketli istilacı tür yoğunluk taraması.
             </p>
-          </div>
-          <a class="btn btn-secondary" href="#benchmarks">ADR-000 Ölçüt Tablosu</a>
+            <ul class="buyer-list">
+              <li>Antalya parça başı alım kayıtlarına bağımsız görsel doğrulama</li>
+              <li>Slack, Discord ve Teams için SSRF-korumalı anlık uyarı</li>
+              <li><code>DASHBOARD_API_TOKEN</code> korumalı saha paneli</li>
+            </ul>
+          </article>
+
+          <article class="buyer-card reveal">
+            <div class="buyer-card-header">
+              <h3 class="buyer-title">ROV &amp; Tekne Platformları</h3>
+              <span class="buyer-metric">~10–13 W · 5 V/5 A</span>
+            </div>
+            <p class="buyer-desc">
+              Harici AI HAT+ ($70–110) eklemeden düşük güç bütçeli sualtı araçlarına doğrudan entegre edilen
+              uç çıkarım ve donanım tetikleme yığını.
+            </p>
+            <ul class="buyer-list">
+              <li>Önerilen optik: Global Shutter IMX296 (1456×1088@60fps, 3,45 µm)</li>
+              <li>1–2 ms sabit pozlama + alüminyum muhafaza ısı yolu uyumu</li>
+              <li>GPIO Pin 17 anlık donanım uyarısı ve NMEA 9600 baud GPS</li>
+            </ul>
+          </article>
+
+          <article class="buyer-card reveal">
+            <div class="buyer-card-header">
+              <h3 class="buyer-title">Deniz Biyolojisi &amp; STK</h3>
+              <span class="buyer-metric">GBIF · OBIS · QGIS</span>
+            </div>
+            <p class="buyer-desc">
+              Araştırma grupları için ham kareden bilimsel standarda kesintisiz veri hattı ve uzman doğrulamalı
+              aktif öğrenme stüdyosu.
+            </p>
+            <ul class="buyer-list">
+              <li>Tek tıkla QGIS GeoJSON, CSV ve DarwinCore Archive (ZIP)</li>
+              <li><code>:5050</code> inceleme, ortam denetimi ve kutu etiketleme arayüzü</li>
+              <li>pHash &amp; SHA-256 izlenebilir, veri sızıntısız değerlendirme</li>
+            </ul>
+          </article>
         </div>
       </div>
     </section>
 
     <!-- ====================================================================
-         4. İnteraktif Tür ve Veri Seti Vitrini
+         4. Veri Mühendisliği, Hedef Türler ve Zor Negatifler
          ==================================================================== -->
     <section id="species" class="section">
       <div class="container">
         <div class="section-header reveal">
-          <span class="eyebrow">Türler &amp; Veri Mühendisliği</span>
-          <h2 class="section-title">İstilacı Türler, Zor Negatifler ve Doğrulanmış Veri Setleri</h2>
+          <span class="eyebrow">Veri Mühendisliği &amp; Türler</span>
+          <h2 class="section-title">İstilacı Türler, Zor Negatifler ve Sızıntısız Veri Mimarisi</h2>
           <p class="section-lead">
-            Tek sınıflı dedektör (<code>nc: 1 · 0: pufferfish</code>), aynı Akdeniz habitatını paylaşan
-            hedef dışı balıklarla karıştırılmayacak şekilde iNaturalist ve IMEDEA Mallorca verileriyle eğitildi.
+            Tek sınıflı dedektör (<code>nc: 1 · 0: pufferfish</code>), aynı Akdeniz habitatını paylaşan hedef dışı
+            balıklarla karıştırılmayacak şekilde iNaturalist ve IMEDEA Mallorca dış negatif setleriyle sertleştirildi.
           </p>
         </div>
 
@@ -345,18 +523,21 @@
           <!-- Kart 1: Lagocephalus sceleratus -->
           <article class="species-card reveal" data-category="invasive">
             <div class="species-media">
-              <span class="badge badge-coral species-badge">Pozitif · 0: pufferfish</span>
               <img
-                src="./assets/kapak.jpg"
-                alt="Sualtı ortamında benekli balon balığı Lagocephalus sceleratus tespit kutusu"
+                src="./assets/kapak.webp"
+                alt="Sualtı ortamında benekli balon balığı Lagocephalus sceleratus 0,93 tespit kutusu"
+                width="614"
+                height="768"
                 loading="lazy"
+                decoding="async"
               >
             </div>
             <div class="species-body">
+              <span class="badge badge-coral species-badge">Pozitif · 0: pufferfish</span>
               <div class="species-latin">Lagocephalus sceleratus</div>
               <h3 class="species-title">Benekli Balon Balığı</h3>
               <p class="species-desc">
-                Doğu Akdeniz'de en yaygın istilacı Lesepsiyen tür. Sırtındaki gümüşi şerit ve koyu benekler
+                Doğu Akdeniz’de en yaygın istilacı Lesepsiyen tür. Sırtındaki gümüşi şerit ve koyu benekler
                 su altı ve su üstü çekimlerinde ana pozitif hedefi oluşturur.
               </p>
               <div class="species-stats">
@@ -366,7 +547,7 @@
                 </div>
                 <div class="species-stat-item">
                   <span>Test Güven Eşiği</span>
-                  <strong>conf ≥ 0.50 / 0.60</strong>
+                  <strong>conf ≥ 0,50 / 0,60</strong>
                 </div>
               </div>
               <div class="class-pill-group">
@@ -380,19 +561,22 @@
           <!-- Kart 2: Diğer Hedef Balon Balığı Türleri -->
           <article class="species-card reveal" data-category="invasive">
             <div class="species-media">
-              <span class="badge badge-coral species-badge">Pozitif · Küçük &amp; Orta</span>
               <img
-                src="./assets/tespit_ornekleri.jpg"
+                src="./assets/tespit_ornekleri.webp"
                 alt="Farklı sualtı zeminlerinde tespit örnekleri ile kaçırılan ve yanlış alarm verilen kareler"
+                width="1280"
+                height="640"
                 loading="lazy"
+                decoding="async"
               >
             </div>
             <div class="species-body">
+              <span class="badge badge-coral species-badge">Pozitif · Küçük &amp; Orta</span>
               <div class="species-latin">L. suezensis · L. guentheri · T. flavimaculosus</div>
               <h3 class="species-title">Diğer İstilacı Balon Balıkları</h3>
               <p class="species-desc">
                 <em>ADR-001</em> kapsam kararı gereği dört Lesepsiyen tür tek sınıfta birleştirildi.
-                5–11 cm boyundaki <em>T. flavimaculosus</em> küçük nesne recall ölçütünü (K2) belirler.
+                5–9 cm (maks. 11 cm) boyundaki <em>T. flavimaculosus</em> küçük nesne recall ölçütünü (K2) belirler.
               </p>
               <div class="species-stats">
                 <div class="species-stat-item">
@@ -412,22 +596,25 @@
             </div>
           </article>
 
-          <!-- Kart 3: iNaturalist Zor Negatif Türler -->
+          <!-- Kart 3: iNaturalist Zor Negatif Türler (4:1 geniş şerit — media-contain) -->
           <article class="species-card reveal" data-category="hard-negative">
-            <div class="species-media">
-              <span class="badge badge-amber species-badge">Zor Negatif · iNaturalist</span>
+            <div class="species-media media-contain">
               <img
-                src="./assets/zor_negatif_turler.jpg"
+                src="./assets/zor_negatif_turler.webp"
                 alt="Zor negatif Akdeniz türleri: Siganus luridus, Siganus rivulatus ve Sparisoma cretense"
+                width="1592"
+                height="400"
                 loading="lazy"
+                decoding="async"
               >
             </div>
             <div class="species-body">
+              <span class="badge badge-amber species-badge">Zor Negatif · iNaturalist</span>
               <div class="species-latin">Siganus luridus · S. rivulatus · Sparisoma cretense</div>
               <h3 class="species-title">Aynı Habitattaki Hedef Dışı Türler</h3>
               <p class="species-desc">
-                Sokar ve ıskaroz türleri sualtı rengi ve gövde formu nedeniyle balon balığıyla en sık
-                karışan türlerdir. E2-1 ve E2-3 eğitimlerine 296, altın sete 100 zor negatif eklendi.
+                Sokar ve ıskaroz türleri gövde formu ve zemin uyumu nedeniyle balon balığıyla en sık
+                karışan türlerdir. E2-1/E2-3 eğitimlerine 296, altın sete 100 zor negatif eklendi.
               </p>
               <div class="species-stats">
                 <div class="species-stat-item">
@@ -447,23 +634,26 @@
             </div>
           </article>
 
-          <!-- Kart 4: IMEDEA Mallorca Dış Negatif Seti -->
+          <!-- Kart 4: IMEDEA Mallorca Dış Negatif Seti (geniş şerit — media-contain) -->
           <article class="species-card reveal" data-category="hard-negative">
-            <div class="species-media">
-              <span class="badge badge-amber species-badge">Dış Negatif · Zenodo 7534425</span>
+            <div class="species-media media-contain">
               <img
-                src="./assets/zor_negatif_once_sonra.jpg"
+                src="./assets/zor_negatif_once_sonra.webp"
                 alt="IMEDEA dış negatif seti üzerinde temel eğitim ve E2-3 eğitimi sonrası yanlış alarm karşılaştırması"
+                width="1280"
+                height="535"
                 loading="lazy"
+                decoding="async"
               >
             </div>
             <div class="species-body">
+              <span class="badge badge-amber species-badge">Dış Negatif · Zenodo 7534425</span>
               <div class="species-latin">IMEDEA Mallorca · DEEPECOMAR (CC BY 4.0)</div>
               <h3 class="species-title">Hiç Görülmemiş 25 Akdeniz Türü</h3>
-              <p class="impact-desc species-desc">
-                <em>Chromis chromis</em>, <em>Diplodus</em> türleri, <em>Sarpa salpa</em>, <em>Coris julis</em>
-                gibi 25 Akdeniz türünü içeren 300 pHash-ayrık görüntü (<code>gold_v1_ext</code>).
-                E2-3 sonrası dış alarm oranı @0.5'te %32,0'dan %2,7'ye düştü.
+              <p class="species-desc">
+                <em>Chromis chromis</em>, <em>Diplodus</em> türleri, <em>Sarpa salpa</em> ve <em>Coris julis</em>
+                dahil 25 Akdeniz türünü içeren 300 pHash-ayrık görüntü (<code>gold_v1_ext</code>).
+                E2-3 sonrası dış alarm @0,5 eşiğinde %32,0’dan %2,7’ye düştü.
               </p>
               <div class="species-stats">
                 <div class="species-stat-item">
@@ -471,7 +661,7 @@
                   <strong>300 görüntü (297 balık)</strong>
                 </div>
                 <div class="species-stat-item">
-                  <span>Dış Alarm (@0.5)</span>
+                  <span>Dış Alarm (@0,5)</span>
                   <strong>%32,0 → %2,7</strong>
                 </div>
               </div>
@@ -486,19 +676,22 @@
           <!-- Kart 5: Roboflow v1 + Ortam ve pHash Denetimi -->
           <article class="species-card reveal" data-category="dataset">
             <div class="species-media">
-              <span class="badge badge-cyan species-badge">Veri Denetimi · Roboflow v1</span>
               <img
-                src="./assets/veri_kirliligi.jpg"
+                src="./assets/veri_kirliligi.webp"
                 alt="Test ve eğitim setlerindeki kara, su üstü ve su altı ortam dağılımı örnekleri"
+                width="1280"
+                height="850"
                 loading="lazy"
+                decoding="async"
               >
             </div>
             <div class="species-body">
+              <span class="badge badge-cyan species-badge">Veri Denetimi · Roboflow v1</span>
               <div class="species-latin">dataset/ · dataset_inat/ · CLIP &amp; pHash</div>
               <h3 class="species-title">Ortam Dağılımı ve Kopya Temizliği</h3>
               <p class="species-desc">
                 Roboflow v1 setinde (1.879 train, 197 valid, 83 test) <code>test</code> karesinin
-                32'si kara, 29'u su üstü, yalnızca 22'si su altıydı. Ayrıca iNaturalist içinde
+                32’si kara, 29’u su üstü, yalnızca 22’si su altıydı. iNaturalist içinde
                 452 görüntünün <code>dataset/</code> ile pHash kopyası olduğu saptandı.
               </p>
               <div class="species-stats">
@@ -519,17 +712,20 @@
             </div>
           </article>
 
-          <!-- Kart 6: Faz 2 dataset_v2 ve Bulanıklık Seti -->
+          <!-- Kart 6: Faz 2 dataset_v2 ve Bulanıklık Seti (4:1 geniş şerit — media-contain) -->
           <article class="species-card reveal" data-category="dataset">
-            <div class="species-media">
-              <span class="badge badge-teal species-badge">Faz 2 Tarifi · dataset_v2</span>
+            <div class="species-media media-contain">
               <img
-                src="./assets/bulaniklik_once_sonra.jpg"
+                src="./assets/bulaniklik_once_sonra.webp"
                 alt="Hareket bulanıklığı kopyaları üzerinde E2-0 temel ve E2-3 tam veri tarifinin karşılaştırması"
+                width="1520"
+                height="370"
                 loading="lazy"
+                decoding="async"
               >
             </div>
             <div class="species-body">
+              <span class="badge badge-teal species-badge">Faz 2 Tarifi · dataset_v2</span>
               <div class="species-latin">E2-0 → E2-3_full · gold_v1_blur</div>
               <h3 class="species-title">Kaynak-Ayrık Bölme ve Bulanıklık Seti</h3>
               <p class="species-desc">
@@ -563,17 +759,17 @@
     </section>
 
     <!-- ====================================================================
-         5. Model, Donanım ve ADR-000 Benchmark Karşılaştırmaları
+         5. Performans, Benchmarklar ve ADR-000 Kabul Ölçütleri
          ==================================================================== -->
     <section id="benchmarks" class="section section-alt">
       <div class="container">
         <div class="benchmark-header-bar">
           <div class="section-header" style="margin-bottom: 0;">
             <span class="eyebrow">Doğrulanmış Ölçümler</span>
-            <h2 class="section-title">PC vs Raspberry Pi 5 ve Deney Karşılaştırmaları</h2>
+            <h2 class="section-title">PC vs Raspberry Pi 5 ve Deney Performansı</h2>
             <p class="section-lead">
               Tüm gecikme, sıcaklık, mAP@50 ve yanlış alarm verileri depo içindeki
-              <code>benchmark_pi5/</code>, <code>benchmark_pc/</code> ve <code>experiments/</code> raporlarından alınmıştır.
+              <code>benchmark_pi5/</code>, <code>benchmark_pc/</code> ve <code>experiments/</code> çıktılarından derlenmiştir.
             </p>
           </div>
 
@@ -585,49 +781,139 @@
           </div>
         </div>
 
-        <!-- Sekme 1: Raspberry Pi 5 (başlangıçta aktif) -->
+        <!-- Sekme 1: Raspberry Pi 5 (No-JS dostu: raw HTML'de hidden yok) -->
         <div id="panel-pi5" class="tab-panel is-active" role="tabpanel" data-panel="pi5" aria-labelledby="tab-btn-pi5">
           <div class="comparison-cards">
             <article class="compare-card compare-card-highlight">
               <div class="compare-label">Pi 5 NCNN FP16 (YOLO11n)</div>
               <div class="compare-value">~14 FPS</div>
-              <div class="compare-delta">70 ms uçtan uca · K5 (≥10 FPS) geçti</div>
+              <div class="compare-delta">70 ms uçtan uca · K5 (≥ 10 FPS) hedefini geçer (Faz 3.4 JSON bekliyor)</div>
             </article>
             <article class="compare-card">
-              <div class="compare-label">Pi 5 ONNX INT8 (YOLO11s)</div>
+              <div class="compare-label">Yayındaki ONNX INT8 (YOLO11s)</div>
               <div class="compare-value">5,85 FPS</div>
-              <div class="compare-delta">171,07 ms ort. (p95: 171,66 ms)</div>
+              <div class="compare-delta">171,07 ms ort. · p95 171,66 ms · 12,53 MB</div>
             </article>
             <article class="compare-card">
               <div class="compare-label">Pi 5 ONNX FP32 (YOLO11s)</div>
               <div class="compare-value">2,76 FPS</div>
-              <div class="compare-delta">362,13 ms · INT8'den 2,1× yavaş</div>
+              <div class="compare-delta">362,13 ms ort. · INT8’den 2,1× yavaş</div>
             </article>
             <article class="compare-card">
-              <div class="compare-label">Isıl Kararlılık (Active Cooler)</div>
+              <div class="compare-label">Isıl Test (Active Cooler)</div>
               <div class="compare-value">0x0 Throttle</div>
-              <div class="compare-delta">INT8: 53,45 → 63,90 °C (200 kare)</div>
+              <div class="compare-delta">INT8: 53,45 → 63,90 °C (200 kare; 1 saat Faz 3’te)</div>
             </article>
           </div>
 
+          <!-- Inline SVG Benchmark Grafikleri (K5 100 ms Kesikli Hedef Çizgisi) -->
+          <div class="chart-grid" style="margin-bottom: 1.5rem;">
+            <div class="bench-svg-card">
+              <h3 class="chart-title">Pi 5 Gecikme Kıyaslaması &amp; K5 (100 ms) Sınırı</h3>
+              <p class="chart-subtitle">Raspberry Pi 5 Model B Rev 1.1 · 640×640 · Daha kısa çubuk daha hızlıdır (ms)</p>
+              <svg class="bench-svg" viewBox="0 0 540 215" role="img" aria-label="Raspberry Pi 5 çıkarım gecikme grafiği: YOLO11n NCNN 70 ms, YOLO11s NCNN 162 ms, s_v2 INT8 ONNX 171,1 ms, s_v2 FP32 ONNX 362,1 ms ve 100 ms K5 kesikli hedef çizgisi">
+                <!-- Izgara çizgileri (x = 148..488 => 340px = 400 ms, 0.85 px/ms) -->
+                <line class="bench-axis" x1="148" y1="28" x2="148" y2="178"></line>
+                <line class="bench-grid" x1="233" y1="28" x2="233" y2="178"></line>
+                <line class="bench-grid" x1="318" y1="28" x2="318" y2="178"></line>
+                <line class="bench-grid" x1="403" y1="28" x2="403" y2="178"></line>
+                <line class="bench-grid" x1="488" y1="28" x2="488" y2="178"></line>
+                <line class="bench-axis" x1="148" y1="178" x2="488" y2="178"></line>
+
+                <!-- K5 100 ms (10 FPS) kesikli hedef çizgisi (metinlerin arkasında) -->
+                <line class="bench-target-line" x1="233" y1="22" x2="233" y2="180"></line>
+                <text class="bench-target-label" x="237" y="18">K5 Hedef: 100 ms (10 FPS)</text>
+
+                <!-- Eksen değerleri -->
+                <text class="bench-label" x="148" y="196" text-anchor="middle">0</text>
+                <text class="bench-label" x="233" y="196" text-anchor="middle">100 ms</text>
+                <text class="bench-label" x="318" y="196" text-anchor="middle">200 ms</text>
+                <text class="bench-label" x="403" y="196" text-anchor="middle">300 ms</text>
+                <text class="bench-label" x="488" y="196" text-anchor="middle">400 ms</text>
+
+                <!-- Çubuk 1: YOLO11n NCNN 70 ms (60px) -->
+                <text class="bench-label" x="140" y="54" text-anchor="end">YOLO11n NCNN</text>
+                <rect class="bench-bar" x="148" y="38" width="60" height="22" rx="4"></rect>
+                <text class="bench-val" x="215" y="53" paint-order="stroke" stroke="var(--bg-surface)" stroke-width="4" stroke-linejoin="round">70 ms (~14 FPS)</text>
+
+                <!-- Çubuk 2: YOLO11s NCNN 162 ms (138px) -->
+                <text class="bench-label" x="140" y="90" text-anchor="end">YOLO11s NCNN</text>
+                <rect class="bench-bar bench-bar-cyan" x="148" y="74" width="138" height="22" rx="4"></rect>
+                <text class="bench-val" x="293" y="89">162 ms (~6 FPS)</text>
+
+                <!-- Çubuk 3: s_v2 INT8 ONNX 171,1 ms (145px) -->
+                <text class="bench-label" x="140" y="126" text-anchor="end">s_v2 INT8 ONNX</text>
+                <rect class="bench-bar bench-bar-cyan" x="148" y="110" width="145" height="22" rx="4"></rect>
+                <text class="bench-val" x="300" y="125">171,1 ms (5,85 FPS)</text>
+
+                <!-- Çubuk 4: s_v2 FP32 ONNX 362,1 ms (308px) -->
+                <text class="bench-label" x="140" y="162" text-anchor="end">s_v2 FP32 ONNX</text>
+                <rect class="bench-bar bench-bar-amber" x="148" y="146" width="308" height="22" rx="4"></rect>
+                <text class="bench-val" x="462" y="161">362,1 ms</text>
+              </svg>
+            </div>
+
+            <div class="bench-svg-card">
+              <h3 class="chart-title">Yayındaki INT8 Zaman Kırılımı &amp; Ağır Adaylar</h3>
+              <p class="chart-subtitle"><code>s_v2_int8</code> (171,07 ms): ön işleme 2,01 ms · çıkarım 167,91 ms · NMS 1,15 ms</p>
+              <svg class="bench-svg" viewBox="0 0 540 215" role="img" aria-label="Raspberry Pi 5 ağır model gecikme kıyaslaması: cand_s_int8 173,3 ms, cand_m_int8 374,8 ms, cand_m FP32 998,5 ms ve cand_m FP16 1.373,4 ms">
+                <!-- Izgara (x = 148..488 => 340px = 1600 ms, 0.2125 px/ms) -->
+                <line class="bench-axis" x1="148" y1="28" x2="148" y2="178"></line>
+                <line class="bench-grid" x1="233" y1="28" x2="233" y2="178"></line>
+                <line class="bench-grid" x1="318" y1="28" x2="318" y2="178"></line>
+                <line class="bench-grid" x1="403" y1="28" x2="403" y2="178"></line>
+                <line class="bench-grid" x1="488" y1="28" x2="488" y2="178"></line>
+                <line class="bench-axis" x1="148" y1="178" x2="488" y2="178"></line>
+
+                <text class="bench-label" x="148" y="196" text-anchor="middle">0</text>
+                <text class="bench-label" x="233" y="196" text-anchor="middle">400 ms</text>
+                <text class="bench-label" x="318" y="196" text-anchor="middle">800 ms</text>
+                <text class="bench-label" x="403" y="196" text-anchor="middle">1200 ms</text>
+                <text class="bench-label" x="488" y="196" text-anchor="middle">1600 ms</text>
+
+                <!-- cand_s_int8: 173,3 ms (37px) -->
+                <text class="bench-label" x="140" y="54" text-anchor="end">cand_s INT8</text>
+                <rect class="bench-bar" x="148" y="38" width="37" height="22" rx="4"></rect>
+                <text class="bench-val" x="192" y="53">173,3 ms (5,77 FPS)</text>
+
+                <!-- cand_m_int8: 374,8 ms (80px) -->
+                <text class="bench-label" x="140" y="90" text-anchor="end">cand_m INT8</text>
+                <rect class="bench-bar bench-bar-cyan" x="148" y="74" width="80" height="22" rx="4"></rect>
+                <text class="bench-val" x="235" y="89">374,8 ms (2,67 FPS)</text>
+
+                <!-- cand_m FP32: 998,5 ms (212px) -->
+                <text class="bench-label" x="140" y="126" text-anchor="end">cand_m FP32</text>
+                <rect class="bench-bar bench-bar-amber" x="148" y="110" width="212" height="22" rx="4"></rect>
+                <text class="bench-val" x="367" y="125">998,5 ms (1,00 FPS)</text>
+
+                <!-- cand_m FP16: 1373,4 ms (292px) -->
+                <text class="bench-label" x="140" y="162" text-anchor="end">cand_m FP16</text>
+                <rect class="bench-bar bench-bar-coral" x="148" y="146" width="292" height="22" rx="4"></rect>
+                <text class="bench-val" x="447" y="161">1.373,4 ms</text>
+              </svg>
+            </div>
+          </div>
+
+          <p class="table-scroll-hint" aria-hidden="true">← Tabloyu yatay kaydırın →</p>
           <div class="table-wrapper">
             <table class="data-table">
+              <caption>Raspberry Pi 5 Model B Rev 1.1 (16 GB RAM, Debian 13, ONNX Runtime 1.31.0) cihaz-içi çıkarım ve sıcaklık ölçümleri</caption>
               <thead>
                 <tr>
-                  <th>Model &amp; Çalışma Zamanı (Pi 5)</th>
-                  <th>Boyut</th>
-                  <th>Ortalama Gecikme</th>
-                  <th>p95 / Not</th>
-                  <th>Hız (FPS)</th>
-                  <th>Sıcaklık / Test mAP@50</th>
+                  <th scope="col">Model &amp; Çalışma Zamanı (Pi 5)</th>
+                  <th scope="col">Boyut</th>
+                  <th scope="col">Ortalama Gecikme</th>
+                  <th scope="col">p95 / Ölçüm Kaynağı</th>
+                  <th scope="col">Hız (FPS)</th>
+                  <th scope="col">Sıcaklık / Test mAP@50</th>
                 </tr>
               </thead>
               <tbody>
                 <tr class="is-recommended">
                   <td><code>YOLO11n NCNN (FP16, 640 px)</code></td>
                   <td class="metric-cell">NCNN</td>
-                  <td class="metric-cell">70 ms</td>
-                  <td class="metric-cell">Uçtan uca (rapor)</td>
+                  <td class="metric-cell">70,0 ms</td>
+                  <td class="metric-cell">Rapor ölçümü (Faz 3.4 JSON bekliyor)</td>
                   <td class="metric-cell">~14,0 FPS</td>
                   <td class="metric-cell">test mAP@50: 0,7382 · 0/33 alarm</td>
                 </tr>
@@ -635,7 +921,7 @@
                   <td><code>pufferfish_s_v2_int8.onnx</code></td>
                   <td class="metric-cell">12,53 MB</td>
                   <td class="metric-cell">171,07 ms</td>
-                  <td class="metric-cell">p95 171,66 ms</td>
+                  <td class="metric-cell">p95 171,66 ms (200 kare)</td>
                   <td class="metric-cell">5,85 FPS</td>
                   <td class="metric-cell">53,45→63,90 °C · mAP 0,7452 (0/33)</td>
                 </tr>
@@ -650,7 +936,7 @@
                 <tr>
                   <td><code>YOLO11s NCNN (FP16, 640 px)</code></td>
                   <td class="metric-cell">NCNN</td>
-                  <td class="metric-cell">162 ms</td>
+                  <td class="metric-cell">162,0 ms</td>
                   <td class="metric-cell">Rapor ölçümü</td>
                   <td class="metric-cell">~6,0 FPS</td>
                   <td class="metric-cell">test mAP@50: 0,7494 · 0/33 alarm</td>
@@ -683,104 +969,25 @@
                   <td><code>cand_m.onnx</code> (FP32)</td>
                   <td class="metric-cell">80,43 MB</td>
                   <td class="metric-cell">998,49 ms</td>
-                  <td class="metric-cell">p95 1001,23 ms</td>
+                  <td class="metric-cell">p95 1.001,23 ms</td>
                   <td class="metric-cell">1,00 FPS</td>
                   <td class="metric-cell">58,40→75,45 °C · throttled=0x0</td>
                 </tr>
                 <tr>
                   <td><code>cand_m_fp16.onnx</code></td>
                   <td class="metric-cell">40,28 MB</td>
-                  <td class="metric-cell">1373,36 ms</td>
-                  <td class="metric-cell">p95 1393,58 ms</td>
+                  <td class="metric-cell">1.373,36 ms</td>
+                  <td class="metric-cell">p95 1.393,58 ms</td>
                   <td class="metric-cell">0,73 FPS</td>
-                  <td class="metric-cell">58,40→72,70 °C (FP32'den %38 yavaş)</td>
+                  <td class="metric-cell">58,40→72,70 °C (FP32’den %38 yavaş)</td>
                 </tr>
               </tbody>
             </table>
           </div>
-
-          <div class="chart-grid">
-            <div class="chart-card">
-              <h3 class="chart-title">Raspberry Pi 5 Çıkarım Hızı (FPS)</h3>
-              <p class="chart-subtitle">Pi 5 Model B Rev 1.1 · 640×640 · 20 ısınma + 200 test karesi (NCNN değerleri rapor ölçümüdür)</p>
-              <div class="bar-chart">
-                <div class="bar-row">
-                  <span class="bar-label">YOLO11n NCNN</span>
-                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 100%"></div></div>
-                  <span class="bar-value">~14,0 FPS</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">YOLO11s NCNN</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-cyan" style="--bar-width: 43%"></div></div>
-                  <span class="bar-value">~6,0 FPS</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">s_v2 ONNX INT8</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-cyan" style="--bar-width: 42%"></div></div>
-                  <span class="bar-value">5,85 FPS</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">s_v2 ONNX FP32</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-amber" style="--bar-width: 20%"></div></div>
-                  <span class="bar-value">2,76 FPS</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">cand_m INT8</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-amber" style="--bar-width: 19%"></div></div>
-                  <span class="bar-value">2,67 FPS</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">cand_m FP16</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-coral" style="--bar-width: 5%"></div></div>
-                  <span class="bar-value">0,73 FPS</span>
-                </div>
-              </div>
-              <div class="chart-legend">
-                <span class="legend-item"><span class="legend-swatch"></span> K5 hedefi (≥10 FPS) karşılandı</span>
-                <span class="legend-item"><span class="legend-swatch" style="background: var(--accent-cyan);"></span> ONNX INT8 yayındaki temel</span>
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <h3 class="chart-title">Pi 5 İşlem Süresi Dağılımı &amp; Gecikme (ms)</h3>
-              <p class="chart-subtitle"><code>s_int8</code> toplam 171,07 ms: ön işleme 2,01 ms · çıkarım 167,91 ms · NMS 1,15 ms</p>
-              <div class="bar-chart">
-                <div class="bar-row">
-                  <span class="bar-label">YOLO11n NCNN</span>
-                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 7%"></div></div>
-                  <span class="bar-value">70,0 ms</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">YOLO11s NCNN</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-cyan" style="--bar-width: 16%"></div></div>
-                  <span class="bar-value">162,0 ms</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">s_v2 ONNX INT8</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-cyan" style="--bar-width: 17%"></div></div>
-                  <span class="bar-value">171,1 ms</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">s_v2 ONNX FP32</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-amber" style="--bar-width: 36%"></div></div>
-                  <span class="bar-value">362,1 ms</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">cand_m FP32</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-coral" style="--bar-width: 100%"></div></div>
-                  <span class="bar-value">998,5 ms</span>
-                </div>
-              </div>
-              <div class="chart-legend">
-                <span class="legend-item"><span class="legend-swatch"></span> K5 p95 ≤ 100 ms sınırı</span>
-                <span class="legend-item"><span class="legend-swatch" style="background: var(--accent-coral);"></span> FP16 ARM CPU üzerinde yavaşlama</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Sekme 2: PC CPU & GPU -->
-        <div id="panel-pc" class="tab-panel" role="tabpanel" data-panel="pc" aria-labelledby="tab-btn-pc" hidden>
+        <div id="panel-pc" class="tab-panel" role="tabpanel" data-panel="pc" aria-labelledby="tab-btn-pc">
           <div class="comparison-cards">
             <article class="compare-card compare-card-highlight">
               <div class="compare-label">PC PyTorch GPU (RTX 3060)</div>
@@ -788,7 +995,7 @@
               <div class="compare-delta">6 GB Laptop GPU · Eğitim &amp; hız referansı</div>
             </article>
             <article class="compare-card">
-              <div class="compare-label">PC CPU ONNX INT8</div>
+              <div class="compare-label">PC CPU ONNX INT8 (i7-11800H)</div>
               <div class="compare-value">17,58 FPS</div>
               <div class="compare-delta">56,89 ms test · 54,01 ms (18,51 FPS) valid</div>
             </article>
@@ -804,16 +1011,18 @@
             </article>
           </div>
 
+          <p class="table-scroll-hint" aria-hidden="true">← Tabloyu yatay kaydırın →</p>
           <div class="table-wrapper">
             <table class="data-table">
+              <caption>PC (Windows 11, Intel Core i7-11800H, ONNX Runtime 1.24.4) model boyutu, hassasiyet ve çözünürlük ablasyonu</caption>
               <thead>
                 <tr>
-                  <th>Model / Yapılandırma (PC)</th>
-                  <th>Boyut</th>
-                  <th>test mAP@50</th>
-                  <th>test mAP@50-95</th>
-                  <th>Recall / Precision / Doğrulama</th>
-                  <th>CPU Gecikme / Not</th>
+                  <th scope="col">Model / Yapılandırma (PC)</th>
+                  <th scope="col">Boyut</th>
+                  <th scope="col">test mAP@50</th>
+                  <th scope="col">test mAP@50-95</th>
+                  <th scope="col">Recall / Precision / Doğrulama</th>
+                  <th scope="col">CPU Gecikme / Not</th>
                 </tr>
               </thead>
               <tbody>
@@ -822,7 +1031,7 @@
                   <td class="metric-cell">12,53 MB</td>
                   <td class="metric-cell">%75,38</td>
                   <td class="metric-cell">%58,20</td>
-                  <td class="metric-cell">0/33 boş sahne alarmı (conf 0.60)</td>
+                  <td class="metric-cell">0/33 boş sahne alarmı (conf 0,60)</td>
                   <td class="metric-cell">s_v2_int8 CPU: 56,89 ms (17,58 FPS)</td>
                 </tr>
                 <tr>
@@ -830,7 +1039,7 @@
                   <td class="metric-cell">19,02 MB</td>
                   <td class="metric-cell">%75,92</td>
                   <td class="metric-cell">%57,93</td>
-                  <td class="metric-cell">0/33 boş sahne alarmı (conf 0.60)</td>
+                  <td class="metric-cell">0/33 boş sahne alarmı (conf 0,60)</td>
                   <td class="metric-cell">FP16 aday · CPU ölçümü yok</td>
                 </tr>
                 <tr>
@@ -838,7 +1047,7 @@
                   <td class="metric-cell">37,93 MB</td>
                   <td class="metric-cell">%75,92</td>
                   <td class="metric-cell">%57,87</td>
-                  <td class="metric-cell">0/33 boş sahne alarmı (conf 0.60)</td>
+                  <td class="metric-cell">0/33 boş sahne alarmı (conf 0,60)</td>
                   <td class="metric-cell">s_v2 FP32 CPU: 98,30 ms (10,17 FPS)</td>
                 </tr>
                 <tr>
@@ -871,7 +1080,7 @@
                   <td class="metric-cell">%63,12</td>
                   <td class="metric-cell">—</td>
                   <td class="metric-cell">R %56,12 / P %74,60</td>
-                  <td class="metric-cell">640 px modelden -12,12 puan</td>
+                  <td class="metric-cell">640 px modelden −12,12 puan</td>
                 </tr>
               </tbody>
             </table>
@@ -879,35 +1088,8 @@
 
           <div class="chart-grid">
             <div class="chart-card">
-              <h3 class="chart-title">PC CPU Çıkarım Hızı (Intel Core i7-11800H)</h3>
-              <p class="chart-subtitle"><code>pufferfish_s_v2</code> · 83 test görüntüsü · 15 ısınma · <code>CPUExecutionProvider</code></p>
-              <div class="bar-chart">
-                <div class="bar-row">
-                  <span class="bar-label">ONNX INT8 (valid)</span>
-                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 100%"></div></div>
-                  <span class="bar-value">18,51 FPS</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">ONNX INT8 (test)</span>
-                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 95%"></div></div>
-                  <span class="bar-value">17,58 FPS</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">ONNX FP32 (test)</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-cyan" style="--bar-width: 55%"></div></div>
-                  <span class="bar-value">10,17 FPS</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">PyTorch .pt (test)</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-amber" style="--bar-width: 46%"></div></div>
-                  <span class="bar-value">8,44 FPS</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <h3 class="chart-title">CLAHE ve Çözünürlük Ablasyonu (test F1 / mAP@50)</h3>
-              <p class="chart-subtitle"><code>YOLO11s INT8</code> @ conf 0.60 için CLAHE kapatma ve 640 px kararı</p>
+              <h3 class="chart-title">CLAHE Kapatma Kararı (YOLO11s INT8 @ conf 0,60)</h3>
+              <p class="chart-subtitle">CLAHE açıldığında test F1 −6,4 puan düşer ve boş sahne alarmı 0/33 → 2/33’e çıkar</p>
               <div class="bar-chart">
                 <div class="bar-row">
                   <span class="bar-label">CLAHE Kapalı (valid F1)</span>
@@ -929,10 +1111,22 @@
                   <div class="bar-track"><div class="bar-fill bar-fill-coral" style="--bar-width: 68%"></div></div>
                   <span class="bar-value">%68,2</span>
                 </div>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <h3 class="chart-title">Giriş Çözünürlüğü Ablasyonu (test mAP@50)</h3>
+              <p class="chart-subtitle">640 px (batch 8) vs 960 px (<code>v2_s960</code>, batch 4) — 640 px açık ara önde</p>
+              <div class="bar-chart">
                 <div class="bar-row">
-                  <span class="bar-label">640 px vs 960 px mAP</span>
+                  <span class="bar-label">YOLO11s 640 px</span>
+                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 75%"></div></div>
+                  <span class="bar-value">%75,24</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-label">v2_s960 (960 px)</span>
                   <div class="bar-track"><div class="bar-fill bar-fill-coral" style="--bar-width: 63%"></div></div>
-                  <span class="bar-value">%75,2 → %63,1</span>
+                  <span class="bar-value">%63,12</span>
                 </div>
               </div>
             </div>
@@ -940,40 +1134,42 @@
         </div>
 
         <!-- Sekme 3: E1 / E2 / E3 Deneyleri -->
-        <div id="panel-experiments" class="tab-panel" role="tabpanel" data-panel="experiments" aria-labelledby="tab-btn-experiments" hidden>
+        <div id="panel-experiments" class="tab-panel" role="tabpanel" data-panel="experiments" aria-labelledby="tab-btn-experiments">
           <div class="comparison-cards">
             <article class="compare-card">
-              <div class="compare-label">E1-a Başlangıç (s_v2_int8 @0.6)</div>
-              <div class="compare-value">0.8624</div>
+              <div class="compare-label">E1-a Başlangıç (s_v2_int8 @0,6)</div>
+              <div class="compare-value">%86,2</div>
               <div class="compare-delta">Gold alarm %49,11 · Blur R %45,96</div>
             </article>
             <article class="compare-card compare-card-highlight">
-              <div class="compare-label">E2-3 Full (YOLO11s @0.5)</div>
-              <div class="compare-value">0.9088</div>
-              <div class="compare-delta">R %82,1 · P %92,8 · Ext alarm %2,7</div>
+              <div class="compare-label">E2-3 Full (YOLO11s @0,5)</div>
+              <div class="compare-value">%90,9</div>
+              <div class="compare-delta">R %82,1 · P %92,8 · Dış alarm %2,7</div>
             </article>
             <article class="compare-card compare-card-highlight">
-              <div class="compare-label">E3 YOLO26n (n=3 @0.5)</div>
+              <div class="compare-label">E3 YOLO26n (n=3 @0,5)</div>
               <div class="compare-value">%92,2</div>
-              <div class="compare-delta">R %85,5 · Küçük R %51,3 · Blur %82,0</div>
+              <div class="compare-delta">R %85,5 · Blur %82,0 · Pi 5 hızı Faz 3’te</div>
             </article>
             <article class="compare-card">
-              <div class="compare-label">E3 YOLO11s (n=2 @0.5)</div>
+              <div class="compare-label">E3 YOLO11s (n=2 @0,5)</div>
               <div class="compare-value">%91,1</div>
-              <div class="compare-delta">P %94,5 · Ext alarm %3,5 · Küçük %50,0</div>
+              <div class="compare-delta">P %94,5 · Dış alarm %3,5 · Küçük %50,0</div>
             </article>
           </div>
 
+          <p class="table-scroll-hint" aria-hidden="true">← Tabloyu yatay kaydırın →</p>
           <div class="table-wrapper">
             <table class="data-table">
+              <caption>Faz 1–2 altın set (gold_v1), hareket bulanıklığı (gold_v1_blur) ve IMEDEA dış negatif (gold_v1_ext) deney sonuçları</caption>
               <thead>
                 <tr>
-                  <th>Deney / Mimari</th>
-                  <th>Eşik</th>
-                  <th>Gold Recall</th>
-                  <th>Precision</th>
-                  <th>Gold / Ext Alarm</th>
-                  <th>Blur Recall &amp; mAP@50</th>
+                  <th scope="col">Deney / Mimari</th>
+                  <th scope="col">Eşik</th>
+                  <th scope="col">Gold Recall</th>
+                  <th scope="col">Precision</th>
+                  <th scope="col">Gold / Dış Alarm</th>
+                  <th scope="col">Blur Recall &amp; mAP@50</th>
                 </tr>
               </thead>
               <tbody>
@@ -990,7 +1186,7 @@
                   <td class="metric-cell">0,40</td>
                   <td class="metric-cell">%90,6</td>
                   <td class="metric-cell">%64,0</td>
-                  <td class="metric-cell">%58,9 / %36,7 (@0.5: %32,0)</td>
+                  <td class="metric-cell">%58,9 / %36,7 (@0,5: %32,0)</td>
                   <td class="metric-cell">%49,8 · mAP 0,8579</td>
                 </tr>
                 <tr>
@@ -998,7 +1194,7 @@
                   <td class="metric-cell">0,40</td>
                   <td class="metric-cell">%83,4</td>
                   <td class="metric-cell">%92,9</td>
-                  <td class="metric-cell">%5,4 / %15,0 (@0.5: %10,3)</td>
+                  <td class="metric-cell">%5,4 / %15,0 (@0,5: %10,3)</td>
                   <td class="metric-cell">%51,9 · mAP 0,9150</td>
                 </tr>
                 <tr>
@@ -1006,7 +1202,7 @@
                   <td class="metric-cell">0,40</td>
                   <td class="metric-cell">%90,2</td>
                   <td class="metric-cell">%63,1</td>
-                  <td class="metric-cell">%56,2 / %42,7 (@0.5: %35,0)</td>
+                  <td class="metric-cell">%56,2 / %42,7 (@0,5: %35,0)</td>
                   <td class="metric-cell">%83,0 · mAP 0,8479</td>
                 </tr>
                 <tr class="is-recommended">
@@ -1015,7 +1211,7 @@
                   <td class="metric-cell">%82,1</td>
                   <td class="metric-cell">%92,8</td>
                   <td class="metric-cell">%4,5 / %2,7</td>
-                  <td class="metric-cell">%78,3 (-3,8) · mAP 0,9088</td>
+                  <td class="metric-cell">%78,3 (−3,8) · mAP 0,9088</td>
                 </tr>
                 <tr class="is-recommended">
                   <td><code>E3 YOLO26n</code> (n=3: s0, s1, s2)</td>
@@ -1052,108 +1248,44 @@
               </tbody>
             </table>
           </div>
-
-          <div class="chart-grid">
-            <div class="chart-card">
-              <h3 class="chart-title">E2 Veri Tarifleri: Bulanıklık Dayanıklılığı vs Alarm</h3>
-              <p class="chart-subtitle"><code>gold_blur</code> Recall (%) — E2-3 hem bulanıklığı korur hem dış alarmı düşürür</p>
-              <div class="bar-chart">
-                <div class="bar-row">
-                  <span class="bar-label">E2-2 blur (@0.4)</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-cyan" style="--bar-width: 83%"></div></div>
-                  <span class="bar-value">%83,0</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">E2-3 full (@0.4)</span>
-                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 80%"></div></div>
-                  <span class="bar-value">%80,4</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">E2-3 full (@0.5)</span>
-                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 78%"></div></div>
-                  <span class="bar-value">%78,3</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">E2-1 hardneg (@0.4)</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-amber" style="--bar-width: 52%"></div></div>
-                  <span class="bar-value">%51,9</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">E2-0 base (@0.4)</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-coral" style="--bar-width: 50%"></div></div>
-                  <span class="bar-value">%49,8</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <h3 class="chart-title">E3 Mimariler: Küçük Nesne Recall (n=13, @0.5)</h3>
-              <p class="chart-subtitle"><code>gold_v1</code> küçük nesne (alan &lt; %1) ortalamaları (ADR-000 K2 hedefi: ≥ %50)</p>
-              <div class="bar-chart">
-                <div class="bar-row">
-                  <span class="bar-label">YOLO26n (n=3)</span>
-                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 51%"></div></div>
-                  <span class="bar-value">%51,3</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">YOLO11s (n=2)</span>
-                  <div class="bar-track"><div class="bar-fill" style="--bar-width: 50%"></div></div>
-                  <span class="bar-value">%50,0</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">E2-3 s0 (@0.5)</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-cyan" style="--bar-width: 46%"></div></div>
-                  <span class="bar-value">%46,2</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">YOLO11n (n=3)</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-amber" style="--bar-width: 44%"></div></div>
-                  <span class="bar-value">%43,6</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-label">YOLO11m (n=1)</span>
-                  <div class="bar-track"><div class="bar-fill bar-fill-coral" style="--bar-width: 39%"></div></div>
-                  <span class="bar-value">%38,5</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Sekme 4: ADR-000 Sayısal Kabul Ölçütleri -->
-        <div id="panel-adr000" class="tab-panel" role="tabpanel" data-panel="adr000" aria-labelledby="tab-btn-adr000" hidden>
+        <div id="panel-adr000" class="tab-panel" role="tabpanel" data-panel="adr000" aria-labelledby="tab-btn-adr000">
           <div class="comparison-cards">
             <article class="compare-card compare-card-highlight">
               <div class="compare-label">K1 &amp; K3 Doğruluk Kapısı</div>
               <div class="compare-value">%85,5 / %94,1</div>
               <div class="compare-delta">YOLO26n · Hedef R ≥ %80, P ≥ %70</div>
             </article>
-            <article class="compare-card compare-card-highlight">
-              <div class="compare-label">K2 Küçük Nesne Recall</div>
-              <div class="compare-value">%51,3</div>
-              <div class="compare-delta">YOLO26n (n=3) · Hedef ≥ %50</div>
+            <article class="compare-card">
+              <div class="compare-label">K2 Küçük Nesne (n=13)</div>
+              <div class="compare-value">%51,3 ± 8,9</div>
+              <div class="compare-delta">Örneklem küçük (n=13); tek balık ~7,7 puan etkiler</div>
             </article>
             <article class="compare-card compare-card-highlight">
               <div class="compare-label">K4 Yanlış Alarm Sınırı</div>
               <div class="compare-value">%2,7 – %4,5</div>
-              <div class="compare-delta">E2-3 @0.5 · Hedef ≤ %5</div>
+              <div class="compare-delta">E2-3 @0,5 · Hedef ≤ %5 geçti</div>
             </article>
             <article class="compare-card">
-              <div class="compare-label">K5 Pi 5 Gerçek Zamanlı Hız</div>
-              <div class="compare-value">~14 FPS</div>
-              <div class="compare-delta">YOLO11n NCNN 70 ms · Hedef ≥ 10 FPS</div>
+              <div class="compare-label">K5 &amp; K6 Faz 3 Kapıları</div>
+              <div class="compare-value">NCNN / 1 Saat</div>
+              <div class="compare-delta">NCNN JSON (Faz 3.4) ve 1 saatlik termal test açık</div>
             </article>
           </div>
 
+          <p class="table-scroll-hint" aria-hidden="true">← Tabloyu yatay kaydırın →</p>
           <div class="table-wrapper">
             <table class="data-table">
+              <caption>ADR-000 (K1–K7) sayısal kabul ölçütleri, doğrulanmış sonuçlar ve açık Faz 3 doğrulama maddeleri</caption>
               <thead>
                 <tr>
-                  <th>Ölçüt</th>
-                  <th>Tanım</th>
-                  <th>ADR-000 Hedefi</th>
-                  <th>Doğrulanan Güncel Sonuç</th>
-                  <th>Durum</th>
+                  <th scope="col">Ölçüt</th>
+                  <th scope="col">Tanım</th>
+                  <th scope="col">ADR-000 Hedefi</th>
+                  <th scope="col">Doğrulanan Güncel Sonuç &amp; Şeffaflık Notu</th>
+                  <th scope="col">Durum</th>
                 </tr>
               </thead>
               <tbody>
@@ -1164,12 +1296,12 @@
                   <td class="metric-cell">E2-3 %82,1 · YOLO26n %85,5</td>
                   <td><span class="badge badge-teal">Geçti</span></td>
                 </tr>
-                <tr class="is-recommended">
+                <tr>
                   <td><code>K2</code></td>
-                  <td>Küçük Nesne Recall (alan &lt; %1, n=13)</td>
+                  <td>Küçük Nesne Recall (alan &lt; %1)</td>
                   <td class="metric-cell">≥ %50</td>
-                  <td class="metric-cell">YOLO26n %51,3 · YOLO11s %50,0</td>
-                  <td><span class="badge badge-teal">Geçti</span></td>
+                  <td class="metric-cell">YOLO26n %51,3 ± 8,9 · YOLO11s %50,0 (küçük örneklem: n = 13)</td>
+                  <td><span class="badge badge-cyan">Geçti (n=13)</span></td>
                 </tr>
                 <tr class="is-recommended">
                   <td><code>K3</code></td>
@@ -1182,28 +1314,28 @@
                   <td><code>K4</code></td>
                   <td>Boş Sahne / Negatif Alarm</td>
                   <td class="metric-cell">≤ %5</td>
-                  <td class="metric-cell">E2-3 gold %4,5 · ext %2,7 (@0.5)</td>
+                  <td class="metric-cell">E2-3 gold %4,5 · ext %2,7 (@0,5)</td>
                   <td><span class="badge badge-teal">Geçti</span></td>
                 </tr>
                 <tr>
                   <td><code>K5</code></td>
                   <td>Raspberry Pi 5 CPU Hızı</td>
                   <td class="metric-cell">≥ 10 FPS (p95 ≤ 100 ms)</td>
-                  <td class="metric-cell">YOLO11n NCNN 70 ms (~14 FPS) · ONNX s_int8 5,85 FPS</td>
-                  <td><span class="badge badge-cyan">NCNN Geçti / Faz 3</span></td>
+                  <td class="metric-cell">YOLO11n NCNN 70 ms (~14 FPS, JSON Faz 3.4’te) · yayındaki ONNX s_int8 5,85 FPS</td>
+                  <td><span class="badge badge-cyan">Faz 3.4 JSON</span></td>
                 </tr>
                 <tr>
                   <td><code>K6</code></td>
                   <td>1 Saat Kesintisiz Kararlılık</td>
                   <td class="metric-cell">0 throttle, sabit bellek</td>
-                  <td class="metric-cell">200 kare testte throttled=0x0 (1 saatlik test Faz 3)</td>
+                  <td class="metric-cell">200 kare (~34 sn) testte <code>throttled=0x0</code>; 1 saatlik sürekli koşu Faz 3’te</td>
                   <td><span class="badge badge-amber">Faz 3 Bekliyor</span></td>
                 </tr>
                 <tr class="is-recommended">
                   <td><code>K7</code></td>
                   <td>Bulanık Kopyada Recall Kaybı</td>
                   <td class="metric-cell">≤ 10 puan kayıp</td>
-                  <td class="metric-cell">E2-3 @0.5: 3,8 puan · YOLO26n: 3,5 puan</td>
+                  <td class="metric-cell">E2-3 @0,5: 3,8 puan · YOLO26n: 3,5 puan</td>
                   <td><span class="badge badge-teal">Geçti</span></td>
                 </tr>
               </tbody>
@@ -1214,402 +1346,444 @@
     </section>
 
     <!-- ====================================================================
-         6. Sistem Mimarisi Akış Diyagramı
+         6. Canlı Ürün Vitrini (4 Sekmeli) ve Uçtan Uca Sistem Mimarisi
          ==================================================================== -->
-    <section id="architecture" class="section">
+    <section id="application" class="section">
       <div class="container">
         <div class="section-header reveal">
-          <span class="eyebrow">Uçtan Uca Mimari</span>
-          <h2 class="section-title">Kameradan Coğrafi Veritabanına 5 Aşamalı İş Akışı</h2>
+          <span class="eyebrow">Ürün &amp; Sistem Mimarisi</span>
+          <h2 class="section-title">Canlı Saha Paneli (:5000), Denetim Stüdyosu (:5050) ve Uç Akışı</h2>
           <p class="section-lead">
-            Yakalama ve çıkarım döngüleri ayrı iş parçacıklarında (thread) çalışır; tespit döngüsü
-            eski kareleri atlayarak daima en güncel kareyi işler.
+            Not defterinde kalan bir model değil; kamera iş parçacığından SpatiaLite veritabanına,
+            canlı Leaflet ısı haritasından uzman doğrulama stüdyosuna kadar bütünleşik bir yazılım yığını.
           </p>
         </div>
 
-        <div class="pipeline">
-          <div class="pipeline-track">
-            <article class="pipeline-step reveal">
-              <span class="step-index">01</span>
-              <h3 class="step-title">Görüntü Yakalama</h3>
-              <p class="step-desc">
-                Pi 5'te <code>picamera2</code> (RGB→BGR), PC'de OpenCV <code>VideoCapture(0)</code> fallback.
-                Kamera yoksa güvenli siyah hata karesi üretilir.
-              </p>
-              <div class="step-tags">
-                <span class="step-tag">640×480</span>
-                <span class="step-tag">30 FPS</span>
-                <span class="step-tag">camera.py</span>
-              </div>
-            </article>
-
-            <article class="pipeline-step reveal">
-              <span class="step-index">02</span>
-              <h3 class="step-title">Ön İşleme &amp; Çıkarım</h3>
-              <p class="step-desc">
-                640×640 en-boy korumalı letterbox, <code>DETECT_USE_CLAHE = False</code>.
-                <code>PatchedInferenceSession</code> ile 4 thread ve <code>allow_spinning="0"</code>.
-              </p>
-              <div class="step-tags">
-                <span class="step-tag">ONNX / NCNN</span>
-                <span class="step-tag">XNNPACK</span>
-                <span class="step-tag">conf 0.60</span>
-              </div>
-            </article>
-
-            <article class="pipeline-step reveal">
-              <span class="step-index">03</span>
-              <h3 class="step-title">GPIO &amp; NMEA GPS</h3>
-              <p class="step-desc">
-                Tespit anında GPIO Pin 17 LED yanar; <code>/dev/ttyAMA0</code> (9600 baud)
-                üzerinden gelen <code>$GPGGA/$GNGGA/$GPRMC/$GNRMC</code> cümleleri 10 sn bayatlama kontrolüyle eşlenir.
-              </p>
-              <div class="step-tags">
-                <span class="step-tag">GPIO 17</span>
-                <span class="step-tag">pynmea2</span>
-                <span class="step-tag">gps.py</span>
-              </div>
-            </article>
-
-            <article class="pipeline-step reveal">
-              <span class="step-index">04</span>
-              <h3 class="step-title">Kayıt &amp; SpatiaLite</h3>
-              <p class="step-desc">
-                Kayıtlar CSV'ye (<code>detections_log.csv</code>), görsellere (250/500/100 dosya limiti)
-                ve <code>mod_spatialite</code> / SQLite fallback destekli <code>spatial_log.sqlite</code>'a yazılır.
-              </p>
-              <div class="step-tags">
-                <span class="step-tag">spatial.py</span>
-                <span class="step-tag">CSV Log</span>
-                <span class="step-tag">Retention</span>
-              </div>
-            </article>
-
-            <article class="pipeline-step reveal">
-              <span class="step-index">05</span>
-              <h3 class="step-title">Dashboard &amp; Dışa Aktarım</h3>
-              <p class="step-desc">
-                Port 5000 üzerinden MJPEG ve Socket.IO canlı akış, Leaflet ısı haritası,
-                GeoJSON/CSV/DarwinCore ZIP ve SSRF-korumalı Webhook bildirimleri.
-              </p>
-              <div class="step-tags">
-                <span class="step-tag">:5000</span>
-                <span class="step-tag">Leaflet</span>
-                <span class="step-tag">DarwinCore</span>
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <div class="arch-layers">
-          <article class="arch-layer-card reveal">
-            <h3 class="layer-title">app/core/ — Çekirdek Motor</h3>
-            <ul class="layer-list">
-              <li><code>config.py</code>: Model yolu, <code>CONF_THRESH=0.60</code>, <code>SKIP_FRAMES=5</code>, retention limitleri</li>
-              <li><code>detector.py</code>: ONNX Runtime <code>PatchedInferenceSession</code>, XNNPACK &amp; termal koruma</li>
-              <li><code>camera.py</code>: Thread-safe <code>CameraThread</code> (picamera2 + VideoCapture)</li>
-              <li><code>gps.py</code> &amp; <code>gpio.py</code>: NMEA seri port okuyucu ve Pin 17 uyarı LED'i</li>
-              <li><code>detection_store.py</code>: İş parçacığı güvenli kayıt ve dosya temizliği</li>
-            </ul>
-          </article>
-
-          <article class="arch-layer-card reveal">
-            <h3 class="layer-title">app/dashboard/ &amp; export/ — Canlı İzleme</h3>
-            <ul class="layer-list">
-              <li><code>server.py</code> &amp; <code>stream.py</code>: Flask + SocketIO (Eventlet), 15 FPS MJPEG &amp; WS</li>
-              <li><code>app/db/spatial.py</code>: <code>spatial_log</code> tablosu ve bbox coğrafi sorguları</li>
-              <li><code>formats.py</code>: QGIS GeoJSON, araştırmacı CSV ve GBIF/OBIS DarwinCore</li>
-              <li><code>webhook.py</code>: <code>_is_safe_url</code> SSRF korumalı ve 60 sn rate-limit'li bildirimler</li>
-            </ul>
-          </article>
-
-          <article class="arch-layer-card reveal">
-            <h3 class="layer-title">app/review/ &amp; training/ — Aktif Öğrenme</h3>
-            <ul class="layer-list">
-              <li><code>app/review/server.py</code> (:5050): GT vs tahmin inceleme, P/R/F1 ve kutu düzeltme</li>
-              <li><code>/denetim</code> &amp; <code>/etiket</code>: Ortam doğrulama ve iNaturalist etiketleme aracı</li>
-              <li><code>training/export_int8_v2.py</code>: QDQ karma hassasiyetli INT8 dönüştürücü</li>
-              <li><code>tests/</code>: 14 test dosyası (103 test) ile import, güvenlik, CBS ve uçtan uca doğrulama</li>
-            </ul>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         7. Canlı Uygulama, API Uç Noktaları ve Teknoloji Yığını
-         ==================================================================== -->
-    <section id="application" class="section section-alt">
-      <div class="container">
-        <div class="section-header reveal">
-          <span class="eyebrow">Saha Paneli &amp; İnceleme Araçları</span>
-          <h2 class="section-title">Canlı Dashboard (Port 5000) ve Veri Denetim Stüdyosu (Port 5050)</h2>
-          <p class="section-lead">
-            Saha operasyonu sırasında Debug / Operation View geçişi, anlık eşik ayarı ve
-            düşük bant genişlikli WebSocket video akışı tek panelde toplanır.
-          </p>
-        </div>
-
-        <div class="feature-showcase">
+        <!-- Özellik Kartları (Sol) + 4 Sekmeli Gerçek Ürün Ekranları (Sağ) -->
+        <div class="feature-showcase" style="margin-bottom: 1.75rem;">
           <div class="feature-grid">
             <article class="feature-card reveal">
-              <div class="feature-icon" aria-hidden="true">HD</div>
+              <div class="feature-icon" aria-hidden="true">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+              </div>
               <h3 class="feature-title">3 MJPEG + WebSocket Akışı</h3>
               <p class="feature-desc">
                 <code>raw</code>, <code>clahe</code> ve <code>detection</code> MJPEG kanallarına ek olarak
-                düşük bant genişliği için <code>WS_STREAM_QUALITY=50</code> tabanlı base64 akış sunar.
+                düşük bant genişliğinde <code>WS_STREAM_QUALITY=50</code> base64 akış sunar.
               </p>
             </article>
 
             <article class="feature-card reveal">
-              <div class="feature-icon" aria-hidden="true">°C</div>
+              <div class="feature-icon" aria-hidden="true">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                </svg>
+              </div>
               <h3 class="feature-title">Canlı Pi 5 Telemetri &amp; Eşik</h3>
               <p class="feature-desc">
-                Socket.IO üzerinden FPS, güven skoru, CPU sıcaklığı, throttle bayrağı,
-                fan RPM ve GPS fix durumu anlık yayınlanır; güven eşiği ve CLAHE canlı değiştirilir.
+                Socket.IO ile FPS, güven skoru, CPU sıcaklığı, throttle bayrağı, fan RPM ve GPS fix durumu
+                yayınlanır; eşik ve CLAHE canlı ayarlanır.
               </p>
             </article>
 
             <article class="feature-card reveal">
-              <div class="feature-icon" aria-hidden="true">MAP</div>
+              <div class="feature-icon" aria-hidden="true">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </div>
               <h3 class="feature-title">Leaflet.js &amp; Isı Haritası</h3>
               <p class="feature-desc">
                 GPS koordinatlı her tespit <code>leaflet.heat</code> katmanına işlenir; tespit logu
-                thumbnail önizleme ve lightbox incelemesiyle eşzamanlı güncellenir.
+                thumbnail önizleme ve büyütme ile güncellenir.
               </p>
             </article>
 
             <article class="feature-card reveal">
-              <div class="feature-icon" aria-hidden="true">ZIP</div>
+              <div class="feature-icon" aria-hidden="true">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </div>
               <h3 class="feature-title">DarwinCore &amp; GeoJSON İhracı</h3>
               <p class="feature-desc">
-                Tek tıkla QGIS/Leaflet uyumlu GeoJSON, istatistiksel analiz için CSV ve
-                GBIF/OBIS biyoçeşitlilik portalları için DarwinCore Archive ZIP indirilir.
+                Tek tıkla QGIS uyumlu GeoJSON, istatistiksel CSV ve GBIF/OBIS standartlarında
+                DarwinCore Archive (ZIP) indirilir.
               </p>
             </article>
 
             <article class="feature-card reveal">
-              <div class="feature-icon" aria-hidden="true">SEC</div>
+              <div class="feature-icon" aria-hidden="true">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
               <h3 class="feature-title">API Token &amp; SSRF Koruması</h3>
               <p class="feature-desc">
-                Değişiklik yapan uçlar <code>DASHBOARD_API_TOKEN</code> (<code>@require_api_token</code>) ile
-                korunur; Slack/Discord/Teams webhook'ları <code>_is_safe_url</code> ve 60 sn limitiyle çalışır.
+                Değişiklik yapan uçlar <code>DASHBOARD_API_TOKEN</code> ile korunur; Slack/Discord/Teams
+                webhook’ları <code>_is_safe_url</code> ve 60 sn limitiyle çalışır.
               </p>
             </article>
 
             <article class="feature-card reveal">
-              <div class="feature-icon" aria-hidden="true">QA</div>
+              <div class="feature-icon" aria-hidden="true">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+              </div>
               <h3 class="feature-title">PC İnceleme &amp; Etiket Stüdyosu</h3>
               <p class="feature-desc">
-                <code>app.review.server</code> (:5050) üzerinde GT vs tahmin kutuları, video yükleme (maks. 120 kare),
-                <code>/denetim</code> ortam etiketleme ve <code>/etiket</code> iNaturalist kutu editörü sunulur.
+                <code>app.review.server</code> (:5050) üzerinde GT vs tahmin inceleme, video yükleme (maks. 120 kare),
+                <code>/denetim</code> ve <code>/etiket</code> editörü sunulur.
               </p>
             </article>
           </div>
 
-          <div class="mock-hud reveal" aria-label="Dashboard ve Review HTTP API uç noktaları">
-            <div class="mock-hud-bar">
-              <div class="mock-hud-dots" aria-hidden="true">
-                <span></span><span></span><span></span>
-              </div>
-              <span>app/dashboard/server.py (:5000) · app/review/server.py (:5050)</span>
+          <!-- 4 Sekmeli Etkileşimli Ürün Arayüz Vitrini -->
+          <div class="app-showcase-panel reveal" aria-label="Canlı uygulama ve denetim stüdyosu ekran görüntüleri">
+            <div id="app-screen-tabs" class="app-screen-tabs" role="tablist" aria-label="Uygulama arayüz sekmeleri">
+              <button id="screen-tab-dashboard" class="app-screen-tab is-active" type="button" role="tab" data-screen="dashboard" aria-selected="true" aria-controls="screen-dashboard">Canlı Panel :5000</button>
+              <button id="screen-tab-review" class="app-screen-tab" type="button" role="tab" data-screen="review" aria-selected="false" aria-controls="screen-review">İnceleme (/)</button>
+              <button id="screen-tab-audit" class="app-screen-tab" type="button" role="tab" data-screen="audit" aria-selected="false" aria-controls="screen-audit">Denetim (/denetim)</button>
+              <button id="screen-tab-label" class="app-screen-tab" type="button" role="tab" data-screen="label" aria-selected="false" aria-controls="screen-label">Etiket (/etiket)</button>
             </div>
 
-            <div class="mock-hud-body">
-              <ul class="endpoint-list">
-                <li class="endpoint-item">
-                  <span class="endpoint-method">GET</span>
-                  <span class="endpoint-path">/video/&lt;stream_type&gt;</span>
-                  <span class="endpoint-note">raw | clahe | detection</span>
-                </li>
-                <li class="endpoint-item">
-                  <span class="endpoint-method">POST</span>
-                  <span class="endpoint-path">/api/config</span>
-                  <span class="endpoint-note">conf, clahe_clip, overlay</span>
-                </li>
-                <li class="endpoint-item">
-                  <span class="endpoint-method">POST</span>
-                  <span class="endpoint-path">/api/snapshot · /api/record</span>
-                  <span class="endpoint-note">@require_api_token</span>
-                </li>
-                <li class="endpoint-item">
-                  <span class="endpoint-method">GET</span>
-                  <span class="endpoint-path">/api/export/geojson</span>
-                  <span class="endpoint-note">csv · darwincore</span>
-                </li>
-                <li class="endpoint-item">
-                  <span class="endpoint-method">CRUD</span>
-                  <span class="endpoint-path">/api/webhooks</span>
-                  <span class="endpoint-note">Slack / Discord / Teams</span>
-                </li>
-                <li class="endpoint-item">
-                  <span class="endpoint-method">UI</span>
-                  <span class="endpoint-path">/ · /denetim · /etiket</span>
-                  <span class="endpoint-note">Port 5050 (Review)</span>
-                </li>
-              </ul>
+            <div class="app-screen-stage">
+              <figure id="screen-dashboard" role="tabpanel" data-screen-panel="dashboard" aria-labelledby="screen-tab-dashboard">
+                <img
+                  src="./assets/canli_panel.webp"
+                  alt="Canlı video akışı, Raspberry Pi 5 telemetri kartları ve Leaflet ısı haritası içeren web dashboard ekranı"
+                  width="1360"
+                  height="850"
+                  loading="lazy"
+                  decoding="async"
+                >
+                <figcaption>
+                  <strong>Canlı Web Dashboard (:5000):</strong> Debug / Operation View geçişi, 3 MJPEG + WebSocket akışı,
+                  CPU sıcaklığı, fan RPM, Leaflet ısı haritası ve tek tıkla GeoJSON/CSV/DarwinCore ihracı.
+                </figcaption>
+              </figure>
 
-              <div class="tech-stack" aria-label="Kullanılan teknolojiler">
-                <span class="tech-chip">Flask &gt;=3.0</span>
-                <span class="tech-chip">Flask-SocketIO</span>
-                <span class="tech-chip">Eventlet</span>
-                <span class="tech-chip">ONNX Runtime 1.31</span>
-                <span class="tech-chip">NCNN</span>
-                <span class="tech-chip">picamera2</span>
-                <span class="tech-chip">SpatiaLite</span>
-                <span class="tech-chip">Leaflet.js</span>
-                <span class="tech-chip">Pytest (14 dosya)</span>
-              </div>
+              <figure id="screen-review" role="tabpanel" data-screen-panel="review" aria-labelledby="screen-tab-review" hidden>
+                <img
+                  src="./assets/arayuz_inceleme.webp"
+                  alt="Ground truth ile model tahmin kutularını yan yana kıyaslayan ve canlı P/R/F1 hesaplayan tespit inceleme ekranı"
+                  width="1360"
+                  height="850"
+                  loading="lazy"
+                  decoding="async"
+                >
+                <figcaption>
+                  <strong>Tespit İnceleme Stüdyosu (:5050/):</strong> GT vs tahmin kutusu kıyaslaması,
+                  eşik kaydırıcı ile canlı P/R/F1 ve <code>/api/fix</code> ile doğrudan kutu düzeltme.
+                </figcaption>
+              </figure>
+
+              <figure id="screen-audit" role="tabpanel" data-screen-panel="audit" aria-labelledby="screen-tab-audit" hidden>
+                <img
+                  src="./assets/arayuz_denetim.webp"
+                  alt="CLIP ön etiketleriyle ayrılan kara, su üstü ve su altı karelerini doğrulayan ortam denetim arayüzü"
+                  width="1360"
+                  height="850"
+                  loading="lazy"
+                  decoding="async"
+                >
+                <figcaption>
+                  <strong>Ortam Doğrulama (:5050/denetim):</strong> CLIP ön etiketleriyle ayrılan kara,
+                  su üstü ve su altı karelerinin uzman tarafından tek tıkla doğrulanması.
+                </figcaption>
+              </figure>
+
+              <figure id="screen-label" role="tabpanel" data-screen-panel="label" aria-labelledby="screen-tab-label" hidden>
+                <img
+                  src="./assets/arayuz_etiket.webp"
+                  alt="iNaturalist balon balığı fotoğrafları üzerinde sınırlayıcı kutu çizen etiketleme arayüzü"
+                  width="1360"
+                  height="850"
+                  loading="lazy"
+                  decoding="async"
+                >
+                <figcaption>
+                  <strong>Kutu Etiketleme Aracı (:5050/etiket):</strong> iNaturalist’ten alınan pozitif
+                  balon balığı fotoğrafları üzerinde hızlı YOLO sınırlayıcı kutu çizimi ve kaydı.
+                </figcaption>
+              </figure>
             </div>
           </div>
         </div>
+
+        <!-- Özel Inline SVG 5 Aşamalı Uç Sistem Mimarisi Diyagramı -->
+        <div class="svg-diagram-card reveal" aria-label="5 aşamalı sualtı uç çıkarım mimari diyagramı">
+          <svg class="arch-svg" viewBox="0 0 980 156" role="img" aria-label="Kameradan canlı panele 5 aşamalı veri akışı: Kamera, Pi 5 Çıkarım, GPS ve GPIO, SpatiaLite, Canlı Panel ve GIS">
+            <defs>
+              <marker id="arch-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--accent-cyan)"></path>
+              </marker>
+            </defs>
+
+            <!-- Aşama 1: Kamera -->
+            <rect class="svg-node" x="8" y="20" width="164" height="116" rx="12"></rect>
+            <text class="svg-badge" x="22" y="42">01 · YAKALAMA</text>
+            <text class="svg-label" x="22" y="66">Kamera Thread</text>
+            <text class="svg-sublabel" x="22" y="88">picamera2 / OpenCV</text>
+            <text class="svg-sublabel" x="22" y="106">640×480 · 30 FPS</text>
+            <text class="svg-sublabel" x="22" y="124">Önerilen: IMX296</text>
+
+            <line class="svg-arrow" x1="172" y1="78" x2="204" y2="78" marker-end="url(#arch-arrow)"></line>
+
+            <!-- Aşama 2: Pi 5 Çıkarım (Vurgulu) -->
+            <rect class="svg-node-accent" x="208" y="20" width="168" height="116" rx="12"></rect>
+            <text class="svg-badge" x="222" y="42">02 · PI 5 CPU</text>
+            <text class="svg-label" x="222" y="66">Uç Çıkarım</text>
+            <text class="svg-sublabel" x="222" y="88">ONNX INT8 / NCNN</text>
+            <text class="svg-sublabel" x="222" y="106">640×640 · 4 thread</text>
+            <text class="svg-sublabel" x="222" y="124">XNNPACK · CLAHE off</text>
+
+            <line class="svg-arrow" x1="376" y1="78" x2="408" y2="78" marker-end="url(#arch-arrow)"></line>
+
+            <!-- Aşama 3: GPS & GPIO -->
+            <rect class="svg-node" x="412" y="20" width="164" height="116" rx="12"></rect>
+            <text class="svg-badge" x="426" y="42">03 · DONANIM</text>
+            <text class="svg-label" x="426" y="66">GPS &amp; GPIO</text>
+            <text class="svg-sublabel" x="426" y="88">/dev/ttyAMA0 · 9600</text>
+            <text class="svg-sublabel" x="426" y="106">NMEA GGA/RMC (10s)</text>
+            <text class="svg-sublabel" x="426" y="124">GPIO Pin 17 LED</text>
+
+            <line class="svg-arrow" x1="576" y1="78" x2="608" y2="78" marker-end="url(#arch-arrow)"></line>
+
+            <!-- Aşama 4: SpatiaLite -->
+            <rect class="svg-node" x="612" y="20" width="164" height="116" rx="12"></rect>
+            <text class="svg-badge" x="626" y="42">04 · KAYIT</text>
+            <text class="svg-label" x="626" y="66">SpatiaLite &amp; CSV</text>
+            <text class="svg-sublabel" x="626" y="88">spatial_log.sqlite</text>
+            <text class="svg-sublabel" x="626" y="106">detections_log.csv</text>
+            <text class="svg-sublabel" x="626" y="124">250/500/100 limit</text>
+
+            <line class="svg-arrow" x1="776" y1="78" x2="808" y2="78" marker-end="url(#arch-arrow)"></line>
+
+            <!-- Aşama 5: Canlı Panel & GIS -->
+            <rect class="svg-node" x="812" y="20" width="160" height="116" rx="12"></rect>
+            <text class="svg-badge" x="826" y="42">05 · SUNUM</text>
+            <text class="svg-label" x="826" y="66">Panel &amp; GIS</text>
+            <text class="svg-sublabel" x="826" y="88">:5000 MJPEG &amp; WS</text>
+            <text class="svg-sublabel" x="826" y="106">Leaflet + Heatmap</text>
+            <text class="svg-sublabel" x="826" y="124">GeoJSON · DarwinCore</text>
+          </svg>
+        </div>
+
+        <!-- Daraltılabilir Teknik Modül ve HTTP/WS API Çekmecesi -->
+        <details class="details-drawer reveal">
+          <summary>HTTP / WebSocket API Uç Noktaları ve Teknik Modül Dökümünü Göster</summary>
+          <div class="details-drawer-body">
+            <ul class="endpoint-list" style="margin-bottom: 1.15rem;">
+              <li class="endpoint-item">
+                <span class="endpoint-method">GET</span>
+                <span class="endpoint-path">/video/&lt;stream_type&gt;</span>
+                <span class="endpoint-note">raw | clahe | detection</span>
+              </li>
+              <li class="endpoint-item">
+                <span class="endpoint-method">POST</span>
+                <span class="endpoint-path">/api/config</span>
+                <span class="endpoint-note">conf, clahe_clip, overlay</span>
+              </li>
+              <li class="endpoint-item">
+                <span class="endpoint-method">POST</span>
+                <span class="endpoint-path">/api/snapshot · /api/record</span>
+                <span class="endpoint-note">@require_api_token</span>
+              </li>
+              <li class="endpoint-item">
+                <span class="endpoint-method">GET</span>
+                <span class="endpoint-path">/api/export/geojson</span>
+                <span class="endpoint-note">csv · darwincore</span>
+              </li>
+              <li class="endpoint-item">
+                <span class="endpoint-method">CRUD</span>
+                <span class="endpoint-path">/api/webhooks</span>
+                <span class="endpoint-note">Slack / Discord / Teams (SSRF korumalı)</span>
+              </li>
+              <li class="endpoint-item">
+                <span class="endpoint-method">UI</span>
+                <span class="endpoint-path">/ · /denetim · /etiket</span>
+                <span class="endpoint-note">Port 5050 (Review Stüdyosu)</span>
+              </li>
+            </ul>
+
+            <div class="arch-layers" style="margin-bottom: 1rem;">
+              <article class="arch-layer-card">
+                <h3 class="layer-title">app/core/ — Çekirdek Motor</h3>
+                <ul class="layer-list">
+                  <li><code>config.py</code>: <code>CONF_THRESH=0.60</code>, <code>SKIP_FRAMES=5</code>, saklama limitleri</li>
+                  <li><code>detector.py</code>: <code>PatchedInferenceSession</code> (4 thread, <code>allow_spinning="0"</code>, XNNPACK)</li>
+                  <li><code>camera.py</code>, <code>gps.py</code>, <code>gpio.py</code>, <code>detection_store.py</code></li>
+                </ul>
+              </article>
+
+              <article class="arch-layer-card">
+                <h3 class="layer-title">app/dashboard/ &amp; export/ — İzleme</h3>
+                <ul class="layer-list">
+                  <li><code>server.py</code> &amp; <code>stream.py</code>: Flask + SocketIO (Eventlet), 15 FPS akış</li>
+                  <li><code>app/db/spatial.py</code>: <code>spatial_log</code> tablosu ve bbox sorguları</li>
+                  <li><code>formats.py</code> &amp; <code>webhook.py</code>: GeoJSON, CSV, DarwinCore, 60 sn rate-limit</li>
+                </ul>
+              </article>
+
+              <article class="arch-layer-card">
+                <h3 class="layer-title">app/review/, training/ &amp; tests/</h3>
+                <ul class="layer-list">
+                  <li><code>app/review/server.py</code> (:5050): GT vs tahmin, <code>/denetim</code>, <code>/etiket</code></li>
+                  <li><code>training/export_int8_v2.py</code>: QDQ karma hassasiyetli INT8 dönüştürücü</li>
+                  <li><code>tests/</code>: 14 pytest dosyası (103 test, birim + güvenlik + uçtan uca)</li>
+                </ul>
+              </article>
+            </div>
+
+            <div class="tech-stack" aria-label="Kullanılan teknolojiler">
+              <span class="tech-chip">Flask &gt;=3.0</span>
+              <span class="tech-chip">Flask-SocketIO</span>
+              <span class="tech-chip">Eventlet</span>
+              <span class="tech-chip">ONNX Runtime 1.31</span>
+              <span class="tech-chip">NCNN</span>
+              <span class="tech-chip">picamera2</span>
+              <span class="tech-chip">SpatiaLite</span>
+              <span class="tech-chip">Leaflet.js</span>
+              <span class="tech-chip">Pytest (14 dosya)</span>
+            </div>
+          </div>
+        </details>
       </div>
     </section>
 
     <!-- ====================================================================
-         8. Görsel Kanıt Galerisi (13 Kürasyon Görseli) ve Lightbox
+         7. Dengeli, Tekrarsız Görsel Kanıt Galerisi (6 Özgün Görsel — 2×3)
          ==================================================================== -->
-    <section id="gallery" class="section">
+    <section id="gallery" class="section section-alt">
       <div class="container">
         <div class="section-header reveal">
           <span class="eyebrow">Görsel Kanıt Arşivi</span>
-          <h2 class="section-title">Gerçek Veriden Üretilen Tespit, Veri Denetimi ve Arayüz Ekranları</h2>
+          <h2 class="section-title">Doğrulanmış Tespit, Hata Analizi ve Veri Denetimi Kanıtları</h2>
           <p class="section-lead">
-            Sunum ve değerlendirme çalışmalarında üretilen 13 doğrulanmış görsel. Büyütmek ve
-            teknik ayrıntıları incelemek için herhangi bir karta tıklayın.
+            Ürün arayüz ekranları yukarıdaki vitrinde yer aldığı için galeri 6 özgün teknik kanıta
+            odaklanır. Tam çözünürlükte incelemek için herhangi bir karta tıklayın.
           </p>
         </div>
 
         <div class="gallery-toolbar">
           <div id="gallery-filters" class="filter-bar" role="group" aria-label="Galeri kategori filtreleri">
-            <button class="filter-btn is-active" type="button" data-filter="all" aria-pressed="true">Tümü (13)</button>
-            <button class="filter-btn" type="button" data-filter="detection" aria-pressed="false">Tespit &amp; Model (4)</button>
-            <button class="filter-btn" type="button" data-filter="data" aria-pressed="false">Veri &amp; Deneyler (5)</button>
-            <button class="filter-btn" type="button" data-filter="ui" aria-pressed="false">Arayüzler (4)</button>
+            <button class="filter-btn is-active" type="button" data-filter="all" aria-pressed="true">Tümü (6)</button>
+            <button class="filter-btn" type="button" data-filter="detection" aria-pressed="false">Tespit &amp; Model (3)</button>
+            <button class="filter-btn" type="button" data-filter="data" aria-pressed="false">Veri &amp; Deneyler (3)</button>
           </div>
-          <span class="badge badge-teal" id="gallery-count">13 görsel listeleniyor</span>
+          <span class="badge badge-teal" id="gallery-count">6 görsel listeleniyor</span>
         </div>
 
         <div id="gallery-grid" class="gallery-grid">
-          <!-- 1. cozum_tespit.jpg -->
+          <!-- 1. cozum_tespit.webp -->
           <button
             class="gallery-item reveal"
             type="button"
             data-category="detection"
-            data-src="./assets/cozum_tespit.jpg"
-            data-title="Sualtı Gerçek Zamanlı Tespit Örneği"
-            data-caption="Doğal sualtı zemininde tek sınıflı dedektörün (0: pufferfish) 0.81 güven skoruyla yaptığı örnek çıkarım."
-            data-meta="Kategori: Tespit · Eşik: conf ≥ 0.60 · Giriş: 640×640 letterbox"
+            data-src="./assets/cozum_tespit.webp"
+            data-title="Sualtı Gerçek Veri Seti Tespit Örneği"
+            data-caption="Doğal sualtı zemininde tek sınıflı dedektörün (0: pufferfish) 0,81 güven skoruyla yaptığı örnek çıkarım."
+            data-meta="Kategori: Tespit · Eşik: conf ≥ 0,60 · Giriş: 640×640 letterbox"
           >
-            <div class="gallery-thumb">
-              <img src="./assets/cozum_tespit.jpg" alt="Sualtı ortamında 0.81 güven skoruyla balon balığı tespiti" loading="lazy">
+            <span class="gallery-thumb">
+              <img src="./assets/cozum_tespit.webp" alt="Sualtı ortamında 0,81 güven skoruyla balon balığı tespiti" width="1024" height="768" loading="lazy" decoding="async">
               <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
+            </span>
             <span class="gallery-caption">
               <span class="gallery-tag">Tespit &amp; Model</span>
-              <span class="gallery-title">Sualtı Gerçek Zamanlı Tespit</span>
-              <span class="gallery-meta">Balon balığı 0.81 · 640×640</span>
+              <span class="gallery-title">Sualtı Tespit Çıkarımı</span>
+              <span class="gallery-meta">Balon balığı 0,81 · 640×640</span>
             </span>
           </button>
 
-          <!-- 2. kapak.jpg -->
+          <!-- 2. tespit_ornekleri.webp -->
           <button
             class="gallery-item reveal"
             type="button"
             data-category="detection"
-            data-src="./assets/kapak.jpg"
-            data-title="Lagocephalus sceleratus Altın Set Tespiti"
-            data-caption="Dondurulmuş dataset_gold_v1 test kümesinden alınan sualtı karesinde 0.93 güven skoruyla Lagocephalus sceleratus tespiti."
-            data-meta="Kategori: Tespit · Kaynak: dataset_gold_v1 · Tür: L. sceleratus"
-          >
-            <div class="gallery-thumb">
-              <img src="./assets/kapak.jpg" alt="dataset_gold_v1 karesinde Lagocephalus sceleratus 0.93 tespiti" loading="lazy">
-              <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
-            <span class="gallery-caption">
-              <span class="gallery-tag">Tespit &amp; Model</span>
-              <span class="gallery-title">L. sceleratus Gold V1 Tespiti</span>
-              <span class="gallery-meta">Güven: 0.93 · dataset_gold_v1</span>
-            </span>
-          </button>
-
-          <!-- 3. tespit_ornekleri.jpg -->
-          <button
-            class="gallery-item reveal"
-            type="button"
-            data-category="detection"
-            data-src="./assets/tespit_ornekleri.jpg"
+            data-src="./assets/tespit_ornekleri.webp"
             data-title="Doğru Tespitler ve Hata Türleri Analizi"
-            data-caption="Yüksek güvenli doğru tespitlerin (0.88–0.93) yanında kaçırılan balık (FN) ve boş sahnede oluşan yanlış alarm (FP 0.67) örnekleri."
+            data-caption="Yüksek güvenli doğru tespitlerin (0,88–0,93) yanında kaçırılan balık (FN) ve boş sahnede oluşan yanlış alarm (FP 0,67) örnekleri."
             data-meta="Kategori: Tespit · Hata Analizi: FN &amp; Boş Sahne FP · ADR-000 K1/K4"
           >
-            <div class="gallery-thumb">
-              <img src="./assets/tespit_ornekleri.jpg" alt="Doğru tespitler ile kaçırılan balık ve boş sahne alarmı hata örnekleri" loading="lazy">
+            <span class="gallery-thumb">
+              <img src="./assets/tespit_ornekleri.webp" alt="Doğru tespitler ile kaçırılan balık ve boş sahne alarmı hata örnekleri" width="1280" height="640" loading="lazy" decoding="async">
               <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
+            </span>
             <span class="gallery-caption">
               <span class="gallery-tag">Tespit &amp; Model</span>
               <span class="gallery-title">Doğru Tespitler &amp; Hata Örnekleri</span>
-              <span class="gallery-meta">0.88–0.93 TP · FN &amp; FP incelemesi</span>
+              <span class="gallery-meta">0,88–0,93 TP · FN &amp; FP incelemesi</span>
             </span>
           </button>
 
-          <!-- 4. int8_karsilastirma.jpg -->
+          <!-- 3. int8_karsilastirma.webp (geniş şerit — gallery-thumb-contain) -->
           <button
             class="gallery-item reveal"
             type="button"
             data-category="detection"
-            data-src="./assets/int8_karsilastirma.jpg"
+            data-src="./assets/int8_karsilastirma.webp"
             data-title="Karma Hassasiyetli INT8 Nicemleme Etkisi"
-            data-caption="Tüm grafın statik INT8 nicemlemesi 0.0 mAP@50 verirken, tespit başının FP32'de bırakılmasıyla (export_int8_v2.py) 12,53 MB modelde Pi 5'te 0,7452 test mAP@50 korundu."
+            data-caption="Tüm grafın statik INT8 nicemlemesi 0,0 mAP@50 verirken, tespit başının FP32’de bırakılmasıyla (export_int8_v2.py) 12,53 MB modelde Pi 5’te 0,7452 test mAP@50 korundu."
             data-meta="Kategori: Model · PC: 56,89 ms (17,58 FPS) · Pi 5: 171,07 ms (5,85 FPS)"
           >
-            <div class="gallery-thumb">
-              <img src="./assets/int8_karsilastirma.jpg" alt="FP32 ve karma hassasiyetli INT8 model karşılaştırma görseli" loading="lazy">
+            <span class="gallery-thumb gallery-thumb-contain">
+              <img src="./assets/int8_karsilastirma.webp" alt="FP32 ve karma hassasiyetli INT8 model karşılaştırma şeridi" width="1520" height="370" loading="lazy" decoding="async">
               <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
+            </span>
             <span class="gallery-caption">
               <span class="gallery-tag">Tespit &amp; Model</span>
-              <span class="gallery-title">Karma Hassasiyetli INT8 Karşılaştırması</span>
+              <span class="gallery-title">Karma Hassasiyetli INT8 Kıyaslaması</span>
               <span class="gallery-meta">37,93 MB → 12,53 MB · 2,1× hız artışı</span>
             </span>
           </button>
 
-          <!-- 5. veri_kirliligi.jpg -->
+          <!-- 4. veri_kirliligi.webp -->
           <button
             class="gallery-item reveal"
             type="button"
             data-category="data"
-            data-src="./assets/veri_kirliligi.jpg"
-            data-title="Roboflow v1 Veri Seti Ortam Dağılımı"
-            data-caption="83 görüntülük v1 test setinin CLIP ön etiketine göre yalnızca 22'sinin su altı, 32'sinin kara ve 29'unun su üstü çekimi olduğu saptandı."
-            data-meta="Kategori: Veri · Test (83): 22 su altı / 29 su üstü / 32 kara · ADR-001"
+            data-src="./assets/veri_kirliligi.webp"
+            data-title="Roboflow v1 Test Seti Ortam Dağılımı Denetimi"
+            data-caption="83 görüntülük Roboflow v1 test setinin 32’sinin kara, 29’unun su üstü ve yalnızca 22’sinin gerçek su altı karesi olduğu CLIP ve uzman denetimiyle belgelendi."
+            data-meta="Kategori: Veri · Kara 32 · Su Üstü 29 · Su Altı 22 · ADR-001"
           >
-            <div class="gallery-thumb">
-              <img src="./assets/veri_kirliligi.jpg" alt="Test kümesindeki kara, su üstü ve su altı çekim örnekleri" loading="lazy">
+            <span class="gallery-thumb">
+              <img src="./assets/veri_kirliligi.webp" alt="Roboflow v1 test setindeki kara, su üstü ve su altı kare dağılımı" width="1280" height="850" loading="lazy" decoding="async">
               <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
+            </span>
             <span class="gallery-caption">
               <span class="gallery-tag">Veri &amp; Deneyler</span>
-              <span class="gallery-title">Ortam Dağılımı ve Alan Kayması</span>
-              <span class="gallery-meta">32 kara · 29 su üstü · 22 su altı</span>
+              <span class="gallery-title">Veri Kirliliği &amp; Ortam Denetimi</span>
+              <span class="gallery-meta">Test: 32 kara · 29 su üstü · 22 su altı</span>
             </span>
           </button>
 
-          <!-- 6. phash_kopya.jpg -->
+          <!-- 5. phash_kopya.webp -->
           <button
             class="gallery-item reveal"
             type="button"
             data-category="data"
-            data-src="./assets/phash_kopya.jpg"
+            data-src="./assets/phash_kopya.webp"
             data-title="pHash Görsel Kopya ve Sızıntı Tespiti"
-            data-caption="iNaturalist'ten indirilen 1.744 görüntünün 452'sinin zaten dataset/ içinde bulunduğu ve train-test arasında sızıntı (fotograf_71 ≈ fotograf_81) oluştuğu pHash ile kanıtlandı."
+            data-caption="iNaturalist’ten indirilen 1.744 görüntünün 452’sinin zaten dataset/ içinde bulunduğu ve train-test arasında sızıntı (fotograf_71 ≈ fotograf_81) oluştuğu pHash ile kanıtlandı."
             data-meta="Kategori: Veri · 452 pHash eşleşmesi · Kaynak düzeyinde bölme"
           >
-            <div class="gallery-thumb">
-              <img src="./assets/phash_kopya.jpg" alt="pHash algoritması ile saptanan neredeyse özdeş fotoğraf çiftleri" loading="lazy">
+            <span class="gallery-thumb">
+              <img src="./assets/phash_kopya.webp" alt="pHash algoritması ile saptanan neredeyse özdeş fotoğraf çiftleri" width="1120" height="560" loading="lazy" decoding="async">
               <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
+            </span>
             <span class="gallery-caption">
               <span class="gallery-tag">Veri &amp; Deneyler</span>
               <span class="gallery-title">pHash Kopya &amp; Sızıntı Temizliği</span>
@@ -1617,150 +1791,24 @@
             </span>
           </button>
 
-          <!-- 7. zor_negatif_turler.jpg -->
+          <!-- 6. bulaniklik_once_sonra.webp (geniş şerit — gallery-thumb-contain) -->
           <button
             class="gallery-item reveal"
             type="button"
             data-category="data"
-            data-src="./assets/zor_negatif_turler.jpg"
-            data-title="Zor Negatif Akdeniz Türleri (iNaturalist)"
-            data-caption="Balon balığıyla karıştırılan Siganus luridus, Siganus rivulatus ve Sparisoma cretense türleri; E2-3 eğitimine 296, altın sete 100 örnek eklendi."
-            data-meta="Kategori: Veri · 3 hedef dışı tür · E1-a alarmı: %49,11"
-          >
-            <div class="gallery-thumb">
-              <img src="./assets/zor_negatif_turler.jpg" alt="Siganus luridus, Siganus rivulatus ve Sparisoma cretense türleri" loading="lazy">
-              <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
-            <span class="gallery-caption">
-              <span class="gallery-tag">Veri &amp; Deneyler</span>
-              <span class="gallery-title">iNaturalist Zor Negatif Türler</span>
-              <span class="gallery-meta">Siganus &amp; Sparisoma · 296 eğitim karesi</span>
-            </span>
-          </button>
-
-          <!-- 8. zor_negatif_once_sonra.jpg -->
-          <button
-            class="gallery-item reveal"
-            type="button"
-            data-category="data"
-            data-src="./assets/zor_negatif_once_sonra.jpg"
-            data-title="Dış Negatif Seti (gold_v1_ext) Öncesi ve Sonrası"
-            data-caption="IMEDEA Mallorca 300 görüntülük dış negatif setinde @0.5 eşiğinde yanlış alarm oranı E2-0 temelinde %32,0 iken E2-3_full ile %2,7'ye düştü."
-            data-meta="Kategori: Deneyler · E2-0 %32,0 → E2-3 %2,7 (@0.5) · Zenodo 7534425"
-          >
-            <div class="gallery-thumb">
-              <img src="./assets/zor_negatif_once_sonra.jpg" alt="Zor negatif eğitimi öncesi ve sonrası IMEDEA dış negatif alarm karşılaştırması" loading="lazy">
-              <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
-            <span class="gallery-caption">
-              <span class="gallery-tag">Veri &amp; Deneyler</span>
-              <span class="gallery-title">Zor Negatif Eğitimi Öncesi / Sonrası</span>
-              <span class="gallery-meta">gold_v1_ext alarmı: %32,0 → %2,7</span>
-            </span>
-          </button>
-
-          <!-- 9. bulaniklik_once_sonra.jpg -->
-          <button
-            class="gallery-item reveal"
-            type="button"
-            data-category="data"
-            data-src="./assets/bulaniklik_once_sonra.jpg"
+            data-src="./assets/bulaniklik_once_sonra.webp"
             data-title="Hareket Bulanıklığı (gold_v1_blur) Öncesi ve Sonrası"
-            data-caption="327 sabit-tohumlu bulanık kopyada E2-0 temel model %49,8 recall'da kalırken, E2-3_full modeli @0.4'te %80,4 ve @0.5'te %78,3 recall'a ulaştı."
+            data-caption="327 sabit-tohumlu bulanık kopyada E2-0 temel model %49,8 recall’da kalırken, E2-3_full modeli @0,4’te %80,4 ve @0,5’te %78,3 recall’a ulaştı."
             data-meta="Kategori: Deneyler · Kayıp: 40,8 puan → 3,8 puan · ADR-000 K7 geçti"
           >
-            <div class="gallery-thumb">
-              <img src="./assets/bulaniklik_once_sonra.jpg" alt="Hareket bulanıklığı altında temel model ve E2-3 modeli tespit karşılaştırması" loading="lazy">
+            <span class="gallery-thumb gallery-thumb-contain">
+              <img src="./assets/bulaniklik_once_sonra.webp" alt="Hareket bulanıklığı altında temel model ve E2-3 modeli tespit karşılaştırma şeridi" width="1520" height="370" loading="lazy" decoding="async">
               <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
+            </span>
             <span class="gallery-caption">
               <span class="gallery-tag">Veri &amp; Deneyler</span>
               <span class="gallery-title">Hareket Bulanıklığı Dayanıklılığı</span>
-              <span class="gallery-meta">gold_blur R: %49,8 → %80,4 (@0.4)</span>
-            </span>
-          </button>
-
-          <!-- 10. canli_panel.png -->
-          <button
-            class="gallery-item reveal"
-            type="button"
-            data-category="ui"
-            data-src="./assets/canli_panel.png"
-            data-title="Canlı Web Dashboard Paneli (:5000)"
-            data-caption="Flask + Socket.IO tabanlı saha izleme paneli: raw/clahe/detection MJPEG akışları, CPU sıcaklığı, fan RPM, Leaflet ısı haritası ve dışa aktarım butonları."
-            data-meta="Kategori: Arayüz · app/dashboard/server.py · Port 5000"
-          >
-            <div class="gallery-thumb">
-              <img src="./assets/canli_panel.png" alt="Canlı video akışı, telemetri kartları ve Leaflet harita içeren web dashboard ekranı" loading="lazy">
-              <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
-            <span class="gallery-caption">
-              <span class="gallery-tag">Arayüzler</span>
-              <span class="gallery-title">Canlı Dashboard Ekranı</span>
-              <span class="gallery-meta">MJPEG / WS · Telemetri · Leaflet Harita</span>
-            </span>
-          </button>
-
-          <!-- 11. arayuz_inceleme.png -->
-          <button
-            class="gallery-item reveal"
-            type="button"
-            data-category="ui"
-            data-src="./assets/arayuz_inceleme.png"
-            data-title="Tespit İnceleme ve Kutu Düzeltme Arayüzü (:5050/)"
-            data-caption="GT ile model tahmin kutularını yan yana kıyaslayan, eşik kaydırıcıyla anlık P/R/F1 hesaplayan ve kutu düzeltme (/api/fix) yapan inceleme ekranı."
-            data-meta="Kategori: Arayüz · app/review/server.py · Rota: /"
-          >
-            <div class="gallery-thumb">
-              <img src="./assets/arayuz_inceleme.png" alt="Ground truth ve model tahmin kutularını gösteren tespit inceleme arayüzü" loading="lazy">
-              <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
-            <span class="gallery-caption">
-              <span class="gallery-tag">Arayüzler</span>
-              <span class="gallery-title">Tespit İnceleme Arayüzü</span>
-              <span class="gallery-meta">GT vs Tahmin · Canlı P/R/F1 · Port 5050</span>
-            </span>
-          </button>
-
-          <!-- 12. arayuz_denetim.png -->
-          <button
-            class="gallery-item reveal"
-            type="button"
-            data-category="ui"
-            data-src="./assets/arayuz_denetim.png"
-            data-title="Ortam Etiketi Doğrulama Ekranı (:5050/denetim)"
-            data-caption="CLIP ön etiketleriyle ayrılan kara, su üstü ve su altı karelerinin uzman tarafından tek tıkla doğrulanmasını sağlayan veri denetim arayüzü."
-            data-meta="Kategori: Arayüz · app/review/server.py · Rota: /denetim"
-          >
-            <div class="gallery-thumb">
-              <img src="./assets/arayuz_denetim.png" alt="Kara, su üstü ve su altı ortam etiketlerini doğrulayan /denetim arayüzü" loading="lazy">
-              <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
-            <span class="gallery-caption">
-              <span class="gallery-tag">Arayüzler</span>
-              <span class="gallery-title">Ortam Doğrulama (/denetim)</span>
-              <span class="gallery-meta">Su Altı / Su Üstü / Kara Etiketleme</span>
-            </span>
-          </button>
-
-          <!-- 13. arayuz_etiket.png -->
-          <button
-            class="gallery-item reveal"
-            type="button"
-            data-category="ui"
-            data-src="./assets/arayuz_etiket.png"
-            data-title="iNaturalist Kutu Etiketleme Aracı (:5050/etiket)"
-            data-caption="iNaturalist'ten gelen pozitif balon balığı fotoğrafları üzerinde YOLO sınırlayıcı kutularını hızlıca çizmek ve kaydetmek için geliştirilen özel editör."
-            data-meta="Kategori: Arayüz · app/review/server.py · Rota: /etiket"
-          >
-            <div class="gallery-thumb">
-              <img src="./assets/arayuz_etiket.png" alt="iNaturalist fotoğrafları için sınırlayıcı kutu çizme aracı /etiket ekranı" loading="lazy">
-              <span class="gallery-overlay" aria-hidden="true"><span class="badge badge-teal">Büyüt</span></span>
-            </div>
-            <span class="gallery-caption">
-              <span class="gallery-tag">Arayüzler</span>
-              <span class="gallery-title">Kutu Etiketleme Aracı (/etiket)</span>
-              <span class="gallery-meta">iNaturalist Pozitif Kutu Editörü</span>
+              <span class="gallery-meta">gold_blur R: %49,8 → %80,4 (@0,4)</span>
             </span>
           </button>
         </div>
@@ -1772,173 +1820,234 @@
     </section>
 
     <!-- ====================================================================
-         9. Sık Sorulan Teknik Sorular (SSS) ve CLI Çalıştırma Kartları
+         8. Yol Haritası, Proje Ekibi ve Pilot / İş Birliği Çağrısı
+         ==================================================================== -->
+    <section id="roadmap" class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="eyebrow">Yol Haritası &amp; Ekip</span>
+          <h2 class="section-title">Doğrulanmış Geliştirme Fazları ve Saha Pilotu Planı</h2>
+          <p class="section-lead">
+            <code>docs/ROADMAP.md</code> ve <code>docs/DEVIR_PLANI.md</code> kayıtlarına göre tamamlanan,
+            aktif yürütülen, bilinçli olarak atlanan ve saha pilotuna hazırlanan kilometre taşları.
+          </p>
+        </div>
+
+        <div class="roadmap-grid">
+          <article class="roadmap-card status-done reveal">
+            <span class="roadmap-phase">FAZ 0 &amp; FAZ 1</span>
+            <h3 class="roadmap-title">Gereksinim &amp; Altın Veri</h3>
+            <p class="roadmap-desc">
+              <code>ADR-000</code> (K1–K7) kabul ölçütleri, CLIP/pHash veri denetimi, 452 kopya temizliği ve
+              dondurulmuş <code>gold_v1</code> (327) + <code>gold_v1_blur</code> (327) test kümeleri.
+            </p>
+            <span class="roadmap-status">Tamamlandı</span>
+          </article>
+
+          <article class="roadmap-card status-active reveal">
+            <span class="roadmap-phase">FAZ 2</span>
+            <h3 class="roadmap-title">Veri Tarifi &amp; E3 Tarama</h3>
+            <p class="roadmap-desc">
+              <code>E2-3_full</code> (2.645 kare) ile IMEDEA dış alarmı %2,7’ye indirildi; çok tohumlu E3
+              kıyaslamasında <code>YOLO26n</code> %92,2, <code>YOLO11s</code> %91,1 mAP@50 verdi.
+            </p>
+            <span class="roadmap-status">Devam Ediyor</span>
+          </article>
+
+          <article class="roadmap-card status-skipped reveal">
+            <span class="roadmap-phase">FAZ 3 · FAZ 4 ATLANDI</span>
+            <h3 class="roadmap-title">NCNN, K6 &amp; AI HAT+ Kararı</h3>
+            <p class="roadmap-desc">
+              Faz 3’te Pi 5 NCNN JSON kayıtları (3.4) ve 1 saatlik K6 termal/bellek testi tamamlanacak.
+              Faz 4 (AI HAT+ $70–110) yalnızca Pi 5 CPU kararıyla bilinçli olarak atlandı.
+            </p>
+            <span class="roadmap-status">Faz 3 Planlı · Faz 4 Atlandı</span>
+          </article>
+
+          <article class="roadmap-card status-planned reveal">
+            <span class="roadmap-phase">FAZ 5–9</span>
+            <h3 class="roadmap-title">Saha Pilotu &amp; Çoklu Tür</h3>
+            <p class="roadmap-desc">
+              Güneybatı Türkiye koylarında (5–10 m) ROV/tekne saha testi, Global Shutter IMX296 optik
+              entegrasyonu ve Akdeniz biyoçeşitliliği için çoklu tür genişlemesi.
+            </p>
+            <span class="roadmap-status">Saha &amp; Ölçeklenme</span>
+          </article>
+        </div>
+
+        <!-- Ekip Kimliği ve Pilot / İş Birliği CTA Bandı -->
+        <div class="cta-band reveal">
+          <div>
+            <span class="eyebrow">Proje Ekibi &amp; Pilot Çağrısı</span>
+            <h3>Saha Pilotu, ROV Entegrasyonu veya Veri Ortaklığı</h3>
+            <p>
+              <strong>Proje Ekibi:</strong> Kayra Semercioğlu, Umut Çalışkan, Murat Aydın —
+              <strong>TÜBİTAK 2209-B</strong> Sanayiye Yönelik Lisans Araştırma Projeleri Destekleme Programı
+              (<strong>Proje No: 1139B412401065</strong>). Kıyı izleme ekipleri, ROV/tekne üreticileri ve
+              deniz biyolojisi araştırmacılarıyla açık kaynaklı saha pilotlarına açığız.
+            </p>
+            <div class="cta-meta">
+              <span class="badge badge-teal">TÜBİTAK 2209-B · 1139B412401065</span>
+              <span class="badge badge-cyan">Roboflow &amp; IMEDEA: CC BY 4.0</span>
+              <span class="badge badge-amber">14 Pytest Dosyası</span>
+            </div>
+          </div>
+
+          <div class="cta-actions">
+            <a class="btn btn-primary" href="https://github.com/kysrgit/Balik_Projesi/issues/new" target="_blank" rel="noopener noreferrer">
+              Pilot / İş Birliği Talebi
+            </a>
+            <a class="btn btn-secondary" href="https://github.com/kysrgit/Balik_Projesi" target="_blank" rel="noopener noreferrer">
+              GitHub Deposunu İncele
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         9. Sıfır-JS Yerel SSS Akordeonu ve Doğrulanmış CLI Kurulum Kartları
          ==================================================================== -->
     <section id="docs" class="section section-alt">
       <div class="container">
         <div class="section-header reveal">
           <span class="eyebrow">Mühendislik Kararları &amp; Çalıştırma</span>
-          <h2 class="section-title">Mimari SSS ve Doğrulanmış Komutlar</h2>
+          <h2 class="section-title">Mimari SSS ve Hızlı Kurulum Komutları</h2>
           <p class="section-lead">
-            Faz 0–4 karar kayıtları (ADR), model nicemleme bulguları ve geliştirme/saha komutları.
+            Faz 0–4 mimari karar kayıtları (ADR), INT8/CLAHE bulguları ve Raspberry Pi 5 / PC çalıştırma komutları.
           </p>
         </div>
 
         <div class="docs-layout">
-          <!-- Teknik SSS Akordeonu -->
+          <!-- Sıfır-JS Yerel <details>/<summary> SSS Akordeonu -->
           <div id="faq-accordion" class="accordion">
-            <div class="accordion-item is-open">
-              <button
-                id="faq-q1"
-                class="accordion-trigger"
-                type="button"
-                aria-expanded="true"
-                aria-controls="faq-a1"
-              >
+            <details class="accordion-item" open>
+              <summary class="accordion-trigger">
                 <span>Raspberry Pi AI HAT+ (Faz 4) neden atlandı?</span>
                 <span class="accordion-icon" aria-hidden="true">+</span>
-              </button>
-              <div id="faq-a1" class="accordion-panel" role="region" aria-labelledby="faq-q1">
+              </summary>
+              <div class="accordion-panel">
                 <div class="accordion-body">
                   <p>
                     <code>docs/ROADMAP.md</code> ve <code>ADR-000</code> (K5) kapsamında harici sinirsel hızlandırıcı
-                    kullanmadan yalnızca Raspberry Pi 5 CPU üzerinde gerçek zamanlı (≥ 10 FPS) çalışma hedeflendi.
-                    Faz 4 (AI HAT+) bilinçli olarak atlandı; YOLO11n NCNN FP16'nın 70 ms (~14 FPS) ölçümü,
-                    ek donanım maliyeti ve güç tüketimi olmadan K5 sınırının CPU üzerinde aşılabildiğini göstermektedir.
+                    (AI HAT+ 13 TOPS ~$70 veya 26 TOPS ~$110) eklemeden yalnızca Raspberry Pi 5 CPU üzerinde gerçek zamanlı
+                    (≥ 10 FPS) çalışma hedeflendi. Faz 4 bilinçli olarak atlandı; YOLO11n NCNN FP16’nın 70 ms (~14 FPS)
+                    ölçümü, ek kart maliyeti ve güç yükü olmadan K5 sınırının CPU üzerinde aşılabildiğini göstermektedir.
                   </p>
                 </div>
               </div>
-            </div>
+            </details>
 
-            <div class="accordion-item">
-              <button
-                id="faq-q2"
-                class="accordion-trigger"
-                type="button"
-                aria-expanded="false"
-                aria-controls="faq-a2"
-              >
-                <span>INT8 nicemleme neden başlangıçta 0.0 mAP@50 verdi ve nasıl çözüldü?</span>
+            <details class="accordion-item">
+              <summary class="accordion-trigger">
+                <span>INT8 nicemleme neden başlangıçta 0,0 mAP@50 verdi ve nasıl çözüldü?</span>
                 <span class="accordion-icon" aria-hidden="true">+</span>
-              </button>
-              <div id="faq-a2" class="accordion-panel" role="region" aria-labelledby="faq-q2">
+              </summary>
+              <div class="accordion-panel">
                 <div class="accordion-body">
                   <p>
-                    Tüm grafın statik INT8 nicemlemesi (<code>rapor_int8</code>) YOLO'nun anchor-free tespit başındaki
-                    kutu regresyonunu bozarak <code>0.0</code> mAP@50 üretmiştir. <code>training/export_int8_v2.py</code>
-                    ile yalnızca omurga (backbone) ve boyun (neck) katmanları QDQ per-channel INT8'e (QInt8 ağırlık /
-                    QUInt8 aktivasyon) dönüştürülüp tespit başı (<code>model.&lt;last&gt;</code>) FP32'de bırakılmıştır.
-                    Bu karma hassasiyet yaklaşımı boyutu 37,93 MB'tan 12,53 MB'a indirip Pi 5'te 0,7452 test mAP@50 korumuştur.
+                    Tüm grafın statik INT8 nicemlemesi (<code>rapor_int8</code>) YOLO’nun anchor-free tespit başındaki
+                    kutu regresyonunu bozarak <code>0,0</code> mAP@50 üretmiştir. <code>training/export_int8_v2.py</code>
+                    ile yalnızca omurga (backbone) ve boyun (neck) katmanları QDQ per-channel INT8’e dönüştürülüp tespit başı
+                    (<code>model.&lt;last&gt;</code>) FP32’de bırakılmıştır. Bu karma hassasiyet yaklaşımı boyutu 37,93 MB’tan
+                    12,53 MB’a indirip Pi 5’te 0,7452 test mAP@50 korumuştur.
                   </p>
                 </div>
               </div>
-            </div>
+            </details>
 
-            <div class="accordion-item">
-              <button
-                id="faq-q3"
-                class="accordion-trigger"
-                type="button"
-                aria-expanded="false"
-                aria-controls="faq-a3"
-              >
+            <details class="accordion-item">
+              <summary class="accordion-trigger">
                 <span>CLAHE sualtı kontrast iyileştirmesi çıkarımda neden varsayılan olarak kapalı?</span>
                 <span class="accordion-icon" aria-hidden="true">+</span>
-              </button>
-              <div id="faq-a3" class="accordion-panel" role="region" aria-labelledby="faq-q3">
+              </summary>
+              <div class="accordion-panel">
                 <div class="accordion-body">
                   <p>
-                    <code>YOLO11s INT8</code> (@ conf 0.60) üzerinde yapılan ölçümde CLAHE kapalıyken test F1
-                    <strong>%74,6</strong>, valid F1 <strong>%89,7</strong> ve boş sahne yanlış alarmı <strong>0/33</strong> iken;
-                    CLAHE açıldığında test F1 <strong>%68,2</strong>'ye, valid F1 <strong>%86,5</strong>'e düşmüş ve yanlış alarm
-                    <strong>2/33</strong>'e çıkmıştır. Bu nedenle <code>app/core/config.py</code> içinde
-                    <code>DETECT_USE_CLAHE = False</code> ayarlıdır; yalnızca dashboard üzerinden görsel inceleme kanalı olarak açık bırakılır.
+                    <code>YOLO11s INT8</code> (@ conf 0,60) ölçümünde CLAHE kapalıyken test F1 <strong>%74,6</strong>,
+                    valid F1 <strong>%89,7</strong> ve boş sahne alarmı <strong>0/33</strong> iken; CLAHE açıldığında
+                    test F1 <strong>%68,2</strong>’ye, valid F1 <strong>%86,5</strong>’e düşmüş ve alarm <strong>2/33</strong>’e
+                    çıkmıştır. Bu nedenle <code>app/core/config.py</code> içinde <code>DETECT_USE_CLAHE = False</code> ayarlıdır.
                   </p>
                 </div>
               </div>
-            </div>
+            </details>
 
-            <div class="accordion-item">
-              <button
-                id="faq-q4"
-                class="accordion-trigger"
-                type="button"
-                aria-expanded="false"
-                aria-controls="faq-a4"
-              >
-                <span>Raspberry Pi 5 üzerinde NCNN ve ONNX Runtime farkı nedir?</span>
+            <details class="accordion-item">
+              <summary class="accordion-trigger">
+                <span>Raspberry Pi 5 üzerinde yayındaki ONNX ile Faz 3 NCNN farkı nedir?</span>
                 <span class="accordion-icon" aria-hidden="true">+</span>
-              </button>
-              <div id="faq-a4" class="accordion-panel" role="region" aria-labelledby="faq-q4">
+              </summary>
+              <div class="accordion-panel">
                 <div class="accordion-body">
                   <p>
-                    ONNX Runtime 1.31.0 (<code>PatchedInferenceSession</code>: 4 thread, <code>allow_spinning="0"</code>,
-                    XNNPACK) ile <code>pufferfish_s_v2_int8.onnx</code> Pi 5'te 171,07 ms (5,85 FPS) vermektedir.
+                    Yayındaki varsayılan <code>pufferfish_s_v2_int8.onnx</code> (ONNX Runtime 1.31.0, 4 thread,
+                    <code>allow_spinning="0"</code>, XNNPACK) Pi 5’te ortalama 171,07 ms (5,85 FPS) verir.
                     Raporlarda aktarılan NCNN FP16 (640 px) ölçümlerinde ise <code>YOLO11s NCNN</code> 162 ms (~6 FPS),
-                    <code>YOLO11n NCNN</code> ise <strong>70 ms (~14 FPS)</strong> uçtan uca gecikmeyle K5 hedefini geçmektedir.
-                    <code>benchmark_pi5/</code> içine NCNN JSON ölçüm kayıtlarının tamamlanması Faz 3.4 kapsamında planlanmıştır.
+                    <code>YOLO11n NCNN</code> <strong>70 ms (~14 FPS)</strong> ile K5 hedefini geçmektedir.
+                    <code>benchmark_pi5/</code> içine NCNN JSON kayıtları Faz 3.4 kapsamında tamamlanacaktır.
                   </p>
                 </div>
               </div>
-            </div>
+            </details>
 
-            <div class="accordion-item">
-              <button
-                id="faq-q5"
-                class="accordion-trigger"
-                type="button"
-                aria-expanded="false"
-                aria-controls="faq-a5"
-              >
+            <details class="accordion-item">
+              <summary class="accordion-trigger">
                 <span>DarwinCore, GeoJSON ve SpatiaLite kayıtları nasıl dışa aktarılır?</span>
                 <span class="accordion-icon" aria-hidden="true">+</span>
-              </button>
-              <div id="faq-a5" class="accordion-panel" role="region" aria-labelledby="faq-q5">
+              </summary>
+              <div class="accordion-panel">
                 <div class="accordion-body">
                   <p>
                     Her tespit <code>/dev/ttyAMA0</code> NMEA GPS koordinatlarıyla birleştirilip
                     <code>data/detections_log.csv</code> ve <code>data/spatial_log.sqlite</code> (<code>mod_spatialite</code>
-                    veya standart SQLite fallback) içine yazılır. Canlı panel üzerinden <code>/api/export/geojson</code>
-                    (QGIS/Leaflet), <code>/api/export/csv</code> ve GBIF/OBIS standartlarıyla uyumlu
-                    <code>/api/export/darwincore</code> (ZIP arşivi) doğrudan indirilebilir.
+                    veya standart SQLite fallback) içine yazılır. Canlı panelden <code>/api/export/geojson</code> (QGIS/Leaflet),
+                    <code>/api/export/csv</code> ve GBIF/OBIS uyumlu <code>/api/export/darwincore</code> (ZIP) indirilebilir.
                   </p>
                 </div>
               </div>
-            </div>
+            </details>
 
-            <div class="accordion-item">
-              <button
-                id="faq-q6"
-                class="accordion-trigger"
-                type="button"
-                aria-expanded="false"
-                aria-controls="faq-a6"
-              >
+            <details class="accordion-item">
+              <summary class="accordion-trigger">
                 <span>Veri sızıntısı önleme ve otomatik test paketi nasıl doğrulanıyor?</span>
                 <span class="accordion-icon" aria-hidden="true">+</span>
-              </button>
-              <div id="faq-a6" class="accordion-panel" role="region" aria-labelledby="faq-q6">
+              </summary>
+              <div class="accordion-panel">
                 <div class="accordion-body">
                   <p>
                     Tüm kaynak fotoğraflar pHash grupları ve SHA-256 lisans manifestolarıyla
                     (<code>dataset_meta/gold_v1.csv</code>, <code>gold_v1_ext.csv</code>) izlenir; eğitim ve doğrulama
-                    kümeleri altın test gruplarından yalıtılır. Kod tabanında ise <code>tests/</code> altında kamera,
-                    detektör, GPS/GPIO, SpatiaLite, dışa aktarım, CORS/SSRF güvenliği ve uçtan uca akışı kapsayan
-                    14 test dosyası (103 test) yer almaktadır.
+                    kümeleri altın testten yalıtılır. Kod tabanında kamera, detektör, GPS/GPIO, SpatiaLite, dışa aktarım
+                    ve CORS/SSRF güvenliğini kapsayan 14 pytest dosyası (103 test) yer almaktadır.
                   </p>
                 </div>
               </div>
-            </div>
+            </details>
           </div>
 
-          <!-- CLI ve Çalıştırma Kartları -->
-          <aside class="docs-sidebar" aria-label="Doğrulanmış CLI çalıştırma komutları">
+          <!-- Doğrulanmış Kurulum ve CLI Çalıştırma Kartları -->
+          <aside class="docs-sidebar" aria-label="Doğrulanmış kurulum ve CLI komutları">
+            <div class="code-card reveal">
+              <div class="code-header">
+                <span>Depo Klonlama &amp; Raspberry Pi Kurulumu</span>
+                <button class="copy-btn" type="button" aria-label="Kurulum komutlarını kopyala">Kopyala</button>
+              </div>
+              <pre class="code-block"><code># Depoyu klonla ve bağımlılıkları kur
+git clone https://github.com/kysrgit/Balik_Projesi.git
+cd Balik_Projesi
+pip install -r requirements.txt
+
+# Raspberry Pi 5 systemd servis kurulumu
+bash scripts/install_pi.sh</code></pre>
+            </div>
+
             <div class="code-card reveal">
               <div class="code-header">
                 <span>Ana Uygulama &amp; Canlı Dashboard (:5000)</span>
                 <button class="copy-btn" type="button" aria-label="Ana uygulama komutlarını kopyala">Kopyala</button>
               </div>
-              <pre class="code-block"><code># Başsız (headless) çalıştırma + Web Dashboard
+              <pre class="code-block"><code># Başsız (headless) çalıştırma + Web Dashboard (:5000)
 python3 app/main.py
 
 # Yerel OpenCV önizleme penceresi ile
@@ -1950,31 +2059,17 @@ python3 app/main.py --clahe</code></pre>
 
             <div class="code-card reveal">
               <div class="code-header">
-                <span>Veri İnceleme, Denetim ve Etiket Stüdyosu (:5050)</span>
-                <button class="copy-btn" type="button" aria-label="Review sunucusu komutunu kopyala">Kopyala</button>
+                <span>Veri İnceleme Stüdyosu (:5050) &amp; Test Paketi</span>
+                <button class="copy-btn" type="button" aria-label="İnceleme sunucusu ve test komutlarını kopyala">Kopyala</button>
               </div>
-              <pre class="code-block"><code># PC üzerinde inceleme/denetim/etiket sunucusu
+              <pre class="code-block"><code># PC inceleme, ortam denetimi ve kutu etiketleme (:5050)
 python -m app.review.server
 
-# Rotalar:
-# http://localhost:5050/          (GT vs Tahmin)
-# http://localhost:5050/denetim   (Ortam doğrulama)
-# http://localhost:5050/etiket    (iNat etiketleme)</code></pre>
-            </div>
-
-            <div class="code-card reveal">
-              <div class="code-header">
-                <span>Test Paketi (14 Dosya) &amp; GPS Simülatörü</span>
-                <button class="copy-btn" type="button" aria-label="Test ve GPS simülatör komutlarını kopyala">Kopyala</button>
-              </div>
-              <pre class="code-block"><code># Tüm birim, güvenlik ve uçtan uca testler
+# 14 test dosyası (birim, güvenlik, CBS, E2E)
 pytest
 
 # Geliştirme ortamı için sahte NMEA GPS yayını
-python scripts/gps_simulator.py
-
-# Raspberry Pi kurulumu ve systemd servisi
-bash scripts/install_pi.sh</code></pre>
+python scripts/gps_simulator.py</code></pre>
             </div>
           </aside>
         </div>
@@ -1993,54 +2088,54 @@ bash scripts/install_pi.sh</code></pre>
             <span class="brand-mark" aria-hidden="true">BB</span>
             <span>
               Balon Balığı AI
-              <span class="brand-sub">İstilacı Tür İzleme Sistemi</span>
+              <span class="brand-sub">Sualtı Biyoçeşitlilik İzleme</span>
             </span>
           </a>
           <p class="footer-desc">
-            TÜBİTAK 2209-B kapsamında geliştirilen, Raspberry Pi 5 CPU üzerinde gerçek zamanlı sualtı
-            balon balığı tespiti ve coğrafi veri izleme projesi.
+            TÜBİTAK 2209-B (Proje No: 1139B412401065) destekli, Raspberry Pi 5 CPU üzerinde çevrimdışı çalışan
+            istilacı balon balığı tespit ve coğrafi izleme platformu.
           </p>
         </div>
 
         <div>
-          <h3 class="footer-heading">Bölümler</h3>
+          <h3 class="footer-heading">Platform</h3>
           <ul class="footer-links">
-            <li><a href="#problem">Problem &amp; Etki</a></li>
-            <li><a href="#species">Türler &amp; Veri Setleri</a></li>
-            <li><a href="#benchmarks">PC vs Pi 5 Benchmark</a></li>
-            <li><a href="#architecture">Sistem Mimarisi</a></li>
+            <li><a href="#problem">Etki &amp; Rekabet</a></li>
+            <li><a href="#species">Veri &amp; Türler</a></li>
+            <li><a href="#benchmarks">Performans &amp; ADR-000</a></li>
+            <li><a href="#application">Ürün &amp; Mimari</a></li>
           </ul>
         </div>
 
         <div>
-          <h3 class="footer-heading">Teknik Kaynaklar</h3>
+          <h3 class="footer-heading">Kaynaklar</h3>
           <ul class="footer-links">
-            <li><a href="#application">Dashboard (:5000)</a></li>
-            <li><a href="#gallery">Görsel Kanıt Galerisi</a></li>
-            <li><a href="#docs">ADR &amp; SSS</a></li>
-            <li><a href="https://github.com/kysrgit/Balik_Projesi.git" target="_blank" rel="noopener noreferrer">GitHub Deposu</a></li>
+            <li><a href="#gallery">Görsel Kanıtlar</a></li>
+            <li><a href="#roadmap">Yol Haritası &amp; Ekip</a></li>
+            <li><a href="#docs">SSS &amp; Kurulum</a></li>
+            <li><a href="https://github.com/kysrgit/Balik_Projesi" target="_blank" rel="noopener noreferrer">GitHub Deposu</a></li>
           </ul>
         </div>
 
         <div>
-          <h3 class="footer-heading">Standartlar &amp; Lisans</h3>
+          <h3 class="footer-heading">Ekip &amp; Standartlar</h3>
           <ul class="footer-links">
+            <li><span>Kayra Semercioğlu · Umut Çalışkan · Murat Aydın</span></li>
             <li><span>Roboflow v1 &amp; IMEDEA: CC BY 4.0</span></li>
-            <li><span>CBS İhracı: GeoJSON · DarwinCore</span></li>
-            <li><span>Test Paketi: 14 dosya (pytest)</span></li>
+            <li><span>CBS: GeoJSON · CSV · DarwinCore</span></li>
           </ul>
         </div>
       </div>
 
       <div class="footer-bottom">
-        <span>Balon Balığı Yapay Zeka Tespit Sistemi · Doğrulanmış proje metrikleriyle derlenmiştir.</span>
+        <span>Balon Balığı AI · TÜBİTAK 2209-B (1139B412401065) · Doğrulanmış depo verileriyle derlenmiştir.</span>
         <a class="back-to-top" href="#hero">Yukarı Çık ↑</a>
       </div>
     </div>
   </footer>
 
   <!-- ======================================================================
-       11. Erişilebilir Lightbox Modalı
+       11. Erişilebilir Lightbox Modalı (src başlangıçta boş; app.js yükler)
        ====================================================================== -->
   <div
     id="lightbox"
@@ -2058,7 +2153,7 @@ bash scripts/install_pi.sh</code></pre>
 
       <div class="lightbox-body">
         <div class="lightbox-media">
-          <img id="lightbox-img" src="./assets/kapak.jpg" alt="">
+          <img id="lightbox-img" width="1280" height="720" alt="" decoding="async">
         </div>
 
         <div class="lightbox-info">
@@ -2070,12 +2165,15 @@ bash scripts/install_pi.sh</code></pre>
 
           <div class="lightbox-nav">
             <button id="lightbox-prev" class="btn btn-secondary btn-sm" type="button">← Önceki</button>
-            <span id="lightbox-counter" class="lightbox-counter">1 / 13</span>
+            <span id="lightbox-counter" class="lightbox-counter">1 / 6</span>
             <button id="lightbox-next" class="btn btn-secondary btn-sm" type="button">Sonraki →</button>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Etkileşim betiği (defer) -->
+  <script src="./app.js" defer></script>
 </body>
 </html>

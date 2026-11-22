@@ -1,3 +1,5 @@
+# Depo yoksayma kuralları — derleme çıktıları, veri kümeleri, modeller ve yerel OS dosyaları
+
 # Python
 __pycache__/
 *.py[cod]
@@ -50,6 +52,7 @@ balon_baligi_fotograflari/
 
 # OS specific
 desktop.ini
+Desktop.ini
 .DS_Store
 Thumbs.db
 
