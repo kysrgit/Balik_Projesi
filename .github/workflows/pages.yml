@@ -1,0 +1,51 @@
+# GitHub Pages Dağıtım İş Akışı
+# Bu iş akışı, website/ altındaki statik tanıtım sitesini GitHub Pages üzerine otomatik olarak dağıtır.
+
+name: GitHub Pages Dağıtımı
+
+on:
+  # main dalında website/ veya bu iş akışı dosyası değiştiğinde tetiklenir
+  push:
+    branches: ["main"]
+    paths:
+      - "website/**"
+      - ".github/workflows/pages.yml"
+  # GitHub Actions arayüzünden veya CLI üzerinden manuel tetiklemeye izin verir
+  workflow_dispatch:
+
+# Yalnızca depo okuma, Pages yazma ve OIDC belirteci izinleri tanımlanır
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Eşzamanlı dağıtımların birbirini iptal etmemesi için sıraya alınır
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      # Depo kaynak kodunu çalışma alanına çeker
+      - name: Depoyu Çek (Checkout)
+        uses: actions/checkout@v4
+
+      # GitHub Pages ortamını ve temel URL yapılandırmasını hazırlar
+      - name: GitHub Pages Yapılandır
+        uses: actions/configure-pages@v5
+
+      # website/ dizinini statik Pages çıktısı (artifact) olarak paketler
+      - name: Pages Çıktısını Yükle
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+
+      # Hazırlanan çıktıyı github-pages ortamına dağıtır
+      - name: GitHub Pages'e Dağıt
+        id: deployment
+        uses: actions/deploy-pages@v4
